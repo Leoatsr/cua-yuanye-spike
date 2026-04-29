@@ -81,6 +81,8 @@ import { LandingPage } from './pages/Landing';
 import { ManualPage, CodexPage, MapsPage } from './pages/ComingSoon';
 import { GameViewPreview } from './pages/GameViewPreview';
 import { NewGameAppHUD } from './pages/NewGameAppHUD';
+import { NewChatPanel } from './components/NewChatPanel';
+import { NewChatPanel } from './components/NewChatPanel';
 
 /** Fallback shown if the React UI subtree crashes. Phaser keeps running. */
 function CrashFallback({ error, resetError }: { error: unknown; resetError: () => void }) {
@@ -228,7 +230,7 @@ function MainGameApp() {
             <ProfilePanelKeyListener />
             <ProfileLink />
             <OnlineRoster />
-            <ChatPanel />
+            <NewChatPanel />
             <ChatPanelKeyListener />
             <PlayerInteractPrompt />
             <PlayerInteractMenu />

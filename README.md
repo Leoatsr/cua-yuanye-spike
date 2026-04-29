@@ -1,31 +1,32 @@
-# Wave 2.2.A · 真数据接通 + /play 替换
+# Wave 2.3.A · ChatPanel 像素风重写（世界频道）
 
-UI 重构第 2 波 · 第 2 步 — **接通真 store · 替换 /play 视觉**
+UI 重构第 2 波 · 第 3 步 — **新像素聊天面板上线**
 
 ---
 
 ## 这一波做了什么
 
-### 接通 5 个真 store
-| Hook | 数据来源 |
-|---|---|
-| `useProfile()` | `fetchMyProfile()` + EventBus `profile-updated` |
-| `useCV()` | `getTotalCV()` + EventBus `cv-updated` |
-| `useLevel()` | 基于 CV 算 L0-L4（`gameMeta.LEVELS`）|
-| `useGameTime()` | `computeGameTime()` setInterval 1s |
-| `useOnlineCount()` | EventBus `online-count-updated` |
+| 类型 | 文件 | 作用 |
+|---|---|---|
+| 🆕 hook | `src/hooks/useChatMessages.ts` | 监听 `chat-message-received` |
+| 🆕 hook | `src/hooks/useToggleViaEventBus.ts` | 通用 panel toggle |
+| 🆕 component | `src/components/ChatMessageItem.tsx` | 单条消息渲染 |
+| 🆕 component | `src/components/NewChatPanel.tsx` | 主聊天面板 |
+| 🔄 hook | `src/hooks/index.ts` | 加 export |
 
-### 文件清单
-| 类型 | 文件 |
-|---|---|
-| 🆕 hook | `src/hooks/useProfile.ts` |
-| 🆕 hook | `src/hooks/useCV.ts` |
-| 🆕 hook | `src/hooks/useLevel.ts` |
-| 🆕 hook | `src/hooks/useGameTime.ts` |
-| 🆕 hook | `src/hooks/useOnlineCount.ts` |
-| 🆕 hook | `src/hooks/index.ts` |
-| 🆕 page | `src/pages/NewGameAppHUD.tsx` — 新像素 HUD（用于 /play）|
-| 🔄 page | `src/pages/GameViewPreview.tsx` — 接真数据（替换 Wave 2.1 的 mock 版）|
+✅ Wave 2.3.A 范围：
+- 像素古籍风视觉（380×520，右下浮动）
+- 世界频道完整功能（消息列表 + 发送 + 实时接收）
+- 5s 反 spam 倒计时 UI
+- 200 字符上限 + 字符计数
+- 消息时间戳格式化（刚刚 / N 分前 / HH:MM / 昨天 HH:MM / MM-DD）
+- 头像渲染（GitHub avatar_url 或 fallback Sprite）
+- 滚动到底逻辑
+- T 键 + 'toggle-panel' EventBus 双触发
+- ESC 关闭
+- 自己消息 vs 别人消息视觉区分
+
+⏳ Wave 2.3.B 将做：场景频道 / 私聊 / 用户名搜索
 
 ---
 
@@ -34,256 +35,140 @@ UI 重构第 2 波 · 第 2 步 — **接通真 store · 替换 /play 视觉**
 ```powershell
 cd D:\projects\cua-base
 
-$zip = "C:\Users\ghani\Downloads\cua-spike-wave2-2a.zip"
+$zip = "C:\Users\ghani\Downloads\cua-spike-wave2-3a.zip"
 Test-Path $zip
 
 tar -xf $zip
-Copy-Item -Path .\cua-spike-wave2-2a\* -Destination . -Recurse -Force
-Remove-Item -Path .\cua-spike-wave2-2a -Recurse -Force
+Copy-Item -Path .\cua-spike-wave2-3a\* -Destination . -Recurse -Force
+Remove-Item -Path .\cua-spike-wave2-3a -Recurse -Force
 
 # 验证
-Test-Path src\hooks\useProfile.ts
-Test-Path src\hooks\index.ts
-Test-Path src\pages\NewGameAppHUD.tsx
+Test-Path src\hooks\useChatMessages.ts
+Test-Path src\components\NewChatPanel.tsx
 ```
 
-期望 3 个 `True`。
+期望 2 个 `True`。
 
 ---
 
-## 两步测试 · 先 /play-new 再 /play
+## 必须手动改 src/App.tsx · 替换 ChatPanel
 
-### Step 1 · 先看 /play-new（真数据隔离测试）
-
-```powershell
-pnpm dev
-```
-
-打开 `http://localhost:5173/play-new` 
-
-期望看到：
-- ✅ AvatarPanel 显示**你的真实 GitHub 名字**（不是 "Gaoliang"）
-- ✅ CVBar 显示**你真实 CV**（如果 0 → 显示 "0 / 100"）
-- ✅ TopRightChips 显示**真实游戏节气**（立春/雨水/...）
-- ✅ TopRightChips 显示**真实游戏时间**（HH:MM）
-- ✅ 显示**真实在线人数**（取决于当前在线情况）
-- ✅ Hotbar 第 2 格显示**真实 CV** 当数量
-- ✅ 顶部 chip "Wave 2.2.A · 真数据"
-
-如果**不对**（比如 AvatarPanel 仍显示 "Gaoliang"）—— 说明你**没登录**，hook 拿不到 profile。先登录再测。
-
-### Step 2 · 满意后改 App.tsx 替换 /play
-
-打开 `src/App.tsx`，找 `MainGameApp` 那个 function（在 200 行左右）。
-
-⚠️ **不要改 `MainGameApp`** —— 我们要做的是**在 MainGameApp 里加新 HUD + 删旧组件**。
-
-跑这条 PowerShell 命令做替换：
+### Step 1 · 加 import
 
 ```powershell
 cd D:\projects\cua-base
 
-# 备份
-Copy-Item src\App.tsx D:\projects\backup-cua\App.tsx.before-wave2-2a -ErrorAction SilentlyContinue
+Copy-Item src\App.tsx D:\projects\backup-cua\App.tsx.before-wave2-3a -ErrorAction SilentlyContinue
 
-# 加 import NewGameAppHUD
 $content = [System.IO.File]::ReadAllText("$PWD\src\App.tsx", [System.Text.UTF8Encoding]::new($false))
-$oldImport = "import { GameViewPreview } from './pages/GameViewPreview';"
-$newImport = "import { GameViewPreview } from './pages/GameViewPreview';`r`nimport { NewGameAppHUD } from './pages/NewGameAppHUD';"
+
+# 加 NewChatPanel import (在 NewGameAppHUD import 后)
+$oldImport = "import { NewGameAppHUD } from './pages/NewGameAppHUD';"
+$newImport = "import { NewGameAppHUD } from './pages/NewGameAppHUD';`r`nimport { NewChatPanel } from './components/NewChatPanel';"
 $content = $content.Replace($oldImport, $newImport)
 
 [System.IO.File]::WriteAllText("$PWD\src\App.tsx", $content, [System.Text.UTF8Encoding]::new($false))
 
-# 验证 import 加上了
-Select-String -Path src\App.tsx -Pattern "NewGameAppHUD" | Format-Table LineNumber, Line
+# 验证
+Select-String -Path src\App.tsx -Pattern "NewChatPanel" | Format-Table LineNumber, Line
 ```
 
 期望看到：
 ```
 LineNumber Line
 ---------- ----
-        83 import { NewGameAppHUD } from './pages/NewGameAppHUD';
+        84 import { NewChatPanel } from './components/NewChatPanel';
 ```
 
-### Step 3 · 手动改 MainGameApp 函数体
-
-⚠️ **这是关键改动** —— 必须**手动**做（PowerShell 难精确替换）。
-
-打开 `src/App.tsx`：
+### Step 2 · 替换 `<ChatPanel />` 为 `<NewChatPanel />`
 
 ```powershell
-notepad src\App.tsx
-```
+cd D:\projects\cua-base
 
-按 `Ctrl+F` 搜索 `<HUD />` —— 找到 MainGameApp 函数 return 块。
+$content = [System.IO.File]::ReadAllText("$PWD\src\App.tsx", [System.Text.UTF8Encoding]::new($false))
 
-#### 改前（你当前长这样）
+# 替换 <ChatPanel /> 为 <NewChatPanel />
+$content = $content -replace '<ChatPanel />', '<NewChatPanel />'
 
-```tsx
-return (
-  <>
-    <PhaserGame />
+[System.IO.File]::WriteAllText("$PWD\src\App.tsx", $content, [System.Text.UTF8Encoding]::new($false))
 
-    <SentryErrorBoundary
-      fallback={({ error, resetError }) => (
-        <CrashFallback error={error} resetError={resetError} />
-      )}
-    >
-      {gameStarted && (
-        <>
-          <HUD />              {/* ← 删 */}
-          <CVDisplay />        {/* ← 删 */}
-          <AuthBadge />
-          <QuestPanel />
-          ...
-          <LevelBadge />       {/* ← 删 */}
-          ...
-          <TimeOverlay />
-          <TimeHUD />          {/* ← 删 */}
-          <TimeSettingsButton />
-          ...
-        </>
-      )}
-      {!gameStarted && <TitleScreen onStart={handleStart} />}
-    </SentryErrorBoundary>
-  </>
-);
-```
+# 验证
+Write-Host "=== 应该 0 个 <ChatPanel /> ==="
+Select-String -Path src\App.tsx -Pattern '<ChatPanel />' | Format-Table LineNumber, Line
 
-#### 改后（4 个删 + 1 个加）
-
-1. 删 `<HUD />`
-2. 删 `<CVDisplay />`
-3. 删 `<LevelBadge />`
-4. 删 `<TimeHUD />`
-5. **加** `<NewGameAppHUD visible={gameStarted} />` —— 放在 `<PhaserGame />` 之后、`<SentryErrorBoundary>` 之前
-
-完整 return 块：
-
-```tsx
-return (
-  <>
-    <PhaserGame />
-    <NewGameAppHUD visible={gameStarted} />     {/* ← 新加 */}
-
-    <SentryErrorBoundary
-      fallback={({ error, resetError }) => (
-        <CrashFallback error={error} resetError={resetError} />
-      )}
-    >
-      {gameStarted && (
-        <>
-          {/* HUD 已删 */}
-          {/* CVDisplay 已删 */}
-          <AuthBadge />
-          <QuestPanel />
-          <TitleList />
-          <DialogueBox />
-          <WorldMap />
-          <QuestLog />
-          <MailBox />
-          <MailBadge />
-          <ReviewBadge />
-          <ReviewPanel />
-          <RoadmapPanel />
-          <AppealDeskPanel />
-          <CreateProposalPanel />
-          <ProposalListPanel />
-          <HomeWallPanel />
-          <MeritBoardPanel />
-          {/* LevelBadge 已删 */}
-          <LevelUpAnimation />
-          <FaceCustomizer />
-          <ProfilePanel />
-          <ProfilePanelKeyListener />
-          <ProfileLink />
-          <OnlineRoster />
-          <ChatPanel />
-          <ChatPanelKeyListener />
-          <PlayerInteractPrompt />
-          <PlayerInteractMenu />
-          <PlayerInteractKeyListener />
-          <QuestHistoryPanel />
-          <QuestHistoryKeyListener />
-          <NotificationToast />
-          <NotificationPanel />
-          <NotificationKeyListener />
-          <NotificationBadge />
-          <FriendsPanel />
-          <FriendsKeyListener />
-          <EmotePanel />
-          <EmoteOverlay />
-          <DashboardPanel />
-          <DashboardKeyListener />
-          <AnnouncementButton />
-          <HelpButton />
-          <TutorialOverlay />
-          <TimeOverlay />
-          {/* TimeHUD 已删 */}
-          <TimeSettingsButton />
-          <NpcGreetingToast />
-          <SolarTermBanner />
-          <ReviewProcessor />
-          <ReviewSeeder />
-          <AppealProcessor />
-        </>
-      )}
-      {!gameStarted && <TitleScreen onStart={handleStart} />}
-    </SentryErrorBoundary>
-  </>
-);
-```
-
-保存 → Vite HMR 自动重载。
-
-### Step 4 · 浏览器测 /play
-
-```
-http://localhost:5173/play
+Write-Host ""
+Write-Host "=== 应该 1 个 <NewChatPanel /> ==="
+Select-String -Path src\App.tsx -Pattern '<NewChatPanel />' | Format-Table LineNumber, Line
 ```
 
 期望：
-- ✅ 进入 TitleScreen 登录界面（如果未登录）
-- ✅ 登录后看到游戏 + **新像素 HUD**（左上头像 / 右上节气 / 右下 hotbar 等）
-- ✅ Phaser canvas 正常运行
-- ✅ 角色 WASD 能移动
-- ✅ 按 E 跟 NPC 对话仍能用
-- ✅ 点新像素左下 5 图标 → 触发 EventBus `toggle-panel`（暂时无响应，Wave 2.3 接）
-- ✅ 教程系统、节气 banner、通知 toast 都正常工作
+- 第一段 0 行（旧的删干净）
+- 第二段 1 行 `<NewChatPanel />`
 
-⚠️ **如果出问题** —— 立刻回滚：
+⚠️ **保留** `<ChatPanelKeyListener />` —— 它仍然能用（emit `toggle-chat-panel` EventBus，新 NewChatPanel 监听这个事件）。
+
+---
+
+## 测试
+
 ```powershell
-Copy-Item D:\projects\backup-cua\App.tsx.before-wave2-2a src\App.tsx
 pnpm dev
 ```
 
----
+打开 `http://localhost:5173/play` → 登录进游戏。
 
-## 已知限制（Wave 2.2.A · 故意）
-
-- ⚠️ **5 图标按钮点击无响应** — 触发了 `toggle-panel` EventBus 但旧 panel 还没监听 · Wave 2.3 接通
-- ⚠️ **小地图玩家位置静态** — 不会随移动更新（Wave 2.B 才接 Phaser scene 数据）
-- ⚠️ **当前任务卡片是占位** — Phase 2.5 接入 GitHub Issues 后才有真数据
-- ⚠️ **旧 ChatPanel/MailBox 仍保留视觉风格**（黑底）— Wave 2.3+ 重写为像素风
-- ⚠️ **登录前 TitleScreen 没改**（Wave 2.B 才改）
-
----
-
-## 测试清单
+### 测试清单
 
 ```
-☐ /play-new 真 profile / CV / 时间显示正确
-☐ /play 登录后 NewGameAppHUD 出现
-☐ /play TitleScreen 登录前不出现 NewGameAppHUD
-☐ Phaser 角色 WASD 仍能移动
-☐ 按 E 跟 NPC 对话仍能用
-☐ 教程 24 step 仍能跑
-☐ 节气切换 banner 仍能出
-☐ 通知 toast 仍能出
-☐ TimeOverlay 昼夜 tint 仍生效
-☐ ProfilePanel (P 键)、ChatPanel (T/Enter)、QuestLog (J)、MailBox (K)、FriendsPanel (F) 仍能开
-☐ 议政高地 5 panel 仍能进
-☐ /u/Leoatsr 公开页仍能开
+☐ 1. 按 T 键 → 新像素聊天面板出现（右下角浮动 · 380×520）
+☐ 2. 看到 "聊天 · 世界频道" 标题 + 消息计数 chip
+☐ 3. 看到 3 个 tab：世界（激活）/ 场景（灰）/ 私聊（灰）
+☐ 4. 点 ✕ 按钮关闭
+☐ 5. 按 Esc 关闭
+☐ 6. 重新按 T 打开 · 输入框自动 focus
+☐ 7. 输入消息 · 看到字符计数 0/200
+☐ 8. 字符接近 170 → 计数变金色（警告色）
+☐ 9. 超过 200 → 红色 + 发送按钮 disabled
+☐ 10. 按 Enter 发送 → 消息出现在列表 + 输入框清空 + "冷却中 5s..." 显示
+☐ 11. 5s 内试发 → 输入框 disabled
+☐ 12. 5s 后 → 重新可发送
+☐ 13. 收到别人消息 → 自动滚动到底
+☐ 14. 自己消息 → 名字金色 + "· 你" 标识 + 浅色背景
+☐ 15. 别人消息 → 名字咖啡色 + 透明背景
+☐ 16. 头像渲染 GitHub avatar 或 fallback sprite
+☐ 17. 时间戳：刚发 → "刚刚" · 5 分前 → "5 分前" · 1h 前 → HH:MM
+☐ 18. 点新像素 HUD 左下 💬 聊天图标 → 切换面板
+```
+
+### 兼容性检查
+
+```
+☐ 旧 T 键仍能用（ChatPanelKeyListener 不变）
+☐ 旧 ChatPanel 文件保留（src/components/ChatPanel.tsx 还在）
+☐ 其他 panel（QuestLog J / MailBox K / FriendsPanel F / ProfilePanel P）仍能开
+☐ 教程 + 节气 banner + 通知 toast 仍正常
+☐ Phaser 游戏 + 多人在场仍正常
+```
+
+---
+
+## ⚠️ 已知限制（Wave 2.3.A · 故意）
+
+- ⚠️ **没初始历史消息** — App.tsx 启动时 `subscribeWorld()` 已调用，但只接收实时消息，没有 `loadRecentHistory` 调用展示之前 50 条历史
+- ⚠️ **场景频道 tab 灰** — Wave 2.3.B 接通
+- ⚠️ **私聊 tab 灰** — Wave 2.3.B 接通
+- ⚠️ **没 G2-D 用户名搜索** — Wave 2.3.B 加
+- ⚠️ **5 图标按钮 toggle-panel 已通** — 点 NewGameAppHUD 左下 💬 触发的就是这个面板
+
+---
+
+## ⚠️ 紧急回滚
+
+如果坏了：
+
+```powershell
+Copy-Item D:\projects\backup-cua\App.tsx.before-wave2-3a src\App.tsx
+pnpm dev
 ```
 
 ---
@@ -294,26 +179,34 @@ pnpm dev
 
 ```powershell
 git add .
-git commit -m "Wave 2.2.A: Connect real stores + replace /play HUD
+git commit -m "Wave 2.3.A: NewChatPanel pixel rewrite (world channel)
 
-- 5 hooks (useProfile/useCV/useLevel/useGameTime/useOnlineCount)
-- NewGameAppHUD with real data (avatar/CV/time/solar term/online)
-- Removed old HUD/CVDisplay/LevelBadge/TimeHUD from App.tsx
-- 5 icon buttons trigger 'toggle-panel' EventBus (handlers in Wave 2.3+)
-- Old ChatPanel/MailBox/QuestLog/etc preserved (visual rewrite in Wave 2.3+)
-- TutorialOverlay/SolarTermBanner/NotificationToast etc all preserved"
+- New pixel-style ChatPanel (380x520, bottom-right floating)
+- 5s cooldown UI + 200 char limit
+- Time formatting (just now / N min ago / HH:MM / yesterday HH:MM)
+- Avatar rendering (GitHub avatar_url or fallback Sprite)
+- 'toggle-chat-panel' + 'toggle-panel' EventBus dual triggers
+- Esc to close
+- Self vs others visual distinction
+- Scene/Private channels grayed out (Wave 2.3.B coming)"
 
 git push
 ```
 
 ---
 
-## 下一波 · Wave 2.3
+## 下一波 · Wave 2.3.B
 
-满意后回我"完成"或"接受"——我立刻开 **Wave 2.3 · ChatPanel 像素风重写**（3-4h）。
+回我 "完成 Wave 2.3.A · 进 2.3.B" 我立刻做：
+- 场景频道接通
+- 私聊 conversation 列表
+- 用户名搜索
+- recipient 切换
+- ~~3-4h 工作量~~
 
-或回滚：
+或者：
 
-```powershell
-Copy-Item D:\projects\backup-cua\App.tsx.before-wave2-2a src\App.tsx
-```
+- "Wave 2.3.A 跑通后 → 直接进 Wave 2.4（MailBox + FriendsPanel）"
+- "暂停 · 用户测一段时间"
+
+回一句话即可。
