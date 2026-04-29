@@ -1,37 +1,34 @@
-# Wave 2.4 · MailBox + FriendsPanel 像素风重写
+# Wave 2.5.A.2 · NewQuestLog 视觉壳重写（80%）
 
-UI 重构第 2 波 · 第 5 步 — **邮件 + 社交两大面板像素风**
+UI 重构第 2 波 · 第 7 步 — **任务日志像素化**
 
 ---
 
 ## 这一波做了什么
 
-### 4 个新 hook
-| Hook | 作用 |
-|---|---|
-| `useMail` | 邮件列表 + 未读数 + 监听 `mail-received` |
-| `useFriends` | 好友 + 请求 · 监听 `friends-updated` |
-| `useFollows` | 关注 + 粉丝 · 监听 `follows-updated` |
-| `useOpenViaEventBus` | 监听旧 `open-mailbox` / `open-friends-panel` + 新 `toggle-panel` |
+### 范围（80% 视觉）
 
-### 4 个新 component
-| Component | 作用 |
-|---|---|
-| `MailItem` | 邮件 sidebar 单项（图标 + 主题 + 时间 + 未读点）|
-| `NewMailBox` | 邮件主面板（左 sidebar + 右详情 · 480×560）|
-| `FriendItem` | 通用好友/请求/关注/粉丝单项 |
-| `NewFriendsPanel` | 社交主面板（4 tab + 加好友搜索 · 480×560）|
+✅ 完全重写：
+- 任务列表 + 4 status tab（可接 / 进行中 / 审核中 / 已完成）
+- 任务卡片（标题 / 工坊 / CP / 难度 / 折叠详情）
+- 接受任务 → `acceptQuest` API
+- 提交表单（URL + 自评 + 评分细则提示）→ `confirmSubmit` + 启动 reviewer
+- 撤回（reviewing 状态 + 倒计时未到）→ `withdrawSubmission` + `cancelScheduledVotes`
+- 状态特定显示（已提交链接 / 撤回倒计时 / CV 入账金额）
+
+⏳ 沿用旧版逻辑（Wave 2.5.A.3+ 重写）：
+- ❌ 审核员投票动画（仅静态显示 N/3 进度）
+- ❌ 申诉流（仅 chip 显示 "申诉处理中"）
+- ❌ CV 入账动画（仅静态金额）
+- ❌ 撤回 1s tick 实时刷新（依赖 React HMR · 状态变化时刷新）
 
 ### 文件清单
 ```
-🆕 src/hooks/useMail.ts
-🆕 src/hooks/useFriends.ts
-🆕 src/hooks/useFollows.ts
-🆕 src/hooks/useOpenViaEventBus.ts
-🆕 src/components/MailItem.tsx
-🆕 src/components/NewMailBox.tsx
-🆕 src/components/FriendItem.tsx
-🆕 src/components/NewFriendsPanel.tsx
+🆕 src/lib/questDefinitions.ts          (5 任务数组 · 抽自旧 QuestLog)
+🆕 src/hooks/useQuestStates.ts
+🆕 src/components/QuestCard.tsx
+🆕 src/components/SubmissionForm.tsx
+🆕 src/components/NewQuestLog.tsx
 🔄 src/hooks/index.ts (加 export)
 ```
 
@@ -42,58 +39,57 @@ UI 重构第 2 波 · 第 5 步 — **邮件 + 社交两大面板像素风**
 ```powershell
 cd D:\projects\cua-base
 
-$zip = "C:\Users\ghani\Downloads\cua-spike-wave2-4.zip"
+$zip = "C:\Users\ghani\Downloads\cua-spike-wave2-5a2.zip"
 Test-Path $zip
 
 tar -xf $zip
-Copy-Item -Path .\cua-spike-wave2-4\* -Destination . -Recurse -Force
-Remove-Item -Path .\cua-spike-wave2-4 -Recurse -Force
+Copy-Item -Path .\cua-spike-wave2-5a2\* -Destination . -Recurse -Force
+Remove-Item -Path .\cua-spike-wave2-5a2 -Recurse -Force
 
 # 验证
-Test-Path src\hooks\useMail.ts
-Test-Path src\hooks\useFriends.ts
-Test-Path src\hooks\useFollows.ts
-Test-Path src\components\NewMailBox.tsx
-Test-Path src\components\NewFriendsPanel.tsx
+Test-Path src\lib\questDefinitions.ts
+Test-Path src\hooks\useQuestStates.ts
+Test-Path src\components\QuestCard.tsx
+Test-Path src\components\SubmissionForm.tsx
+Test-Path src\components\NewQuestLog.tsx
 ```
 
 期望 5 个 `True`。
 
 ---
 
-## 必须手动改 src/App.tsx · 替换 2 个 panel
+## 必须手动改 src/App.tsx · 替换 QuestLog
 
 ```powershell
 cd D:\projects\cua-base
 
-Copy-Item src\App.tsx D:\projects\backup-cua\App.tsx.before-wave2-4 -ErrorAction SilentlyContinue
+Copy-Item src\App.tsx D:\projects\backup-cua\App.tsx.before-wave2-5a2 -ErrorAction SilentlyContinue
 
 $content = [System.IO.File]::ReadAllText("$PWD\src\App.tsx", [System.Text.UTF8Encoding]::new($false))
 
-# 加 imports
-$oldImport = "import { NewChatPanel } from './components/NewChatPanel';"
-$newImport = "import { NewChatPanel } from './components/NewChatPanel';`r`nimport { NewMailBox } from './components/NewMailBox';`r`nimport { NewFriendsPanel } from './components/NewFriendsPanel';"
+# 加 import
+$oldImport = "import { NewAnnouncementPanel } from './components/NewAnnouncementPanel';"
+$newImport = "import { NewAnnouncementPanel } from './components/NewAnnouncementPanel';`r`nimport { NewQuestLog } from './components/NewQuestLog';"
 $content = $content.Replace($oldImport, $newImport)
 
-# 替换 <MailBox /> → <NewMailBox />
-$content = $content -replace '<MailBox />', '<NewMailBox />'
-# 替换 <FriendsPanel /> → <NewFriendsPanel />
-$content = $content -replace '<FriendsPanel />', '<NewFriendsPanel />'
+# 替换 <QuestLog /> → <NewQuestLog />
+$content = $content -replace '<QuestLog />', '<NewQuestLog />'
+
+# 同时移除桥接器（NewQuestLog 自己监听 toggle-panel 了）
+$content = $content -replace '\s*<PanelToggleBridge />', ''
 
 [System.IO.File]::WriteAllText("$PWD\src\App.tsx", $content, [System.Text.UTF8Encoding]::new($false))
 
 # 验证
 Write-Host "=== imports ==="
-Select-String -Path src\App.tsx -Pattern "from './components/NewMailBox'|from './components/NewFriendsPanel'" | Format-Table LineNumber, Line
+Select-String -Path src\App.tsx -Pattern "from './components/NewQuestLog'" | Format-Table LineNumber, Line
 
-Write-Host "=== 应该只有 1 个 NewMailBox · 0 个 MailBox ==="
-Select-String -Path src\App.tsx -Pattern '<MailBox />|<NewMailBox />' | Format-Table LineNumber, Line
+Write-Host "=== 应只有 NewQuestLog · 0 个 QuestLog ==="
+Select-String -Path src\App.tsx -Pattern '<QuestLog />|<NewQuestLog />' | Format-Table LineNumber, Line
 
-Write-Host "=== 应该只有 1 个 NewFriendsPanel · 0 个 FriendsPanel ==="
-Select-String -Path src\App.tsx -Pattern '<FriendsPanel />|<NewFriendsPanel />' | Format-Table LineNumber, Line
+Write-Host "=== PanelToggleBridge 应已移除 ==="
+Select-String -Path src\App.tsx -Pattern '<PanelToggleBridge />' | Format-Table LineNumber, Line
 ```
-
-⚠️ **注意**：保留 `<MailBadge />`、`<FriendsKeyListener />` 等 — 它们仍然能用。
 
 ---
 
@@ -105,66 +101,60 @@ pnpm dev
 
 打开 `http://localhost:5173/play` 登录进游戏。
 
-按 **K 键** → 邮件面板  
-按 **F 键** → 社交面板
+按 **J 键** → 像素风任务日志（540×600）
 
-或点 NewGameAppHUD 左下 ✉ / 👥 图标
+或点 NewGameAppHUD 左下 📋 任务图标。
 
 ---
 
 ## 测试清单
 
-### 邮件
 ```
-☐ 1. 按 K 打开 → 像素风邮件面板（480×560）
-☐ 2. 看到左 sidebar 列表 + 右详情
-☐ 3. 看到欢迎邮件（系统类）
-☐ 4. 自动选第一封 + 自动标记已读
-☐ 5. 切换邮件 → 详情更新
-☐ 6. 未读邮件有金色小圆点
-☐ 7. 类别 chip 颜色：系统(灰)/审核(金)/裁定(绿)/申诉(红)/CV(春)
-☐ 8. 时间相对：刚刚/N分前/N小时前/N天前
-☐ 9. 点 "删除" → 邮件消失
-☐ 10. ESC 关闭
-☐ 11. 点 NewGameAppHUD 左下 ✉ → 切换面板
-```
-
-### 好友
-```
-☐ 12. 按 F 打开 → 像素风社交面板（480×560）
-☐ 13. 看到 4 tab：好友 / 请求 / 关注 / 粉丝
-☐ 14. 默认在好友 tab
-☐ 15. 切到请求 tab → 看到 incoming + outgoing 分组
-☐ 16. 收到的请求：接受 / 拒绝 按钮
-☐ 17. 已发送：撤回 按钮
-☐ 18. 收到请求时 · 请求 tab 上有红色角标
-☐ 19. 点 "+ 加好友" → 搜索栏
-☐ 20. 输入用户名 + 🔍 → 找到用户
-☐ 21. 点 "加好友" → 发请求 + toast 提示 + 自动跳到请求 tab
-☐ 22. 切到关注 tab → 看到关注列表 + 取关按钮
-☐ 23. 切到粉丝 tab → 看到粉丝列表
-☐ 24. 各 tab 数字角标
-☐ 25. 自己用户名搜索 → "不能加自己为好友"
-☐ 26. ESC 关闭
-☐ 27. 点 NewGameAppHUD 左下 👥 → 切换面板
+☐ 1. J 键打开 → 像素风任务日志（540×600）
+☐ 2. 看到 4 tab：可接 / 进行中 / 审核中 / 已完成
+☐ 3. 默认在 "可接" tab · 看到 5 任务（百晓居）
+☐ 4. 点任务卡 → 展开详情（描述 + 质量评分 + 验收标准）
+☐ 5. 点 "接受" 按钮 → 任务移到 "进行中" tab
+☐ 6. 进行中 tab 看到任务 · 点 "提交作品"
+☐ 7. 提交表单：URL 输入 + x0.5/x1.0/x2.0 自评 + 评分细则
+☐ 8. 输入 https://example.com → 显示 "占位链接不能用于真实提交"
+☐ 9. 输入有效 https://github.com/xxx/yyy → 点 "确认提交"
+☐ 10. 任务移到 "审核中" tab
+☐ 11. 看到提交链接 + 自评 chip + "可撤回 N s" 倒计时（3 分钟内）
+☐ 12. 3 分钟内点 "撤回" → 任务回到 "进行中"（草稿保留）
+☐ 13. 等审核员投票 → 静态进度 N/3
+☐ 14. 完成后 → 任务移到 "已完成" tab + CV 入账金额显示
+☐ 15. ESC 关闭面板
+☐ 16. ESC 在提交表单里 → 先关表单 · 再按一次关面板
+☐ 17. 点 NewGameAppHUD 左下 📋 → 切换面板
+☐ 18. 点 NewGameAppHUD 左下 📜 公告 → 公告板（不冲突）
 ```
 
-### 兼容性
+### 兼容性检查
 ```
-☐ 旧 K 键 / F 键仍能用（emit 旧事件）
-☐ 旧 MailBox / FriendsPanel 文件保留
-☐ 其他 panel（QuestLog J / ChatPanel T / ProfilePanel P）仍能开
+☐ 旧 QuestLog 文件保留（src/components/QuestLog.tsx 还在 · Wave 2.6 删）
+☐ Chat（T）/ Mail（K）/ Friends（F）/ Profile（P）/ Announcement（点 5 图标 📜）仍能开
 ☐ 教程 / 节气 banner / 通知 toast 仍正常
 ☐ Phaser 多人在场仍正常
+☐ ReviewProcessor / AppealProcessor headless 组件仍正常监听
+☐ CV 入账时 cv-updated EventBus 触发 · NewGameAppHUD 左上 CVBar 实时刷新
 ```
+
+---
+
+## ⚠️ 已知限制（Wave 2.5.A.2 · 故意）
+
+- ⚠️ **撤回倒计时不实时**：状态变化时才刷新（旧版有 1s tick）· 影响小
+- ⚠️ **审核进度静态**：N/3 只显示 · 没有动画
+- ⚠️ **申诉无法操作**：appealing 状态显示但没有按钮（沿用旧版需进 ReviewPanel）
+- ⚠️ **CV 入账无动画**：直接显示金额（CVBar 会有金光动画）
 
 ---
 
 ## ⚠️ 紧急回滚
 
 ```powershell
-Copy-Item D:\projects\backup-cua\App.tsx.before-wave2-4 src\App.tsx
-pnpm dev
+Copy-Item D:\projects\backup-cua\App.tsx.before-wave2-5a2 src\App.tsx
 ```
 
 ---
@@ -173,15 +163,16 @@ pnpm dev
 
 ```powershell
 git add .
-git commit -m "Wave 2.4: NewMailBox + NewFriendsPanel pixel rewrite
+git commit -m "Wave 2.5.A.2: NewQuestLog 80% pixel rewrite
 
-- 4 new hooks (useMail/useFriends/useFollows/useOpenViaEventBus)
-- 4 new components (MailItem/NewMailBox/FriendItem/NewFriendsPanel)
-- NewMailBox: 480x560 list+detail layout, all 5 categories
-- NewFriendsPanel: 4 tabs (friends/requests/following/followers)
-- Add-friend username search with toast feedback
-- Independent unread badges per tab
-- Old MailBox/FriendsPanel files preserved (Wave 2.6 cleanup)"
+- Extracted QUESTS array to src/lib/questDefinitions.ts
+- New pixel quest log (540x600) with 4 status tabs
+- QuestCard component with foldable details
+- SubmissionForm: URL + self-rate + reviewer scheduling
+- Withdraw button (3min window) + cancelScheduledVotes
+- Real-time questStore subscription via useSyncExternalStore
+- Old QuestLog preserved (1052 lines, Wave 2.6 cleanup)
+- Removed PanelToggleBridge (NewQuestLog handles toggle-panel directly)"
 
 git push
 ```
@@ -190,8 +181,13 @@ git push
 
 ## 下一波
 
+Wave 2.5.A 系列基本完成（公告板 + QuestLog 80% 视觉）。
+
 回我**一个**：
 
-- **"完成 · 进 Wave 2.5"** = QuestLog + 公告板 + 议政 panel 重写（4-5h）
-- **"完成 · 暂停找用户测"** = 暂停一周左右
-- **"调整某处"** + 写出哪里
+- **"完成 · 进 Wave 2.5.A.3"** = 审核员投票流像素化（3-4h）
+- **"完成 · 进 Wave 2.5.B"** = 议政 3 panel（4-5h）
+- **"完成 · 进 Wave 2.5.C"** = 远见塔/功德堂/路线图（3-4h）
+- **"完成 · 进 Wave 2.6 收尾"** = 删旧组件 + 清理（2-3h）
+- **"完成 · 暂停找用户测"**
+- **"调整某处"** + 写出

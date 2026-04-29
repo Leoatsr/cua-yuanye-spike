@@ -84,6 +84,9 @@ import { NewGameAppHUD } from './pages/NewGameAppHUD';
 import { NewChatPanel } from './components/NewChatPanel';
 import { NewMailBox } from './components/NewMailBox';
 import { NewFriendsPanel } from './components/NewFriendsPanel';
+import { NewAnnouncementPanel } from './components/NewAnnouncementPanel';
+import { NewQuestLog } from './components/NewQuestLog';
+import { PanelToggleBridge } from './components/PanelToggleBridge';
 
 /** Fallback shown if the React UI subtree crashes. Phaser keeps running. */
 function CrashFallback({ error, resetError }: { error: unknown; resetError: () => void }) {
@@ -214,7 +217,7 @@ function MainGameApp() {
             <TitleList />
             <DialogueBox />
             <WorldMap />
-            <QuestLog />
+            <NewQuestLog />
             <NewMailBox />
             <MailBadge />
             <ReviewBadge />
@@ -232,6 +235,7 @@ function MainGameApp() {
             <ProfileLink />
             <OnlineRoster />
             <NewChatPanel />
+          <NewAnnouncementPanel />
             <ChatPanelKeyListener />
             <PlayerInteractPrompt />
             <PlayerInteractMenu />
