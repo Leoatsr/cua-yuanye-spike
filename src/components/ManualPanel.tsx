@@ -301,9 +301,9 @@ function TutorialBanner() {
 function QuickstartTab() {
   return (
     <div>
-      <Section title="🌱 欢迎来到源野物语">
+      <Section title="🌱 欢迎来到CUA 基地">
         <P>
-          源野物语是为 <Strong>WebAgentLab 开源社区</Strong> 构建的像素 MMO 雏形——
+          CUA 基地是为 <Strong>WebAgentLab 开源社区</Strong> 构建的像素 MMO 雏形——
           一个把"开源贡献"游戏化的实验。
         </P>
         <P>
@@ -430,7 +430,7 @@ function LevelsTab() {
     <div>
       <Section title="🎖️ 等级体系（基于 CV）">
         <P>
-          CV（Contribution Value，贡献价值）是源野物语的<Strong>核心货币</Strong>。
+          CV（Contribution Value，贡献价值）是CUA 基地的<Strong>核心货币</Strong>。
           完成任务、被审核通过即可获得 CV。
         </P>
       </Section>

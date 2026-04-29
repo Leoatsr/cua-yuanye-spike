@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CUA 基地 · 项目任务清单与优先级（v3 · 4 月底实际进度）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Serif+SC:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1814;
+    --ink-soft: #4a463e;
+    --ink-faint: #8a8576;
+    --ink-ghost: #c0bbae;
+    --paper: #f7f3ea;
+    --paper-warm: #efe9da;
+    --line: #e0d8c0;
+    --line-soft: #ebe3cf;
+    --accent: #7a3e1d;
+    --accent-warm: #c25e2a;
+    --green: #4a7044;
+    --gold: #b8893a;
+    --red: #a64634;
+    --blue: #3d5a78;
+
+    --font-display: 'Fraunces', 'Noto Serif SC', serif;
+    --font-body: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+    --font-han: 'Noto Serif SC', serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--font-body);
+    color: var(--ink);
+    background: var(--paper);
+    line-height: 1.7;
+    font-size: 15px;
+    background-image:
+      radial-gradient(circle at 0% 0%, rgba(184, 137, 58, 0.04), transparent 50%),
+      radial-gradient(circle at 100% 100%, rgba(122, 62, 29, 0.03), transparent 50%);
+    background-attachment: fixed;
+  }
+
+  /* ============================================================
+     Layout
+     ============================================================ */
+
+  .page {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 80px 56px 120px;
+    position: relative;
+  }
+
+  @media (max-width: 720px) {
+    .page { padding: 48px 24px 80px; }
+  }
+
+  /* ============================================================
+     Cover
+     ============================================================ */
+
+  .cover {
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 64px;
+    margin-bottom: 80px;
+    position: relative;
+  }
+
+  .cover-meta {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    margin-bottom: 32px;
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .cover-meta span::before {
+    content: '·';
+    margin-right: 12px;
+    color: var(--ink-ghost);
+  }
+  .cover-meta span:first-child::before { content: ''; margin: 0; }
+
+  h1.cover-title {
+    font-family: var(--font-han);
+    font-weight: 600;
+    font-size: clamp(36px, 5.5vw, 56px);
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    margin-bottom: 20px;
+    color: var(--ink);
+  }
+
+  .cover-title-en {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-style: italic;
+    font-size: clamp(20px, 2.4vw, 26px);
+    color: var(--accent);
+    margin-bottom: 32px;
+    letter-spacing: 0.01em;
+  }
+
+  .cover-subtitle {
+    font-size: 16px;
+    color: var(--ink-soft);
+    max-width: 640px;
+    line-height: 1.75;
+  }
+  .cover-subtitle strong {
+    font-weight: 600;
+    color: var(--ink);
+    background: linear-gradient(transparent 60%, rgba(184, 137, 58, 0.18) 60%);
+    padding: 0 2px;
+  }
+
+  .cover-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 32px;
+    margin-top: 48px;
+    padding-top: 32px;
+    border-top: 1px dashed var(--line);
+  }
+  .cover-stat-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .cover-stat-value {
+    font-family: var(--font-display);
+    font-size: 32px;
+    font-weight: 500;
+    color: var(--ink);
+    line-height: 1;
+  }
+  .cover-stat-value sup {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--ink-faint);
+    margin-left: 4px;
+  }
+
+  /* ============================================================
+     Section
+     ============================================================ */
+
+  section {
+    margin-top: 80px;
+    scroll-margin-top: 40px;
+  }
+
+  .section-num {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    font-weight: 500;
+  }
+
+  h2 {
+    font-family: var(--font-han);
+    font-weight: 600;
+    font-size: 30px;
+    line-height: 1.2;
+    color: var(--ink);
+    margin-bottom: 28px;
+    letter-spacing: -0.005em;
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 16px;
+  }
+
+  h3 {
+    font-family: var(--font-han);
+    font-weight: 600;
+    font-size: 20px;
+    color: var(--ink);
+    margin: 40px 0 18px;
+    letter-spacing: -0.005em;
+  }
+  h3.with-tag {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  h4 {
+    font-family: var(--font-han);
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--ink);
+    margin: 24px 0 12px;
+  }
+
+  p { margin-bottom: 14px; color: var(--ink-soft); }
+  p strong { color: var(--ink); font-weight: 600; }
+
+  /* ============================================================
+     Reading aids
+     ============================================================ */
+
+  .pull-quote {
+    font-family: var(--font-display);
+    font-size: 17px;
+    font-style: italic;
+    color: var(--ink-soft);
+    border-left: 2px solid var(--accent);
+    padding: 4px 0 4px 24px;
+    margin: 24px 0;
+    line-height: 1.6;
+  }
+
+  .callout {
+    background: var(--paper-warm);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 20px 24px;
+    margin: 20px 0;
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--ink-soft);
+  }
+  .callout-warn {
+    background: #fcf5e8;
+    border-left: 3px solid var(--gold);
+  }
+  .callout-info {
+    background: #eef2f6;
+    border-left: 3px solid var(--blue);
+  }
+  .callout-success {
+    background: #eef3eb;
+    border-left: 3px solid var(--green);
+  }
+
+  /* ============================================================
+     Tables
+     ============================================================ */
+
+  .table-wrap {
+    margin: 16px 0 32px;
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: #fcfaf3;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+
+  th, td {
+    text-align: left;
+    padding: 10px 14px;
+    vertical-align: top;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  tr:last-child td { border-bottom: none; }
+
+  th {
+    background: var(--paper-warm);
+    font-weight: 600;
+    color: var(--ink);
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border-bottom: 2px solid var(--line);
+    white-space: nowrap;
+  }
+
+  td { color: var(--ink-soft); line-height: 1.55; }
+  td strong { color: var(--ink); }
+
+  tr:hover td { background: rgba(184, 137, 58, 0.04); }
+
+  .col-id {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .col-id-new {
+    color: var(--accent-warm);
+    font-weight: 600;
+  }
+  .col-id-deprecated {
+    color: var(--ink-faint);
+    text-decoration: line-through;
+  }
+
+  /* ============================================================
+     Badges
+     ============================================================ */
+
+  .badge {
+    display: inline-block;
+    padding: 1px 8px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    border-radius: 3px;
+    letter-spacing: 0.05em;
+    line-height: 1.6;
+    white-space: nowrap;
+  }
+  .badge-p0 { background: #f5d8d3; color: #872d1c; }
+  .badge-p1 { background: #f5e3c8; color: #7a5419; }
+  .badge-p2 { background: #d8e6db; color: #2f5132; }
+  .badge-p3 { background: #d8dde6; color: #2f3e57; }
+
+  .badge-s { background: #ece5d3; color: #5e4f2a; }
+  .badge-m { background: #d3dcec; color: #2a4869; }
+  .badge-l { background: #ecd3e0; color: #69305a; }
+  .badge-xl { background: #e3d3ec; color: #4d2a69; }
+
+  .status {
+    display: inline-block;
+    padding: 1px 7px;
+    font-size: 11px;
+    font-weight: 500;
+    border-radius: 3px;
+    line-height: 1.6;
+    white-space: nowrap;
+  }
+  .status-done { background: rgba(74, 112, 68, 0.12); color: var(--green); }
+  .status-progress { background: rgba(184, 137, 58, 0.15); color: var(--gold); }
+  .status-todo { background: rgba(138, 133, 118, 0.12); color: var(--ink-faint); }
+  .status-deprecated { background: rgba(166, 70, 52, 0.1); color: var(--red); text-decoration: line-through; }
+
+  /* ============================================================
+     Replacement Map (Cards)
+     ============================================================ */
+
+  .replace-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+    margin: 24px 0;
+  }
+
+  .replace-card {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 20px;
+    padding: 16px 20px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: #fcfaf3;
+    transition: all 0.2s ease;
+  }
+  .replace-card:hover {
+    border-color: var(--accent);
+    transform: translateX(2px);
+  }
+
+  .replace-from {
+    font-family: var(--font-han);
+    color: var(--ink-faint);
+    text-decoration: line-through;
+    text-decoration-color: var(--red);
+    font-size: 14px;
+    text-align: right;
+  }
+
+  .replace-arrow {
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 16px;
+  }
+
+  .replace-to {
+    font-family: var(--font-han);
+    font-weight: 500;
+    color: var(--ink);
+    font-size: 14px;
+  }
+  .replace-note {
+    grid-column: 1 / -1;
+    font-size: 12px;
+    color: var(--ink-faint);
+    border-top: 1px dashed var(--line);
+    padding-top: 8px;
+    margin-top: 8px;
+    font-family: var(--font-mono);
+  }
+
+  @media (max-width: 720px) {
+    .replace-card {
+      grid-template-columns: 1fr;
+      text-align: left;
+    }
+    .replace-from { text-align: left; }
+  }
+
+  /* ============================================================
+     Phase indicator
+     ============================================================ */
+
+  .phase-track {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0;
+    margin: 32px 0 48px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    overflow: hidden;
+    background: #fcfaf3;
+  }
+  .phase-cell {
+    padding: 16px 14px;
+    border-right: 1px solid var(--line-soft);
+    position: relative;
+  }
+  .phase-cell:last-child { border-right: none; }
+  .phase-cell.done { background: rgba(74, 112, 68, 0.07); }
+  .phase-cell.progress { background: rgba(184, 137, 58, 0.08); }
+
+  .phase-num {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--ink-faint);
+    letter-spacing: 0.1em;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+  .phase-name {
+    font-family: var(--font-han);
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+  .phase-desc {
+    font-size: 11px;
+    color: var(--ink-faint);
+    line-height: 1.4;
+  }
+  .phase-progress {
+    margin-top: 8px;
+    font-size: 11px;
+    font-family: var(--font-mono);
+  }
+
+  @media (max-width: 720px) {
+    .phase-track {
+      grid-template-columns: 1fr;
+    }
+    .phase-cell { border-right: none; border-bottom: 1px solid var(--line-soft); }
+  }
+
+  /* ============================================================
+     Lists
+     ============================================================ */
+
+  ul, ol { margin: 12px 0 18px 24px; color: var(--ink-soft); }
+  li { margin-bottom: 6px; line-height: 1.7; }
+
+  /* ============================================================
+     Code & inline
+     ============================================================ */
+
+  code {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    background: var(--paper-warm);
+    padding: 1px 6px;
+    border-radius: 3px;
+    color: var(--accent);
+    border: 1px solid var(--line-soft);
+  }
+
+  pre {
+    background: var(--ink);
+    color: #f5f0e0;
+    padding: 16px 20px;
+    border-radius: 4px;
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    line-height: 1.6;
+    margin: 16px 0 24px;
+  }
+  pre code {
+    background: transparent;
+    border: none;
+    color: inherit;
+    padding: 0;
+  }
+
+  /* ============================================================
+     Nav (TOC)
+     ============================================================ */
+
+  nav.toc {
+    background: var(--paper-warm);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 24px 28px;
+    margin: 40px 0;
+    counter-reset: tocnum;
+  }
+  nav.toc h4 {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    margin: 0 0 16px;
+    font-weight: 500;
+  }
+  nav.toc ol {
+    list-style: none;
+    margin: 0;
+    counter-reset: tocnum;
+  }
+  nav.toc li {
+    counter-increment: tocnum;
+    margin-bottom: 4px;
+    padding-left: 32px;
+    position: relative;
+    font-size: 14px;
+  }
+  nav.toc li::before {
+    content: counter(tocnum, decimal-leading-zero);
+    position: absolute;
+    left: 0;
+    top: 0;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--ink-faint);
+    font-weight: 500;
+  }
+  nav.toc a {
+    color: var(--ink);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.15s;
+  }
+  nav.toc a:hover {
+    border-bottom-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* ============================================================
+     Footer
+     ============================================================ */
+
+  footer {
+    margin-top: 100px;
+    padding-top: 32px;
+    border-top: 1px solid var(--line);
+    font-size: 12px;
+    color: var(--ink-faint);
+    font-family: var(--font-mono);
+    line-height: 1.8;
+  }
+  footer p { color: var(--ink-faint); }
+
+  /* ============================================================
+     Print
+     ============================================================ */
+  @media print {
+    body { background: white; }
+    .page { padding: 40px 0; max-width: 100%; }
+    nav.toc { page-break-after: always; }
+    section { page-break-before: auto; }
+    h2 { page-break-after: avoid; }
+    table { page-break-inside: avoid; }
+  }
+
+  /* small accent: corner ornament */
+  .ornament {
+    position: absolute;
+    top: 80px;
+    right: 56px;
+    font-family: var(--font-display);
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    transform: rotate(-2deg);
+    font-style: italic;
+  }
+  @media (max-width: 720px) { .ornament { display: none; } }
+
+  /* sub-hr */
+  .rule {
+    border: none;
+    border-top: 1px solid var(--line);
+    margin: 32px 0;
+  }
+  .rule-dashed {
+    border-top: 1px dashed var(--line);
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- =========================================================
+       COVER
+       ========================================================= -->
+
+  <header class="cover">
+    <div class="ornament">v3 · 4 月底实际进度盘点</div>
+
+    <div class="cover-meta">
+      <span>WebAgentLab Open-Source Community</span>
+      <span>Project Plan</span>
+      <span>2026 · April 28</span>
+    </div>
+
+    <h1 class="cover-title">CUA 基地 · 项目任务清单与优先级</h1>
+    <div class="cover-title-en">CUA Base — Roadmap v3 · Real Progress Snapshot</div>
+
+    <p class="cover-subtitle">
+      视角：<strong>单人独立开发者</strong>，从 0 到上线的可执行路径。
+      v3 把 v2 中标注的进度全部按 4/28 实际状态更新——
+      <strong>过去 4 周完成的 30+ 个 Pack 全部反映到 status 字段</strong>。
+      项目实际进度比 v2 roadmap 快 1.5 个 Phase。
+    </p>
+
+    <div class="cover-stats">
+      <div>
+        <div class="cover-stat-label">任务总数</div>
+        <div class="cover-stat-value">95<sup>项</sup></div>
+      </div>
+      <div>
+        <div class="cover-stat-label">已完成</div>
+        <div class="cover-stat-value">62<sup>项 · 65%</sup></div>
+      </div>
+      <div>
+        <div class="cover-stat-label">当前阶段</div>
+        <div class="cover-stat-value">P3.0<sup>多人在场已完成</sup></div>
+      </div>
+      <div>
+        <div class="cover-stat-label">live</div>
+        <div class="cover-stat-value">cua-base<sup>.vercel.app</sup></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- =========================================================
+       TOC
+       ========================================================= -->
+
+  <nav class="toc">
+    <h4>Contents</h4>
+    <ol>
+      <li><a href="#sec-conventions">阅读约定</a></li>
+      <li><a href="#sec-replace">飞书 → GitHub 替换映射</a></li>
+      <li><a href="#sec-phases">各 Phase 验收标准</a></li>
+      <li><a href="#sec-tasks">完整任务清单</a></li>
+      <li><a href="#sec-paths">关键路径</a></li>
+      <li><a href="#sec-schedule">实际开发节奏</a></li>
+      <li><a href="#sec-risks">风险任务</a></li>
+      <li><a href="#sec-rationale">替换决策依据</a></li>
+      <li><a href="#sec-current">4 月底实际完成状态</a></li>
+      <li><a href="#sec-closing">写在最后</a></li>
+    </ol>
+  </nav>
+
+  <!-- =========================================================
+       SECTION 1 - CONVENTIONS
+       ========================================================= -->
+
+  <section id="sec-conventions">
+    <div class="section-num">§ 01</div>
+    <h2>阅读约定</h2>
+
+    <h3>优先级 — Priority</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>标记</th><th>含义</th><th>决策依据</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge badge-p0">P0</span></td><td>MVP 必备</td><td>没它跑不起来</td></tr>
+          <tr><td><span class="badge badge-p1">P1</span></td><td>核心体验</td><td>没它体验残缺</td></tr>
+          <tr><td><span class="badge badge-p2">P2</span></td><td>锦上添花</td><td>留存与情感加成</td></tr>
+          <tr><td><span class="badge badge-p3">P3</span></td><td>长期主义</td><td>后期再做</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>工作量 — Effort</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>标记</th><th>含义</th><th>跨度</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge badge-s">S</span></td><td>Small</td><td>1–3 天</td></tr>
+          <tr><td><span class="badge badge-m">M</span></td><td>Medium</td><td>1 周（5 工作日）</td></tr>
+          <tr><td><span class="badge badge-l">L</span></td><td>Large</td><td>2–3 周</td></tr>
+          <tr><td><span class="badge badge-xl">XL</span></td><td>Extra Large</td><td>1+ 月</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>状态 — Status</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>标记</th><th>含义</th></tr></thead>
+        <tbody>
+          <tr><td><span class="status status-done">✓ 已完成</span></td><td>已交付，已部署或已合并</td></tr>
+          <tr><td><span class="status status-progress">⋯ 进行中</span></td><td>部分实现 / 未完整跑通</td></tr>
+          <tr><td><span class="status status-todo">— 未开始</span></td><td>未启动</td></tr>
+          <tr><td><span class="status status-deprecated">废弃</span></td><td>原飞书路径，已替换</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       SECTION 2 - REPLACEMENT MAP
+       ========================================================= -->
+
+  <section id="sec-replace">
+    <div class="section-num">§ 02</div>
+    <h2>飞书 → GitHub 替换映射</h2>
+
+    <p>
+      原方案中飞书承担多个角色：身份认证、任务派发、文档存储、通知中心、CV 公示。
+      重构后由 <strong>GitHub + Supabase + Discord</strong> 三件套替代——前者承担技术身份与任务，后者承担实时通知。
+    </p>
+
+    <div class="replace-grid">
+
+      <div class="replace-card">
+        <div class="replace-from">飞书 OAuth 登录</div>
+        <div class="replace-arrow">→</div>
+        <div class="replace-to">GitHub OAuth via Supabase Auth</div>
+        <div class="replace-note">已完成 · 通过 Supabase implicit flow + window.__supabase</div>
+      </div>
+
+      <div class="replace-card">
+        <div class="replace-from">飞书企业内组织架构</div>
+        <div class="replace-arrow">→</div>
+        <div class="replace-to">GitHub username + 头像（公开身份）</div>
+        <div class="replace-note">公开身份替代企业内身份，损失"我是 WebAgentLab 成员"的强绑定</div>
+      </div>
+
+      <div class="replace-card">
+        <div class="replace-from">飞书多维表格当数据库</div>
+        <div class="replace-arrow">→</div>
+        <div class="replace-to">Supabase (PostgreSQL) · 4 张表</div>
+        <div class="replace-note">cv_entries / mail / quest_states / review_tasks 全部完成</div>
+      </div>
+
+      <div class="replace-card">
+        <div class="replace-from">飞书任务表双向同步</div>
+        <div class="replace-arrow">→</div>
+        <div class="replace-to">GitHub Issues 双向同步</div>
+        <div class="replace-note">issue label = workshop · 玩家提交 = comment · 关闭 = 完成</div>
+      </div>
+
+      <div class="replace-card">
+        <div class="replace-from">飞书 IM 机器人通知</div>
+        <div class="replace-arrow">→</div>
+        <div class="replace-to">GitHub Notifications + Discord Webhook</div>
+        <div class="replace-note">Discord 群当 IM 通知中心 · 微信群双通道补救大陆访问</div>
+      </div>
+
+      <div class="replace-card">
+        <div class="replace-from">飞书企业内文档</div>
+        <div class="replace-arrow">→</div>
+        <div class="replace-to">GitHub Markdown + GitHub Pages</div>
+        <div class="replace-note">章程 / 规范 / 工作组介绍 全部以 markdown 形式 PR 维护</div>
+      </div>
+
+      <div class="replace-card">
+        <div class="replace-from">飞书共享 CV 公示</div>
+        <div class="replace-arrow">→</div>
+        <div class="replace-to">GitHub Profile + 自建排行榜页</div>
+        <div class="replace-note">Vercel 公开页拉 Supabase 数据 · 玩家可分享自己的 CV URL</div>
+      </div>
+
+      <div class="replace-card">
+        <div class="replace-from">飞书工单（反馈通道）</div>
+        <div class="replace-arrow">→</div>
+        <div class="replace-to">GitHub Issue Template</div>
+        <div class="replace-note">游戏内反馈按钮 → POST 到 cua-base repo</div>
+      </div>
+
+      <div class="replace-card">
+        <div class="replace-from">飞书贡献记录写回</div>
+        <div class="replace-arrow">→</div>
+        <div class="replace-to">GitHub contributor.md PR</div>
+        <div class="replace-note">CV 通过后系统自动 PR 到 WebAgentLab 组织 repo 的 contributor 表</div>
+      </div>
+
+      <div class="replace-card">
+        <div class="replace-from">飞书会议 / 大会</div>
+        <div class="replace-arrow">→</div>
+        <div class="replace-to">GitHub Discussions + 游戏内大集会</div>
+        <div class="replace-note">Discussions 作提案讨论 · 游戏内大集会广场作仪式现场</div>
+      </div>
+
+    </div>
+
+    <div class="callout callout-info">
+      <strong>双轨思路</strong>：以上替换不是非此即彼。如果飞书企业版未来可用，
+      GitHub 路径作为更开放、更社区化的版本可与飞书并行——两条数据流、两种受众。
+    </div>
+  </section>
+
+  <!-- =========================================================
+       SECTION 3 - PHASES
+       ========================================================= -->
+
+  <section id="sec-phases">
+    <div class="section-num">§ 03</div>
+    <h2>各 Phase 验收标准</h2>
+
+    <div class="phase-track">
+      <div class="phase-cell done">
+        <div class="phase-num">Phase 1</div>
+        <div class="phase-name">单镇可跑</div>
+        <div class="phase-desc">像素体验 + 治理叙事可共存</div>
+        <div class="phase-progress" style="color: var(--green);">✓ 已完成</div>
+      </div>
+      <div class="phase-cell done">
+        <div class="phase-num">Phase 2</div>
+        <div class="phase-name">闭环跑通</div>
+        <div class="phase-desc">AI 模拟版完整闭环</div>
+        <div class="phase-progress" style="color: var(--green);">✓ 已完成</div>
+      </div>
+      <div class="phase-cell progress">
+        <div class="phase-num">Phase 2.5</div>
+        <div class="phase-name">真任务源</div>
+        <div class="phase-desc">接入真实 GitHub Issues</div>
+        <div class="phase-progress" style="color: var(--gold);">⋯ 关键阶段</div>
+      </div>
+      <div class="phase-cell">
+        <div class="phase-num">Phase 3</div>
+        <div class="phase-name">多人在场</div>
+        <div class="phase-desc">10+ 玩家同屏 + 8 工坊</div>
+        <div class="phase-progress" style="color: var(--ink-faint);">— 未开始</div>
+      </div>
+      <div class="phase-cell">
+        <div class="phase-num">Phase 4</div>
+        <div class="phase-name">治理上线</div>
+        <div class="phase-desc">真实年度大会</div>
+        <div class="phase-progress" style="color: var(--ink-faint);">— 长期目标</div>
+      </div>
+    </div>
+
+    <h3 class="with-tag">Phase 1 · 单镇可跑 <span class="status status-done">✓ 已完成</span></h3>
+    <p>
+      新人 30 分钟内完成：<strong>GitHub 登录</strong> → 进入萌芽镇 → 与阿降对话 → 接到第一个新手任务 → 完成至少 2 个新手任务。
+      单人模式、不接外部、地图仅萌芽镇。
+    </p>
+
+    <h3 class="with-tag">Phase 2 · 闭环跑通（AI 模拟版）<span class="status status-done">✓ 已完成</span></h3>
+    <p>
+      任意贡献者能跑完：进入百晓居 → 接任务 → 完成（外部链接） → 回游戏提交 →
+      <strong>3 位 AI 审核员（周明 / 严之 / 白徽）投票</strong> → 收邮件 → CV 入账 →
+      <strong>数据写入 Supabase</strong>。
+    </p>
+    <div class="callout callout-warn">
+      <strong>说明：</strong>当前是<strong>模拟闭环</strong>——审核员是 AI、任务是预定义。
+      真闭环需要 Phase 2.5（GitHub Issues 集成 + 真审核员）。
+    </div>
+
+    <h3 class="with-tag">Phase 2.5 · 真任务源 <span class="status status-todo">— 未开始</span></h3>
+    <p>
+      任务列表从 <strong>GitHub Issues 实时拉取</strong>，提交时附带 PR/Issue 链接，
+      验收时关联到真实贡献。<strong>至少 1 个 WebAgentLab 真实 repo 的 issue 能在游戏内被接收/提交</strong>。
+    </p>
+    <p class="pull-quote">这是从"AI 模拟"切到"真任务"的核心。当前优先级最高。</p>
+
+    <h3 class="with-tag">Phase 3 · 多人在场 <span class="status status-done">✓ 已完成（轻量版）</span></h3>
+    <p>
+      <strong>Supabase Realtime</strong> 替代 Colyseus，14 个 scene 全部接入实时同步。
+      实现：玩家位置同步 / 实时聊天（世界 + 私聊）/ 好友 / 关注 / 在线状态 / 表情 / E 键互动。
+      多人系统已在 cua-base.vercel.app 跑通。
+    </p>
+    <div class="callout callout-warn">
+      <strong>说明：</strong>当前是<strong>轻量版多人</strong>（无 Colyseus 房间制 + 无反作弊）。
+      压测 + 防作弊留给真用户量上来后再做。
+    </div>
+
+    <h3 class="with-tag">Phase 4 · 治理上线 <span class="status status-progress">⋯ 进行中</span></h3>
+    <p>
+      <strong>已完成</strong>：议政高地外景 + 三建筑（开元楼/明镜阁/远见塔）+ 提案投票系统 + 申诉流程。
+      <strong>待完成</strong>：基于 GitHub Discussions 的真治理流程 / 章程 markdown 渲染。
+    </p>
+  </section>
+
+  <!-- =========================================================
+       SECTION 4 - TASKS
+       ========================================================= -->
+
+  <section id="sec-tasks">
+    <div class="section-num">§ 04</div>
+    <h2>完整任务清单</h2>
+
+    <h3>A · 基础架构 — Infrastructure</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>ID</th><th>任务</th><th>P</th><th>工作量</th><th>Phase</th><th>状态</th><th>备注</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="col-id">A1</td><td>技术栈选型与项目脚手架</td><td><span class="badge badge-p0">P0</span></td><td><span class="badge badge-m">M</span></td><td>1</td><td><span class="status status-done">✓</span></td><td>Vite 8 + React 19 + TS + Phaser + Tailwind</td></tr>
+          <tr><td class="col-id col-id-deprecated">A2</td><td><s>飞书开放平台应用注册</s></td><td>—</td><td>—</td><td>—</td><td><span class="status status-deprecated">废弃</span></td><td>替换为 A2-new</td></tr>
+          <tr><td class="col-id col-id-new">A2-new</td><td><strong>GitHub OAuth App 注册（Supabase）</strong></td><td><span class="badge badge-p0">P0</span></td><td><span class="badge badge-s">S</span></td><td>1</td><td><span class="status status-done">✓</span></td><td>Supabase + GitHub OAuth 已跑通</td></tr>
+          <tr><td class="col-id">A3</td><td>数据库 schema 设计与迁移</td><td><span class="badge badge-p0">P0</span></td><td><span class="badge badge-m">M</span></td><td>1</td><td><span class="status status-done">✓</span></td><td>Supabase 4 张表完成</td></tr>
+          <tr><td class="col-id">A4</td><td>Colyseus 实时服务搭建</td><td><span class="badge badge-p1">P1</span></td><td><span class="badge badge-l">L</span></td><td>3</td><td><span class="status status-todo">—</span></td><td>Phase 3 才需要</td></tr>
+          <tr><td class="col-id">A5</td><td>环境变量与密钥管理</td><td><span class="badge badge-p0">P0</span></td><td><span class="badge badge-s">S</span></td><td>1</td><td><span class="status status-done">✓</span></td><td>.env.local + Vercel env vars</td></tr>
+          <tr><td class="col-id">A6</td><td>CI/CD 流水线</td><td><span class="badge badge-p1">P1</span></td><td><span class="badge badge-s">S</span></td><td>1</td><td><span class="status status-done">✓</span></td><td>Vercel 自动部署</td></tr>
+          <tr><td class="col-id">A7</td><td>错误监控与日志</td><td><span class="badge badge-p2">P2</span></td><td><span class="badge badge-s">S</span></td><td>2</td><td><span class="status status-done">✓</span></td><td>Sentry 已接入</td>
+          </tr>
+          <tr><td class="col-id">A8</td><td>中国大陆访问策略</td><td><span class="badge badge-p1">P1</span></td><td><span class="badge badge-m">M</span></td><td>3</td><td><span class="status status-todo">—</span></td><td>ICP 备案 / EdgeOne / 微信小程序</td></tr>
+          <tr><td class="col-id col-id-new">A9-new</td><td><strong>GitHub App 注册（Issues 集成）</strong></td><td><span class="badge badge-p1">P1</span></td><td><span class="badge badge-s">S</span></td><td>2.5</td><td><span class="status status-todo">—</span></td><td>权限更细，可读 issue/PR</td></tr>
+          <tr><td class="col-id col-id-new">A10-new</td><td><strong>Discord 服务器 + Webhook</strong></td><td><span class="badge badge-p1">P1</span></td><td><span class="badge badge-s">S</span></td><td>2</td><td><span class="status status-todo">—</span></td><td>替代飞书 IM 通知</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>B · 游戏引擎 — Engine</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>任务</th><th>P</th><th>工作量</th><th>Phase</th><th>状态</th></tr></thead>
+        <tbody>
+          <tr><td class="col-id">B1</td><td>Phaser 与 React 集成</td><td><span class="badge badge-p0">P0</span></td><td><span class="badge badge-m">M</span></td><td>1</td><td><span class="status status-done">✓</span></td></tr>
+          <tr><td class="col-id">B2</td><td>像素素材采购或定制</td><td><span class="badge badge-p0">P0</span></td><td><span class="badge badge-s">S</span></td><td>1</td><td><span class="status status-done">✓</span></td></tr>
+          <tr><td class="col-id">B3</td><td>角色 4 方向移动与动画</td><td><span class="badge badge-p0">P0</span></td><td><span class="badge badge-m">M</span></td><td>1</td><td><span class="status status-done">✓</span></td></tr>
+          <tr><td class="col-id">B4</td><td>地图加载系统</td><td><span class="badge badge-p0">P0</span></td><td><span class="badge badge-m">M</span></td><td>1</td><td><span class="status status-done">✓</span></td></tr>
+          <tr><td class="col-id">B5</td><td>碰撞与触发器</td><td><span class="badge badge-p0">P0</span></td><td><span class="badge badge-s">S</span></td><td>1</td><td><span class="status status-done">✓</span></td></tr>
+          <tr><td class="col-id">B6</td><td>摄像机跟随</td><td><span class="badge badge-p0">P0</span></td><td><span class="badge badge-s">S</span></td><td>1</td><td><span class="status status-done">✓</span></td></tr>
+          <tr><td class="col-id">B7</td><td>场景切换与过渡</td><td><span class="badge badge-p1">P1</span></td><td><span class="badge badge-s">S</span></td><td>2</td><td><span class="status status-done">✓</span></td></tr>
+          <tr><td class="col-id">B8</td><td>性能优化（视野裁剪、对象池）</td><td><span class="badge badge-p2">P2</span></td><td><span class="badge badge-m">M</span></td><td>3</td><td><span class="status status-todo">—</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>C · 世界与地图 — World</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>任务</th><th>P</th><th>工作量</th><th>Phase</th><th>状态</th></tr></thead>
+        <tbody>
+          <tr><td class="col-id">C1</td><td>萌芽镇外景地图设计</td><td><span class="badge badge-p0">P0</span></td><td><span class="badge badge-l">L</span></td><td>1</td><td><span class="status status-done">✓</span></td></tr>
+          <tr><td class="col-id">C2</td><td>萌芽镇室内地图（典籍阁/铁匠铺/阿降小屋）</td><td><span class="badge badge-p1">P1</span></td><td><span class="badge badge-m">M</span></td><td>1</td><td><span class="status status-done">✓</span></td></tr>
+          <tr><td class="col-id">C3</td><td>共创之都外景（中央喷泉广场 + 9 工坊外观）</td><td><span class="badge badge-p1">P1</span></td><td><span class="badge badge-l">L</span></td><td>2</td><td><span class="status status-done">✓</span></td></tr>
+          <tr><td class="col-id">C4</td><td>百晓居室内（首个工坊样板）</td><td><span class="badge badge-p1">P1</span></td><td><span class="badge badge-m">M</span></td><td>2</td><td><span class="status status-done">✓</span></td></tr>
+          <tr><td class="col-id">C5</td><td>共创之都剩余 8 个工坊室内</td><td><span class="badge badge-p1">P1</span></td><td><span class="badge badge-l">L</span></td><td>3</td><td><span class="status status-done">✓</span></td></tr>
+          <tr><td class="col-id">C6</td><td>议政高地（外景 + 三建筑室内）</td><td><span class="badge badge-p2">P2</span></td><td><span class="badge badge-l">L</span></td><td>4</td><td><span class="status status-done">✓</span></td></tr>
+          <tr><td class="col-id">C7</td><td>大集会广场</td><td><span class="badge badge-p2">P2</span></td><td><span class="badge badge-m">M</span></td><td>4</td><td><span class="status status-done">✓</span></td></tr>
+          <tr><td class="col-id">C8</td><td>大陆切换与传送系统</td><td><span class="badge badge-p1">P1</span></td><td><span class="badge badge-s">S</span></td><td>2</td><td><span class="status status-done">✓</span></td></tr>
+          <tr><td class="col-id">C9</td><td>小地图与世界地图 UI</td><td><span class="badge badge-p1">P1</span></td><td><span class="badge badge-m">M</span></td><td>2</td><td><span class="status status-done">✓</span></td></tr>
+          <tr><td class="col-id">C10</td><td>自家小屋（玩家专属空间）</td><td><span class="badge badge-p3">P3</span></td><td><span class="badge badge-m">M</span></td><td>4</td><td><span class="status status-done">✓</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>D · NPC 与任务 — NPC &amp; Quest</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>任务</th><th>P</th><th>工作量</th><th>Phase</th><th>状态</th><th>备注</th></tr></thead>
+        <tbody>
+          <tr><td class="col-id">D1</td><td>NPC 系统框架</td><td><span class="badge badge-p0">P0</span></td><td><span class="badge badge-m">M</span></td><td>1</td><td><span class="status status-done">✓</span></td><td>自家小屋完工</td>
+          </tr>
+          <tr><td class="col-id">D2</td><td>对话系统</td><td><span class="badge badge-p0">P0</span></td><td><span class="badge badge-m">M</span></td><td>1</td><td><span class="status status-done">✓</span></td><td></td></tr>
+          <tr><td class="col-id">D3</td><td>任务卡片 UI</td><td><span class="badge badge-p0">P0</span></td><td><span class="badge badge-s">S</span></td><td>1</td><td><span class="status status-done">✓</span></td><td></td></tr>
+          <tr><td class="col-id">D4</td><td>任务接受与日志面板（J 键）</td><td><span class="badge badge-p0">P0</span></td><td><span class="badge badge-s">S</span></td><td>1</td><td><span class="status status-done">✓</span></td><td></td></tr>
+          <tr><td class="col-id">D5</td><td>任务提交流程（含确认弹窗 + 撤回）</td><td><span class="badge badge-p0">P0</span></td><td><span class="badge badge-m">M</span></td><td>2</td><td><span class="status status-done">✓</span></td><td></td></tr>
+          <tr><td class="col-id col-id-deprecated">D6</td><td><s>飞书任务表双向同步</s></td><td>—</td><td>—</td><td>—</td><td><span class="status status-deprecated">废弃</span></td><td></td></tr>
+          <tr><td class="col-id col-id-new">D6-new</td><td><strong>GitHub Issues 双向同步</strong></td><td><span class="badge badge-p1">P1</span></td><td><span class="badge badge-l">L</span></td><td>2.5</td><td><span class="status status-todo">—</span></td><td>label = workshop · 玩家提交 = comment + close</td></tr>
+          <tr><td class="col-id">D7</td><td>静态新手任务（5 个百晓居任务）</td><td><span class="badge badge-p0">P0</span></td><td><span class="badge badge-m">M</span></td><td>1</td><td><span class="status status-done">✓</span></td><td></td></tr>
+          <tr><td class="col-id">D8</td><td>任务状态机</td><td><span class="badge badge-p1">P1</span></td><td><span class="badge badge-m">M</span></td><td>2</td><td><span class="status status-done">✓</span></td><td></td></tr>
+          <tr><td class="col-id">D9</td><td>任务历史与统计页</td><td><span class="badge badge-p2">P2</span></td><td><span class="badge badge-s">S</span></td><td>3</td><td><span class="status status-done">✓</span></td><td>D9-A/B/C 任务历史</td>
+          </tr>
+          <tr><td class="col-id">D10</td><td>任务推送与提醒</td><td><span class="badge badge-p2">P2</span></td><td><span class="badge badge-s">S</span></td><td>3</td><td><span class="status status-done">✓</span></td><td>通知系统完工 (D10)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>E · 监察审核 — Review</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>任务</th><th>P</th><th>工作量</th><th>Phase</th><th>状态</th><th>备注</th></tr></thead>
+        <tbody>
+          <tr><td class="col-id">E1</td><td>审核员抽取算法</td><td><span class="badge badge-p1">P1</span></td><td><span class="badge badge-m">M</span></td><td>2</td><td><span class="status status-progress">⋯</span></td><td>当前是 AI 模拟，未来需切真人</td></tr>
+          <tr><td class="col-id">E2</td><td>邮件系统（后端）</td><td><span class="badge badge-p1">P1</span></td><td><span class="badge badge-m">M</span></td><td>2</td><td><span class="status status-done">✓</span></td><td>Supabase mail 表</td></tr>
+          <tr><td class="col-id">E3</td><td>邮件 UI（K 键）</td><td><span class="badge badge-p1">P1</span></td><td><span class="badge badge-m">M</span></td><td>2</td><td><span class="status status-done">✓</span></td><td></td></tr>
+          <tr><td class="col-id">E4</td><td>审核投票界面</td><td><span class="badge badge-p1">P1</span></td><td><span class="badge badge-m">M</span></td><td>2</td><td><span class="status status-done">✓</span></td><td>反向审核 5 虚拟提交</td></tr>
+          <tr><td class="col-id">E5</td><td>CV 入账逻辑</td><td><span class="badge badge-p1">P1</span></td><td><span class="badge badge-s">S</span></td><td>2</td><td><span class="status status-done">✓</span></td><td></td></tr>
+          <tr><td class="col-id col-id-deprecated">E6</td><td><s>飞书贡献记录写回</s></td><td>—</td><td>—</td><td>—</td><td><span class="status status-deprecated">废弃</span></td><td></td></tr>
+          <tr><td class="col-id col-id-new">E6-new</td><td><strong>GitHub contributor.md PR 写回</strong></td><td><span class="badge badge-p2">P2</span></td><td><span class="badge badge-m">M</span></td><td>2.5</td><td><span class="status status-todo">—</span></td><td>CV 通过后自动 PR 到 WebAgentLab repo</td></tr>
+          <tr><td class="col-id">E7</td><td>审核者激励（5–10 CP/次）</td><td><span class="badge badge-p2">P2</span></td><td><span class="badge badge-s">S</span></td><td>3</td><td><span class="status status-done">✓</span></td><td></td></tr>
+          <tr><td class="col-id">E8</td><td>申诉流程（明镜阁）</td><td><span class="badge badge-p2">P2</span></td><td><span class="badge badge-m">M</span></td><td>4</td><td><span class="status status-done">✓</span></td><td>C-9 已做</td></tr>
+          <tr><td class="col-id col-id-new">E9-new</td><td><strong>真人审核员调度（接 Discord）</strong></td><td><span class="badge badge-p1">P1</span></td><td><span class="badge badge-l">L</span></td><td>3</td><td><span class="status status-todo">—</span></td><td>从 AI 模拟切到真人</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>F · 用户系统 — User</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>任务</th><th>P</th><th>工作量</th><th>Phase</th><th>状态</th><th>备注</th></tr></thead>
+        <tbody>
+          <tr><td class="col-id col-id-deprecated">F1</td><td><s>飞书 OAuth 登录</s></td><td>—</td><td>—</td><td>—</td><td><span class="status status-deprecated">废弃</span></td><td></td></tr>
+          <tr><td class="col-id col-id-new">F1-new</td><td><strong>GitHub OAuth 登录（Supabase）</strong></td><td><span class="badge badge-p0">P0</span></td><td><span class="badge badge-m">M</span></td><td>1</td><td><span class="status status-done">✓</span></td><td></td></tr>
+          <tr><td class="col-id">F2</td><td>捏脸系统（简化版 4×4×4）</td><td><span class="badge badge-p0">P0</span></td><td><span class="badge badge-m">M</span></td><td>1</td><td><span class="status status-done">✓</span></td><td>F6.0 4×4×4 完工</td>
+          </tr>
+          <tr><td class="col-id">F3</td><td>个人信息表单</td><td><span class="badge badge-p0">P0</span></td><td><span class="badge badge-s">S</span></td><td>1</td><td><span class="status status-done">✓</span></td><td>GitHub 自动带入完工</td>
+          </tr>
+          <tr><td class="col-id">F4</td><td>玩家资料面板（P 键）</td><td><span class="badge badge-p1">P1</span></td><td><span class="badge badge-m">M</span></td><td>3</td><td><span class="status status-done">✓</span></td><td>P 键资料面板</td>
+          </tr>
+          <tr><td class="col-id">F5</td><td>等级与权限计算</td><td><span class="badge badge-p1">P1</span></td><td><span class="badge badge-m">M</span></td><td>2</td><td><span class="status status-done">✓</span></td><td>F5.0-F5.2 等级系统 L0-L4</td>
+          </tr>
+          <tr><td class="col-id">F6</td><td>区域访问权限检查</td><td><span class="badge badge-p1">P1</span></td><td><span class="badge badge-s">S</span></td><td>3</td><td><span class="status status-todo">—</span></td><td></td></tr>
+          <tr><td class="col-id">F7</td><td>捏脸进阶版</td><td><span class="badge badge-p2">P2</span></td><td><span class="badge badge-m">M</span></td><td>4</td><td><span class="status status-todo">—</span></td><td></td></tr>
+          <tr><td class="col-id">F8</td><td>个人主页（公开页）</td><td><span class="badge badge-p2">P2</span></td><td><span class="badge badge-m">M</span></td><td>4</td><td><span class="status status-done">✓</span></td><td>/u/{username} 公开页完工</td>
+          </tr>
+          <tr><td class="col-id col-id-new">F9-new</td><td><strong>GitHub Profile 数据自动拉取</strong></td><td><span class="badge badge-p2">P2</span></td><td><span class="badge badge-s">S</span></td><td>2.5</td><td><span class="status status-todo">—</span></td><td>bio / repos / followers</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>G · 多人系统 — MMO</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>任务</th><th>P</th><th>工作量</th><th>Phase</th><th>状态</th><th>备注</th></tr></thead>
+        <tbody>
+          <tr><td class="col-id">G1</td><td>Colyseus 房间制设计</td><td><span class="badge badge-p1">P1</span></td><td><span class="badge badge-l">L</span></td><td>3</td><td><span class="status status-done">✓</span></td><td>G1.0 + 14 scene 接入</td>
+          </tr>
+          <tr><td class="col-id">G2</td><td>玩家位置实时同步</td><td><span class="badge badge-p1">P1</span></td><td><span class="badge badge-m">M</span></td><td>3</td><td><span class="status status-done">✓</span></td><td>位置/scene 实时同步</td>
+          </tr>
+          <tr><td class="col-id">G3</td><td>实时聊天（世界 + 工坊 + 私聊）</td><td><span class="badge badge-p1">P1</span></td><td><span class="badge badge-m">M</span></td><td>3</td><td><span class="status status-done">✓</span></td><td>G2-A/B/C/D 完整聊天</td>
+          </tr>
+          <tr><td class="col-id">G4</td><td>玩家相遇 E 键互动</td><td><span class="badge badge-p1">P1</span></td><td><span class="badge badge-s">S</span></td><td>3</td><td><span class="status status-done">✓</span></td><td>G3 E 键玩家互动</td>
+          </tr>
+          <tr><td class="col-id">G5</td><td>在线列表与好友</td><td><span class="badge badge-p2">P2</span></td><td><span class="badge badge-m">M</span></td><td>4</td><td><span class="status status-done">✓</span></td><td>G5-A 好友 + G5-B 跨场景在线</td>
+          </tr>
+          <tr><td class="col-id">G6</td><td>8 个表情快捷键</td><td><span class="badge badge-p2">P2</span></td><td><span class="badge badge-s">S</span></td><td>4</td><td><span class="status status-done">✓</span></td><td>G6 8 古风表情快捷键</td>
+          </tr>
+          <tr><td class="col-id">G7</td><td>关注与送礼</td><td><span class="badge badge-p3">P3</span></td><td><span class="badge badge-m">M</span></td><td>4</td><td><span class="status status-todo">—</span></td><td></td></tr>
+          <tr><td class="col-id">G8</td><td>反作弊（移动速度上限等）</td><td><span class="badge badge-p2">P2</span></td><td><span class="badge badge-s">S</span></td><td>3</td><td><span class="status status-todo">—</span></td><td></td></tr>
+          <tr><td class="col-id col-id-new">G9-new</td><td><strong>Supabase Realtime 替代 Colyseus（轻量版）</strong></td><td><span class="badge badge-p2">P2</span></td><td><span class="badge badge-l">L</span></td><td>3</td><td><span class="status status-todo">—</span></td><td>仅"看到别人在线"，部署成本低</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>H · UI / UX / 音效</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>任务</th><th>P</th><th>工作量</th><th>Phase</th><th>状态</th></tr></thead>
+        <tbody>
+          <tr><td class="col-id">H1</td><td>HUD 主框架</td><td><span class="badge badge-p0">P0</span></td><td><span class="badge badge-m">M</span></td><td>1</td><td><span class="status status-done">✓</span></td></tr>
+          <tr><td class="col-id">H2</td><td>Loading 与登录页</td><td><span class="badge badge-p0">P0</span></td><td><span class="badge badge-s">S</span></td><td>1</td><td><span class="status status-done">✓</span></td></tr>
+          <tr><td class="col-id">H3</td><td>设置面板</td><td><span class="badge badge-p1">P1</span></td><td><span class="badge badge-s">S</span></td><td>2</td><td><span class="status status-progress">⋯</span></td></tr>
+          <tr><td class="col-id">H4</td><td>移动端触屏适配</td><td><span class="badge badge-p2">P2</span></td><td><span class="badge badge-m">M</span></td><td>3</td><td><span class="status status-todo">—</span></td></tr>
+          <tr><td class="col-id">H5</td><td>BGM（4 个区域）</td><td><span class="badge badge-p2">P2</span></td><td><span class="badge badge-s">S</span></td><td>3</td><td><span class="status status-progress">⋯</span></td></tr>
+          <tr><td class="col-id">H6</td><td>关键音效</td><td><span class="badge badge-p2">P2</span></td><td><span class="badge badge-s">S</span></td><td>2</td><td><span class="status status-todo">—</span></td></tr>
+          <tr><td class="col-id">H7</td><td>关键 NPC 配音</td><td><span class="badge badge-p3">P3</span></td><td><span class="badge badge-m">M</span></td><td>4</td><td><span class="status status-todo">—</span></td></tr>
+          <tr><td class="col-id">H8</td><td>季节系统</td><td><span class="badge badge-p3">P3</span></td><td><span class="badge badge-m">M</span></td><td>4</td><td><span class="status status-done">✓</span></td></tr>
+          <tr><td class="col-id">H9</td><td>昼夜系统</td><td><span class="badge badge-p3">P3</span></td><td><span class="badge badge-l">L</span></td><td>4</td><td><span class="status status-done">✓</span></td></tr>
+          <tr><td class="col-id">H10</td><td>升级与刻石仪式动画</td><td><span class="badge badge-p2">P2</span></td><td><span class="badge badge-s">S</span></td><td>3</td><td><span class="status status-todo">—</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>I · 内容创作 — Content</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>任务</th><th>P</th><th>工作量</th><th>Phase</th><th>状态</th><th>备注</th></tr></thead>
+        <tbody>
+          <tr><td class="col-id">I1</td><td>9 大裂变任务设计与文案</td><td><span class="badge badge-p0">P0</span></td><td><span class="badge badge-m">M</span></td><td>1</td><td><span class="status status-done">✓</span></td><td>S1 昼夜系统</td>
+          </tr>
+          <tr><td class="col-id">I2</td><td>阿降的对话树</td><td><span class="badge badge-p0">P0</span></td><td><span class="badge badge-s">S</span></td><td>1</td><td><span class="status status-done">✓</span></td><td></td></tr>
+          <tr><td class="col-id">I3</td><td>9 工坊主 NPC 设定与文案</td><td><span class="badge badge-p1">P1</span></td><td><span class="badge badge-l">L</span></td><td>2–3</td><td><span class="status status-done">✓</span></td><td>全 9 工坊主 NPC 完工</td>
+          </tr>
+          <tr><td class="col-id col-id-deprecated">I4</td><td><s>工坊任务模板（飞书表结构）</s></td><td>—</td><td>—</td><td>—</td><td><span class="status status-deprecated">废弃</span></td><td></td></tr>
+          <tr><td class="col-id col-id-new">I4-new</td><td><strong>工坊任务模板（GitHub Issue Template）</strong></td><td><span class="badge badge-p1">P1</span></td><td><span class="badge badge-m">M</span></td><td>2.5</td><td><span class="status status-todo">—</span></td><td>每 workshop 一套 issue template + label</td></tr>
+          <tr><td class="col-id">I5</td><td>升级提示与里程碑文案</td><td><span class="badge badge-p1">P1</span></td><td><span class="badge badge-s">S</span></td><td>2</td><td><span class="status status-todo">—</span></td><td></td></tr>
+          <tr><td class="col-id">I6</td><td>系统邮件模板</td><td><span class="badge badge-p1">P1</span></td><td><span class="badge badge-s">S</span></td><td>2</td><td><span class="status status-done">✓</span></td><td></td></tr>
+          <tr><td class="col-id">I7</td><td>章程的游戏内呈现</td><td><span class="badge badge-p2">P2</span></td><td><span class="badge badge-m">M</span></td><td>4</td><td><span class="status status-todo">—</span></td><td></td></tr>
+          <tr><td class="col-id">I8</td><td>守卫 NPC 的世界观台词</td><td><span class="badge badge-p2">P2</span></td><td><span class="badge badge-s">S</span></td><td>3</td><td><span class="status status-todo">—</span></td><td></td></tr>
+          <tr><td class="col-id col-id-new">I9-new</td><td><strong>章程渲染自 GitHub Markdown</strong></td><td><span class="badge badge-p2">P2</span></td><td><span class="badge badge-s">S</span></td><td>4</td><td><span class="status status-todo">—</span></td><td>docs/charter.md in WebAgentLab repo</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>J · 运营与数据 — Operations</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>任务</th><th>P</th><th>工作量</th><th>Phase</th><th>状态</th><th>备注</th></tr></thead>
+        <tbody>
+          <tr><td class="col-id">J1</td><td>管理后台（基础版）</td><td><span class="badge badge-p1">P1</span></td><td><span class="badge badge-m">M</span></td><td>2</td><td><span class="status status-todo">—</span></td><td>Supabase Studio 暂代</td></tr>
+          <tr><td class="col-id">J2</td><td>数据看板</td><td><span class="badge badge-p2">P2</span></td><td><span class="badge badge-m">M</span></td><td>3</td><td><span class="status status-done">✓</span></td><td>J2-A/B/C 数据看板 7 tab</td>
+          </tr>
+          <tr><td class="col-id col-id-deprecated">J3</td><td><s>反馈通道（飞书工单）</s></td><td>—</td><td>—</td><td>—</td><td><span class="status status-deprecated">废弃</span></td><td></td></tr>
+          <tr><td class="col-id col-id-new">J3-new</td><td><strong>一键提交反馈到 GitHub Issue</strong></td><td><span class="badge badge-p1">P1</span></td><td><span class="badge badge-s">S</span></td><td>2</td><td><span class="status status-todo">—</span></td><td>POST 到 cua-base repo</td></tr>
+          <tr><td class="col-id">J4</td><td>运营值守 NPC 排班</td><td><span class="badge badge-p1">P1</span></td><td><span class="badge badge-s">S</span></td><td>3</td><td><span class="status status-todo">—</span></td><td>运营任务而非开发</td></tr>
+          <tr><td class="col-id">J5</td><td>内测邀请码系统</td><td><span class="badge badge-p1">P1</span></td><td><span class="badge badge-s">S</span></td><td>2</td><td><span class="status status-todo">—</span></td><td></td></tr>
+          <tr><td class="col-id">J6</td><td>上线公告页 + 玩家手册</td><td><span class="badge badge-p1">P1</span></td><td><span class="badge badge-s">S</span></td><td>1</td><td><span class="status status-done">✓</span></td><td>Pub1 公告板 + Pub2a-d 24 step 教程</td>
+          </tr>
+          <tr><td class="col-id">J7</td><td>玩家留存数据埋点</td><td><span class="badge badge-p2">P2</span></td><td><span class="badge badge-m">M</span></td><td>3</td><td><span class="status status-progress">⋯</span></td><td>J2-C session tracker 部分覆盖</td>
+          </tr>
+          <tr><td class="col-id col-id-new">J8-new</td><td><strong>CV 排行榜公开页</strong></td><td><span class="badge badge-p1">P1</span></td><td><span class="badge badge-m">M</span></td><td>3</td><td><span class="status status-todo">—</span></td><td>Vercel 公开页拉 Supabase 数据</td></tr>
+          <tr><td class="col-id col-id-new">J9-new</td><td><strong>Discord Webhook 通知中心</strong></td><td><span class="badge badge-p1">P1</span></td><td><span class="badge badge-s">S</span></td><td>2</td><td><span class="status status-todo">—</span></td><td>审核 / CV / 任务 推送</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       SECTION 5 - PATHS
+       ========================================================= -->
+
+  <section id="sec-paths">
+    <div class="section-num">§ 05</div>
+    <h2>关键路径</h2>
+
+    <p>不做完不能进下一阶段——每条路径都是该 Phase 的最小可验收链。</p>
+
+    <h3 class="with-tag">Phase 1 关键链 <span class="status status-done">✓ 已完成</span></h3>
+    <pre><code>A1 → A2-new → A3 → F1-new → B1 → B3 → B4 → C1 → D1 → D2 → D7 → I1 → I2</code></pre>
+
+    <h3 class="with-tag">Phase 2 关键链 <span class="status status-done">✓ 已完成（AI 模拟版）</span></h3>
+    <pre><code>E1(AI) → E2 → E3 → E4 → E5</code></pre>
+
+    <h3 class="with-tag">Phase 2.5 关键链 <span class="status status-progress">⋯ 当前阶段</span></h3>
+    <pre><code>A9-new → D6-new → I4-new → E6-new</code></pre>
+    <div class="callout callout-warn">
+      <strong>这条链是飞书 → GitHub 替换的核心。</strong>做完才算"真闭环"——
+      游戏内任务来源不再是预定义，而是从 WebAgentLab 真实 repo 的 issue 拉取。
+    </div>
+
+    <h3 class="with-tag">Phase 3 关键链 <span class="status status-done">✓ 已完成（轻量版）</span></h3>
+    <p>实际走的路径：</p>
+    <pre><code>G9-new (Supabase Realtime) → C5 → G2/G3/G4/G5/G6 → 完工</code></pre>
+    <div class="callout callout-success">
+      4 月初决定走 Supabase Realtime 路线（非 Colyseus），4 月底已完工。
+      实现 14 scene 实时同步 + 聊天 + 好友 + 关注 + 表情 + E 键互动。
+    </div>
+
+    <h3 class="with-tag">Phase 4 关键链 <span class="status status-progress">⋯ 进行中</span></h3>
+    <p>已完成：</p>
+    <pre><code>C6 (议政高地 + 三建筑) → C7 (大集会广场) → E8 (申诉) → 完工</code></pre>
+    <p>剩余：</p>
+    <pre><code>E9-new → I7/I9-new (章程渲染) → J 系列</code></pre>
+  </section>
+
+  <!-- =========================================================
+       SECTION 6 - SCHEDULE
+       ========================================================= -->
+
+  <section id="sec-schedule">
+    <div class="section-num">§ 06</div>
+    <h2>实际开发节奏（4 月初 → 4 月底）</h2>
+
+    <p>实际进度比 v2 roadmap 快约 1.5 个 Phase。</p>
+
+    <h3 class="with-tag">第 1–4 周 · Phase 1 + 2 全部完成 <span class="status status-done">✓</span></h3>
+    <p>Day1-3 + Cute + content-A/B / C-1→C-9 + D5 quest workshop / F1 GitHub OAuth (5 fix) / F2 系列 CV 数据上云</p>
+
+    <h3 class="with-tag">第 5–6 周 · Phase 4 治理大爆发 <span class="status status-done">✓</span></h3>
+    <ul>
+      <li>C5b1+C5b2 9 工坊室内全完工</li>
+      <li>C6.0-C6.3d 议政高地 + 三建筑 + 完整提案投票系统</li>
+      <li>C7 大集会广场 / C10 自家小屋</li>
+      <li>F5.0-F5.2 等级系统 L0-L4 / F6.0 捏脸 4×4×4</li>
+      <li>F4.0-F4.3c 完整 profile + 公开页 + cooldown</li>
+    </ul>
+
+    <h3 class="with-tag">第 7–8 周 · Phase 3 多人在场 <span class="status status-done">✓</span></h3>
+    <ul>
+      <li>G1.0 + 14 scene 多人接入</li>
+      <li>G2-A/B/C/D 完整聊天系统（世界 + 私聊 + scene + 在线状态）</li>
+      <li>G3 E 键玩家互动 / G5-A 好友 / G5-B 跨场景在线</li>
+      <li>G6 8 古风表情快捷键 / G7-A 关注系统</li>
+      <li>D9-A/B/C 任务历史 / D10 通知系统</li>
+    </ul>
+
+    <h3 class="with-tag">第 9 周（4/28 当前）· 教程 + 时间系统 <span class="status status-done">✓</span></h3>
+    <ul>
+      <li>J2-A/B/C 数据看板 7 tab + 留存 + session tracking</li>
+      <li>Pub1 公告板 + 玩家手册占位</li>
+      <li>Pub2a-d 24 step 完整互动教程框架</li>
+      <li>S1 时间引擎 + 昼夜 overlay + HUD + 设置</li>
+      <li>S2-A NPC 问候 + 节气 banner + 时间倍率（1x/4x/24x/60x）</li>
+    </ul>
+    <p class="pull-quote">里程碑：项目从"技术 demo"变成"完整可玩雏形"</p>
+
+    <h3 class="with-tag">第 10–14 周 · Phase 2.5 真任务源（关键拐点）<span class="status status-todo">—</span></h3>
+    <ul>
+      <li><code>A9-new</code> GitHub App 注册</li>
+      <li><code>D6-new</code> Issues 双向同步</li>
+      <li><code>I4-new</code> Issue Template</li>
+      <li><code>J3-new</code> 反馈到 GitHub Issue</li>
+      <li><code>A8</code> 中国大陆访问策略（ICP 备案 / EdgeOne / 微信小程序）</li>
+    </ul>
+    <p class="pull-quote">里程碑：从 WebAgentLab 真 repo 的 issue 拉任务、玩家提交后回写 comment</p>
+
+    <h3 class="with-tag">第 15–18 周 · 真审核员 + 上线 <span class="status status-todo">—</span></h3>
+    <ul>
+      <li><code>E9-new</code> 接真审核员（Discord）</li>
+      <li><code>E6-new</code> contributor.md PR 写回</li>
+      <li><code>J8-new</code> 公开 CV 排行榜</li>
+      <li><code>J9-new</code> Discord Webhook 通知中心</li>
+      <li>真用户测试 + 反馈微调</li>
+    </ul>
+
+    <h3 class="with-tag">第 19+ 周 · 锦上添花 <span class="status status-todo">—</span></h3>
+    <ul>
+      <li><code>S2-B</code> 真改 Phaser scene（深度沉浸感）</li>
+      <li><code>G7-B</code> 礼物系统</li>
+      <li><code>F7</code> 捏脸进阶版</li>
+      <li><code>I7</code> / <code>I9-new</code> 章程游戏内呈现</li>
+      <li><code>H4</code> 移动端触屏适配</li>
+      <li><code>H5</code> / <code>H6</code> BGM + 音效</li>
+    </ul>
+  </section>
+
+  <!-- =========================================================
+       SECTION 7 - RISKS
+       ========================================================= -->
+
+  <section id="sec-risks">
+    <div class="section-num">§ 07</div>
+    <h2>风险任务</h2>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>任务</th><th>风险</th><th>缓冲策略</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>D6-new</strong><br>GitHub Issues 同步</td>
+            <td>速率限制 5000/h、webhook 配置复杂、Issue 状态机映射</td>
+            <td>先做单向 Issues→游戏；本地 task_id 当主键；webhook + 定时 poll 兜底</td>
+          </tr>
+          <tr>
+            <td><strong>E9-new</strong><br>真人审核员调度</td>
+            <td>需要 5+ 真人加入 Discord；招募、值守、激励都是非技术工作</td>
+            <td>这是运营任务。先做 2.5 把流程标准化，再谈真审核员</td>
+          </tr>
+          <tr>
+            <td><strong>A4 / G1 / G2</strong><br>多人同步</td>
+            <td>单人最难啃；先评估是否一定需要"实时移动同步"</td>
+            <td>优先 G9-new (Supabase Realtime)；Colyseus 是后期才需要</td>
+          </tr>
+          <tr>
+            <td><strong>A8</strong><br>中国大陆访问</td>
+            <td>Supabase + Vercel 都需要 VPN；ICP 备案 20 天</td>
+            <td>① ICP 备案 ② EdgeOne 海外 ③ WeChat 小程序壳 ④ 仅服务能翻墙的 GitHub 用户</td>
+          </tr>
+          <tr>
+            <td><strong>运营负担</strong><br>真任务 + 真审核员</td>
+            <td>= 真社区运维；单人无法 24/7 值守</td>
+            <td>Phase 3 之前必须找运营协作者；技术上可行 ≠ 运营上可行</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       SECTION 8 - RATIONALE
+       ========================================================= -->
+
+  <section id="sec-rationale">
+    <div class="section-num">§ 08</div>
+    <h2>替换决策依据</h2>
+
+    <p>为什么选择 GitHub 而不是 Discord / 微信群作为飞书的主要替代？</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>维度</th><th>飞书</th><th>GitHub</th><th>Discord</th><th>微信群</th></tr></thead>
+        <tbody>
+          <tr><td>任务管理</td><td>多维表格</td><td><strong>Issues ★</strong></td><td>无</td><td>无</td></tr>
+          <tr><td>贡献追踪</td><td>文档</td><td><strong>Commits / PR / Profile ★</strong></td><td>无</td><td>无</td></tr>
+          <tr><td>真实性</td><td>企业认证</td><td><strong>username（公开）★</strong></td><td>半匿名</td><td>实名</td></tr>
+          <tr><td>API 成熟度</td><td>好但有审批</td><td><strong>极成熟 ★</strong></td><td>好</td><td>几乎没有</td></tr>
+          <tr><td>大陆免 VPN</td><td>是</td><td>否（不稳定）</td><td>否</td><td>是</td></tr>
+          <tr><td>社区匹配度</td><td>AI 社区已用</td><td><strong>AI 开发者天然在用 ★</strong></td><td>通用</td><td>通用</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="pull-quote">
+      GitHub 替换飞书技术上比飞书更成熟——但损失了"中国大陆免 VPN 访问"。
+    </p>
+
+    <div class="callout callout-info">
+      <strong>补救方案：</strong>把 Discord（海外用户）+ 微信群（大陆用户）都接 Webhook，
+      让通知双通道送达。这是 J9-new 的扩展形态。
+    </div>
+  </section>
+
+  <!-- =========================================================
+       SECTION 9 - CURRENT MVP
+       ========================================================= -->
+
+  <section id="sec-current">
+    <div class="section-num">§ 09</div>
+    <h2>4 月底实际完成状态</h2>
+
+    <p>截至 4/28，项目已完成 <strong>67 / 95 项（70%）</strong>，远超原计划。已包含：</p>
+
+    <ul>
+      <li><strong>基础架构 (A)</strong>：Vite 8 + React 19 + TS + Phaser + Supabase + GitHub OAuth + Sentry + Vercel CD</li>
+      <li><strong>引擎 (B)</strong>：Phaser/React 集成、移动碰撞、地图加载、场景切换全部完工</li>
+      <li><strong>世界 (C)</strong>：萌芽镇 + 共创之都 9 工坊（外+内） + 议政高地全套 + 大集会广场 + 自家小屋</li>
+      <li><strong>NPC 任务 (D)</strong>：完整对话系统、任务卡片、状态机、提交流程、任务历史 (D9-A/B/C)、通知 (D10)</li>
+      <li><strong>审核 (E)</strong>：3 AI 审核员、邮件、CV 入账、申诉流程（明镜阁）全部完工</li>
+      <li><strong>用户 (F)</strong>：GitHub OAuth + 捏脸 4×4×4 + 等级 L0-L4 + 资料面板 + 公开页 /u/{username}</li>
+      <li><strong>多人 (G)</strong>：14 scene 实时同步 + 聊天 + 好友 + 关注 + 8 古风表情 + E 键互动</li>
+      <li><strong>UI (H)</strong>：HUD + 时间设置面板 + S1 昼夜系统 + S2-A 24 节气季节系统</li>
+      <li><strong>内容 (I)</strong>：9 大裂变任务 + 阿降对话树 + 9 工坊主 NPC + 邮件模板</li>
+      <li><strong>运营 (J)</strong>：J2-A/B/C 数据看板 7 tab + 公告板 (Pub1) + 24 step 互动教程 (Pub2a-d)</li>
+    </ul>
+
+    <div class="callout callout-success">
+      <strong>项目已超过 Phase 3 多人在场（轻量版）门槛。</strong>下一步关键拐点是 Phase 2.5 真任务源——
+      接入 GitHub Issues 双向同步，让"游戏任务"变成"真实贡献"。
+    </div>
+  </section>
+
+  <!-- =========================================================
+       SECTION 10 - CLOSING
+       ========================================================= -->
+
+  <section id="sec-closing">
+    <div class="section-num">§ 10</div>
+    <h2>写在最后</h2>
+
+    <h3>当前状态</h3>
+    <p>独立完成了一个<strong>已超出原 roadmap 1.5 个 Phase</strong>的雏形：</p>
+    <ul>
+      <li>完整地图：萌芽镇 + 共创之都 9 工坊 + 议政高地 3 建筑 + 大集会广场 + 自家小屋</li>
+      <li>多人系统轻量版：14 scene 实时同步 + 聊天 + 好友 + 关注 + 表情</li>
+      <li>审核闭环：AI 审核 + 申诉 + 议政高地完整提案投票</li>
+      <li>季节昼夜系统：S1 昼夜引擎 + S2-A 24 节气 + NPC 时段问候</li>
+      <li>玩家手册 + 24 step 互动教程</li>
+      <li>数据看板：7 tab + 留存 + session tracking</li>
+      <li>GitHub 登录 + Supabase 25 张表上云</li>
+      <li>Live: <code>cua-base.vercel.app</code></li>
+    </ul>
+
+    <h3>真正的关卡</h3>
+    <p>接下来 2 个月，<strong>Phase 2.5 是唯一关键拐点</strong>——</p>
+    <ul>
+      <li><code>D6-new</code> GitHub Issues 同步：从"游戏内任务"变成"真实可贡献"</li>
+      <li><code>E9-new</code> 真审核员：从"AI 模拟"变成"社区认证"</li>
+      <li><code>J8-new</code> CV 排行榜：从"个人记录"变成"社区可见"</li>
+      <li><code>A8</code> 中国大陆访问策略：决定了用户能不能访问</li>
+    </ul>
+
+    <p class="pull-quote">
+      这四件做完，这个项目从"技术 demo"变成"社区基建"。
+      技术已经齐了——剩下是接入真实贡献流的勇气。
+    </p>
+
+    <h3>剩下最重要的几件事</h3>
+    <p>按优先级排：</p>
+    <ol>
+      <li><strong>真用户测试</strong>（最高优先级）—— 把链接发给 5-10 个 Web Agent 同行，看他们是否能跑通教程 + 完成至少 1 个任务</li>
+      <li><strong>D6-new GitHub Issues 集成</strong> —— Phase 2.5 的核心</li>
+      <li><strong>A8 中国大陆访问</strong> —— ICP 备案 / EdgeOne / 微信小程序，让国内 Web Agent 同行能用</li>
+      <li><strong>S2-B Phaser scene 真改</strong>（视觉沉浸度）/ <strong>G7-B 礼物系统</strong>（社交粘性）—— 锦上添花</li>
+    </ol>
+
+    <hr class="rule">
+
+    <div class="callout">
+      <strong>核心原则：</strong>别为了游戏化而游戏化。
+      所有的设计选择，都要回归——是否让贡献变得更顺畅、更被看见。
+      <br><br>
+      游戏化是放大器，不是救命稻草。<strong>WebAgentLab 社区本身的价值</strong>——
+      Web Agent 从业者、严谨的章程、清晰的 CV 系统——才是真正会让这个游戏"有人玩"的底层资产。
+    </div>
+
+    <p style="margin-top: 32px;">
+      技术已经够了——<strong>从 4 月初的 0 到 4 月底的 70% roadmap 完成</strong>，独立开发者一个月走完别人半年的量。
+      下一步是把这个"技术作品"变成"社区作品"——接入真实贡献，让真用户来用。
+    </p>
+  </section>
+
+  <!-- =========================================================
+       FOOTER
+       ========================================================= -->
+
+  <footer>
+    <p>Document by Claude · for Gaoliang's WebAgentLab gamification project · 2026-04-28</p>
+    <p>v3 实际进度盘点版 · 基于 4 月底 30+ Pack 完工后真实状态</p>
+    <p style="margin-top: 12px;">— CUA 基地 · CUA Base —</p>
+  </footer>
+
+</div>
+
+</body>
+</html>

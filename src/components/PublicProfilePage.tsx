@@ -264,7 +264,7 @@ export function PublicProfilePage() {
             textDecoration: 'none',
             letterSpacing: '0.1em',
           }}>
-            ← 回 源野物语
+            ← 回 CUA 基地
           </Link>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             {isMe && (

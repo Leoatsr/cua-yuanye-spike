@@ -261,7 +261,7 @@ export class VisionTowerScene extends Phaser.Scene {
       name: '📜 路线图',
       lines: [
         '（一卷长长的羊皮纸挂在墙上）',
-        '"CUA 源野物语 · 阶段路线"',
+        '"CUA 基地 · 阶段路线"',
         '─ 萌芽镇：完成 ✓',
         '─ 共创之都 · 百晓居：开放 ✓',
         '─ 共创之都 · 其余 8 工坊：筹建中',

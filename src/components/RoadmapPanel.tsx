@@ -143,12 +143,12 @@ export function RoadmapPanel() {
             fontFamily: 'serif', fontSize: 26, fontWeight: 600,
             color: '#f5f0e0', letterSpacing: '0.08em',
           }}>
-            源野物语 · 五阶路线
+            CUA 基地 · 五阶路线
           </div>
           <div style={{
             fontSize: 12, color: '#8a8576', marginTop: 8, lineHeight: 1.7,
           }}>
-            从萌芽镇起，到议政高地止——这是 CUA 源野物语的全部地图。
+            从萌芽镇起，到议政高地止——这是 CUA 基地的全部地图。
             五个阶段，按真实进展更新。
           </div>
         </div>

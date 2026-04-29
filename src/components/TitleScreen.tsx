@@ -56,7 +56,7 @@ export function TitleScreen({ onStart }: TitleScreenProps) {
           animation: 'titleFadeIn 1.4s ease-out',
         }}
       >
-        源野物语
+        CUA 基地
       </h1>
 
       {/* 英文副标 */}

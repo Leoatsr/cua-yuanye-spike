@@ -12,7 +12,7 @@ export function HUD() {
         pointerEvents: 'none',
       }}
     >
-      <div style={{ fontSize: 16, fontWeight: 'bold' }}>源野物语</div>
+      <div style={{ fontSize: 16, fontWeight: 'bold' }}>CUA 基地</div>
       <div style={{ fontSize: 11, opacity: 0.7, marginTop: 2 }}>
         Spike Demo · WASD 移动 · E 对话
       </div>

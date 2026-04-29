@@ -404,7 +404,7 @@ function CompletionBanner({ onClose }: { onClose: () => void }) {
         <br />
         <br />
         <span style={{ fontSize: 13, color: '#a8b3a0' }}>
-          这只是源野物语的第一站——
+          这只是CUA 基地的第一站——
           <br />
           往后还有共创之都、议政高地、大集会广场。
         </span>
