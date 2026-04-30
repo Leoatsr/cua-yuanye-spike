@@ -1,5 +1,25 @@
 import * as Phaser from 'phaser';
 
+/**
+ * BootScene · 资源预加载 + 路由调度
+ *
+ * Wave 4.B 升级:
+ *   ✅ 解析 URL query string ?scene=XXX
+ *   ✅ 检查 scene key 合法性（白名单）
+ *   ✅ 切到目标 scene · 否则默认 Main
+ *   ✅ 清掉 query string（避免刷新重复触发）
+ */
+
+// 合法 scene key 白名单（只允许跳转到这些 · 防止恶意 URL）
+const VALID_SCENE_KEYS = new Set([
+  'Main',
+  'SproutCity',
+  'GovHill',
+  'GrandPlaza',
+]);
+
+const DEFAULT_SCENE = 'Main';
+
 export class BootScene extends Phaser.Scene {
   constructor() {
     super('Boot');
@@ -60,6 +80,66 @@ export class BootScene extends Phaser.Scene {
   }
 
   create() {
-    this.scene.start('Main');
+    const targetScene = this.resolveTargetScene();
+    this.scene.start(targetScene);
+  }
+
+  /**
+   * 解析 URL query string ?scene=XXX
+   *
+   * 流程:
+   *   1. 读 window.location.search 拿 scene 参数
+   *   2. 验证是否在白名单
+   *   3. 清掉 query string（避免刷新重复触发）
+   *   4. 返回目标 scene key（默认 'Main'）
+   */
+  private resolveTargetScene(): string {
+    if (typeof window === 'undefined') return DEFAULT_SCENE;
+
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const requested = params.get('scene');
+
+      if (!requested) return DEFAULT_SCENE;
+
+      // 白名单验证
+      if (!VALID_SCENE_KEYS.has(requested)) {
+        // eslint-disable-next-line no-console
+        console.warn(
+          `[BootScene] Invalid scene key in URL: "${requested}" · falling back to ${DEFAULT_SCENE}`,
+        );
+        this.clearQueryString();
+        return DEFAULT_SCENE;
+      }
+
+      // eslint-disable-next-line no-console
+      console.log(`[BootScene] Routing to scene from URL: ${requested}`);
+
+      // 清 query string（用 history.replaceState · 避免刷新重复跳转）
+      this.clearQueryString();
+
+      return requested;
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('[BootScene] Failed to parse URL query:', err);
+      return DEFAULT_SCENE;
+    }
+  }
+
+  /**
+   * 清掉 ?scene=XXX query string
+   *
+   * 用 history.replaceState · 不触发 React Router 重新渲染
+   */
+  private clearQueryString() {
+    if (typeof window === 'undefined') return;
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('scene');
+      window.history.replaceState({}, '', url.toString());
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('[BootScene] Failed to clear query string:', err);
+    }
   }
 }
