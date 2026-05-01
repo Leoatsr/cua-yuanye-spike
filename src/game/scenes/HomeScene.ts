@@ -6,8 +6,11 @@ import { applyFaceToSprite } from '../faceRenderer';
 const PLAYER_SPEED = 130;
 const INTERACT_DISTANCE = 56;
 
-const ROOM_WIDTH = 640;
-const ROOM_HEIGHT = 480;
+const TILE = 32;
+const ROOM_TILE_W = 20;
+const ROOM_TILE_H = 15;
+const ROOM_WIDTH = ROOM_TILE_W * TILE;   // 640
+const ROOM_HEIGHT = ROOM_TILE_H * TILE;  // 480
 
 interface SceneInitData {
   returnX?: number;
@@ -15,17 +18,22 @@ interface SceneInitData {
 }
 
 /**
- * 自家小屋 (Player's Home) — C10.
+ * Wave 7.G · 自家小屋 (Player's Home)
  *
- * Personal cozy space in Sprout Town. A wooden cabin interior with:
- *   - Memorial wall (taps quest history + proposal history)
- *   - Desk with notebook
- *   - Bed
- *   - Fireplace (warm vibe)
- *   - Window looking out at the town
+ * 视觉重做：从 graphics-drawn 改成 tilemap (跟 sproutown / blacksmith-forge 等同架构)
+ * Tile assets:
+ *   - public/assets/maps/home.json
+ *   - public/assets/tilesets/home-tiles.png
  *
- * Drawn entirely with Phaser graphics. The memorial wall opens
- * a React panel (HomeWallPanel) showing player achievements.
+ * 互动点坐标改为 hardcode tile pos （不再用 graphics 画完算坐标）
+ *
+ * Logic 保留：
+ *   - 4 个互动点 (memorial wall / desk / bed / fireplace)
+ *   - 出口 + return 坐标
+ *   - face customizer
+ *   - 玩家走动 / 朝向动画
+ *
+ * Bug 修复：player.setDepth(5) 让玩家始终在家具之上
  */
 export class HomeScene extends Phaser.Scene {
   private player!: Phaser.Physics.Arcade.Sprite;
@@ -38,24 +46,26 @@ export class HomeScene extends Phaser.Scene {
   private kKey!: Phaser.Input.Keyboard.Key;
   private lastDirection: 'down' | 'left' | 'right' | 'up' = 'down';
 
-  private exitX = 0;
-  private exitY = 0;
+  // ---- Hardcoded tile-based interaction coords ----
+  // 跟 home.json layout 对应
+  private exitX = (10 * TILE) + TILE / 2;       // col 10 row 14 - 门
+  private exitY = (14 * TILE) + TILE / 2;
+  private wallX = (9.5 * TILE) + TILE / 2;      // col 9-10 row 1 - 纪念墙
+  private wallY = (1 * TILE) + TILE / 2;
+  private deskX = (15.5 * TILE) + TILE / 2;     // col 15-16 row 6 - 桌
+  private deskY = (6 * TILE) + TILE / 2;
+  private bedX = (4 * TILE) + TILE / 2;         // col 4 row 5-6 - 床
+  private bedY = (5.5 * TILE) + TILE / 2;
+  private fireplaceX = (16 * TILE) + TILE / 2;  // col 16 row 3 - 壁炉
+  private fireplaceY = (3 * TILE) + TILE / 2;
+
   private exitHint!: Phaser.GameObjects.Text;
   private interactHint!: Phaser.GameObjects.Text;
-
-  // Interaction points
-  private wallX = 0;
-  private wallY = 0;
-  private deskX = 0;
-  private deskY = 0;
-  private bedX = 0;
-  private bedY = 0;
-  private fireplaceX = 0;
-  private fireplaceY = 0;
 
   private returnX = 0;
   private returnY = 0;
   private inputLockUntil = 0;
+  private flameTween: Phaser.Tweens.Tween | null = null;
 
   constructor() {
     super('Home');
@@ -66,67 +76,77 @@ export class HomeScene extends Phaser.Scene {
     this.returnY = data.returnY ?? 6 * 32 + 16;
   }
 
+  preload() {
+    // 安全：保险加载（即使 BootScene 漏了 · 这里也会装上）
+    if (!this.cache.tilemap.has('home')) {
+      this.load.tilemapTiledJSON('home', 'assets/maps/home.json');
+    }
+    if (!this.textures.exists('home-tiles')) {
+      this.load.image('home-tiles', 'assets/tilesets/home-tiles.png');
+    }
+  }
+
   create() {
     this.inputLockUntil = this.time.now + 250;
     this.physics.world.setBounds(0, 0, ROOM_WIDTH, ROOM_HEIGHT);
 
-    // ---- Floor (warm wood) ----
-    const g = this.add.graphics();
-    g.setDepth(-5);
-    g.fillStyle(0x2a1e16, 1);
-    g.fillRect(0, 0, ROOM_WIDTH, ROOM_HEIGHT);
-    // Wood floor — warm brown with planks
-    g.fillStyle(0x8a6f4a, 1);
-    g.fillRect(60, 80, ROOM_WIDTH - 120, ROOM_HEIGHT - 140);
-    // Plank lines
-    g.lineStyle(1, 0x6a5538, 0.5);
-    for (let y = 80; y < ROOM_HEIGHT - 60; y += 32) {
-      g.lineBetween(60, y, ROOM_WIDTH - 60, y);
-    }
-    for (let x = 100; x < ROOM_WIDTH - 60; x += 96) {
-      g.lineBetween(x, 80, x, ROOM_HEIGHT - 60);
-    }
-
-    // ---- Wall (top, with logs texture) ----
-    g.fillStyle(0x6a5538, 1);
-    g.fillRect(60, 60, ROOM_WIDTH - 120, 24);
-    g.lineStyle(2, 0x4a3826, 1);
-    g.strokeRect(60, 60, ROOM_WIDTH - 120, 24);
-    // Log lines
-    for (let x = 80; x < ROOM_WIDTH - 60; x += 40) {
-      g.lineBetween(x, 60, x, 84);
+    // ---- Tilemap 加载 ----
+    const map = this.make.tilemap({ key: 'home' });
+    const tileset = map.addTilesetImage('home-tiles', 'home-tiles');
+    if (!tileset) {
+      console.error('[HomeScene] tileset home-tiles missing — fallback to dark floor');
+      const g = this.add.graphics();
+      g.fillStyle(0x2a1e16, 1);
+      g.fillRect(0, 0, ROOM_WIDTH, ROOM_HEIGHT);
+    } else {
+      // 3 layers: Floor / Walls / Furniture
+      const floor = map.createLayer('Floor', tileset, 0, 0);
+      if (floor) floor.setDepth(-5);
+      const walls = map.createLayer('Walls', tileset, 0, 0);
+      if (walls) walls.setDepth(2);
+      const furniture = map.createLayer('Furniture', tileset, 0, 0);
+      if (furniture) furniture.setDepth(2);
     }
 
-    // ---- Memorial wall (north center, big panel of wood) ----
-    this.wallX = ROOM_WIDTH / 2;
-    this.wallY = 120;
-    this.drawMemorialWall(this.wallX, this.wallY);
+    // ---- Fireplace flame overlay (动态闪烁 · 像素三角) ----
+    const flameG = this.add.graphics();
+    flameG.setDepth(3);
+    flameG.fillStyle(0xe07060, 1);
+    flameG.fillTriangle(
+      this.fireplaceX - 6, this.fireplaceY + 8,
+      this.fireplaceX + 6, this.fireplaceY + 8,
+      this.fireplaceX, this.fireplaceY - 4
+    );
+    flameG.fillStyle(0xe0b060, 1);
+    flameG.fillTriangle(
+      this.fireplaceX - 3, this.fireplaceY + 6,
+      this.fireplaceX + 3, this.fireplaceY + 6,
+      this.fireplaceX, this.fireplaceY
+    );
+    this.flameTween = this.tweens.add({
+      targets: flameG,
+      scaleY: 0.85,
+      duration: 600,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut',
+    });
 
-    // ---- Desk (east) ----
-    this.deskX = ROOM_WIDTH - 120;
-    this.deskY = ROOM_HEIGHT / 2;
-    this.drawDesk(this.deskX, this.deskY);
-
-    // ---- Bed (west) ----
-    this.bedX = 130;
-    this.bedY = ROOM_HEIGHT / 2;
-    this.drawBed(this.bedX, this.bedY);
-
-    // ---- Fireplace (north-east corner) ----
-    this.fireplaceX = ROOM_WIDTH - 130;
-    this.fireplaceY = 140;
-    this.drawFireplace(this.fireplaceX, this.fireplaceY);
-
-    // ---- Rug (center) ----
-    this.drawRug(ROOM_WIDTH / 2, ROOM_HEIGHT / 2 + 40);
-
-    // ---- Window (north-west) ----
-    this.drawWindow(140, 100);
+    // ---- Title (room name banner top center) ----
+    this.add.text(ROOM_WIDTH / 2, 16, '— 自家小屋 —', {
+      fontFamily: 'serif',
+      fontSize: '14px',
+      color: '#fdf0cf',
+      fontStyle: 'bold',
+    }).setOrigin(0.5).setDepth(10);
 
     // ---- Player ----
     this.createCharacterAnims('player');
-    this.player = this.physics.add.sprite(ROOM_WIDTH / 2, ROOM_HEIGHT - 100, 'player', 0);
+    // 出生在门口 · 朝上
+    this.player = this.physics.add.sprite(this.exitX, this.exitY - 32, 'player', 0);
     this.player.setCollideWorldBounds(true);
+    // Wave 7.F bugfix · player 显示在所有家具之上
+    this.player.setDepth(5);
     const pBody = this.player.body as Phaser.Physics.Arcade.Body;
     pBody.setSize(12, 6).setOffset(10, 17);
     this.player.anims.play('player-idle-up');
@@ -143,21 +163,11 @@ export class HomeScene extends Phaser.Scene {
         this.playerFace.destroy();
         this.playerFace = null;
       }
+      if (this.flameTween) {
+        this.flameTween.stop();
+        this.flameTween = null;
+      }
     });
-
-    // ---- Walls (collision) ----
-    const walls = this.physics.add.staticGroup();
-    walls.add(this.add.rectangle(ROOM_WIDTH / 2, 50, ROOM_WIDTH, 20, 0, 0));
-    walls.add(this.add.rectangle(ROOM_WIDTH / 2, ROOM_HEIGHT - 60, ROOM_WIDTH, 20, 0, 0));
-    walls.add(this.add.rectangle(50, ROOM_HEIGHT / 2, 20, ROOM_HEIGHT, 0, 0));
-    walls.add(this.add.rectangle(ROOM_WIDTH - 50, ROOM_HEIGHT / 2, 20, ROOM_HEIGHT, 0, 0));
-    this.physics.add.collider(this.player, walls);
-
-    // ---- Camera ----
-    this.cameras.main.setBounds(0, 0, ROOM_WIDTH, ROOM_HEIGHT);
-    this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
-    this.cameras.main.setZoom(2);
-    this.cameras.main.fadeIn(300, 0, 0, 0);
 
     // ---- Input ----
     this.cursors = this.input.keyboard!.createCursorKeys();
@@ -167,231 +177,45 @@ export class HomeScene extends Phaser.Scene {
     this.jKey = this.input.keyboard!.addKey('J');
     this.kKey = this.input.keyboard!.addKey('K');
 
-    // ---- Exit (south door) ----
-    this.exitX = ROOM_WIDTH / 2;
-    this.exitY = ROOM_HEIGHT - 70;
-    const doorG = this.add.graphics();
-    doorG.fillStyle(0x4a3826, 1);
-    doorG.fillRect(this.exitX - 22, this.exitY - 30, 44, 56);
-    doorG.lineStyle(2, 0x2a1e10, 1);
-    doorG.strokeRect(this.exitX - 22, this.exitY - 30, 44, 56);
-    // Door handle
-    doorG.fillStyle(0xb8a472, 1);
-    doorG.fillCircle(this.exitX + 12, this.exitY, 3);
-
-    // ---- Title ----
-    this.add.text(ROOM_WIDTH / 2, 30, '— 自家小屋 —', {
-      fontFamily: 'serif', fontSize: '15px',
-      color: '#f5f0e0', backgroundColor: '#1a141aaa',
-      padding: { left: 10, right: 10, top: 4, bottom: 4 },
-    }).setOrigin(0.5).setDepth(10);
-
-    // ---- Hints ----
-    this.exitHint = this.add.text(0, 0, '[E] 出门', {
-      fontFamily: 'sans-serif', fontSize: '11px',
-      color: '#ffffff', backgroundColor: '#3a4a6add',
-      padding: { left: 6, right: 6, top: 3, bottom: 3 },
+    // ---- Hint texts (created here once · positioned in update) ----
+    this.exitHint = this.add.text(0, 0, '', {
+      fontFamily: 'monospace',
+      fontSize: '14px',
+      color: '#fdf0cf',
+      backgroundColor: '#3a2a1a',
+      padding: { x: 8, y: 4 },
     }).setOrigin(0.5).setVisible(false).setDepth(100);
 
-    this.interactHint = this.add.text(0, 0, '[E]', {
-      fontFamily: 'sans-serif', fontSize: '11px',
-      color: '#ffffff', backgroundColor: '#000000aa',
-      padding: { left: 4, right: 4, top: 2, bottom: 2 },
+    this.interactHint = this.add.text(0, 0, '', {
+      fontFamily: 'monospace',
+      fontSize: '14px',
+      color: '#fdf0cf',
+      backgroundColor: '#3a2a1a',
+      padding: { x: 8, y: 4 },
     }).setOrigin(0.5).setVisible(false).setDepth(100);
+
+    // ---- Camera ----
+    this.cameras.main.setBounds(0, 0, ROOM_WIDTH, ROOM_HEIGHT);
+    this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
+    this.cameras.main.setZoom(2);
   }
 
-  // ============ DRAWING ============
-
-  private drawMemorialWall(x: number, y: number) {
-    const g = this.add.graphics();
-    g.setDepth(2);
-    // Big wooden panel framed
-    g.fillStyle(0x6b5230, 1);
-    g.fillRect(x - 100, y - 30, 200, 60);
-    g.lineStyle(3, 0x3a2818, 1);
-    g.strokeRect(x - 100, y - 30, 200, 60);
-    // Inner parchment
-    g.fillStyle(0xede5cf, 1);
-    g.fillRect(x - 92, y - 22, 184, 44);
-    // Decorative corners (gold)
-    g.fillStyle(0xb8a472, 1);
-    [-92, 88].forEach((dx) => {
-      [-22, 18].forEach((dy) => {
-        g.fillCircle(x + dx, y + dy, 3);
-      });
-    });
-    // Inscription lines (mock content)
-    g.lineStyle(1, 0x6b5230, 0.5);
-    for (let i = 0; i < 4; i++) {
-      g.lineBetween(x - 82, y - 14 + i * 10, x + 82, y - 14 + i * 10);
-    }
-    // Title pixel header
-    this.add.text(x, y - 38, '✦ 纪念展示墙 ✦', {
-      fontFamily: 'serif', fontSize: '9px',
-      color: '#b8893a',
-    }).setOrigin(0.5).setDepth(3);
+  /** 创建 player 动画（如果还没创建过） */
+  private createCharacterAnims(key: string) {
+    if (this.anims.exists(`${key}-walk-down`)) return;
+    this.anims.create({ key: `${key}-walk-down`, frames: this.anims.generateFrameNumbers(key, { start: 0, end: 3 }), frameRate: 8, repeat: -1 });
+    this.anims.create({ key: `${key}-walk-right`, frames: this.anims.generateFrameNumbers(key, { start: 4, end: 7 }), frameRate: 8, repeat: -1 });
+    this.anims.create({ key: `${key}-walk-up`, frames: this.anims.generateFrameNumbers(key, { start: 8, end: 11 }), frameRate: 8, repeat: -1 });
+    this.anims.create({ key: `${key}-idle-down`, frames: [{ key, frame: 0 }], frameRate: 1 });
+    this.anims.create({ key: `${key}-idle-right`, frames: [{ key, frame: 4 }], frameRate: 1 });
+    this.anims.create({ key: `${key}-idle-up`, frames: [{ key, frame: 8 }], frameRate: 1 });
+    this.anims.create({ key: `${key}-idle-left`, frames: [{ key, frame: 4 }], frameRate: 1 });
   }
 
-  private drawDesk(x: number, y: number) {
-    const g = this.add.graphics();
-    g.setDepth(2);
-    // Desk top
-    g.fillStyle(0x6b5230, 1);
-    g.fillRect(x - 36, y - 14, 72, 28);
-    g.lineStyle(2, 0x3a2818, 1);
-    g.strokeRect(x - 36, y - 14, 72, 28);
-    // Legs
-    g.fillStyle(0x4a3826, 1);
-    g.fillRect(x - 32, y + 14, 5, 24);
-    g.fillRect(x + 27, y + 14, 5, 24);
-    // Notebook on desk
-    g.fillStyle(0xede5cf, 1);
-    g.fillRect(x - 18, y - 8, 24, 16);
-    g.lineStyle(1, 0x6b5230, 1);
-    g.strokeRect(x - 18, y - 8, 24, 16);
-    // Pen
-    g.fillStyle(0x2a1e10, 1);
-    g.fillRect(x + 8, y - 4, 14, 2);
-    // Mug
-    g.fillStyle(0xb8a472, 1);
-    g.fillCircle(x + 22, y - 4, 5);
-  }
-
-  private drawBed(x: number, y: number) {
-    const g = this.add.graphics();
-    g.setDepth(2);
-    // Bed frame
-    g.fillStyle(0x4a3826, 1);
-    g.fillRect(x - 28, y - 50, 56, 100);
-    g.lineStyle(2, 0x2a1e10, 1);
-    g.strokeRect(x - 28, y - 50, 56, 100);
-    // Mattress
-    g.fillStyle(0xc8b890, 1);
-    g.fillRect(x - 24, y - 46, 48, 92);
-    // Pillow
-    g.fillStyle(0xede5cf, 1);
-    g.fillRect(x - 20, y - 42, 40, 22);
-    g.lineStyle(1, 0xb8a472, 1);
-    g.strokeRect(x - 20, y - 42, 40, 22);
-    // Blanket
-    g.fillStyle(0x8a4a4a, 1);
-    g.fillRect(x - 22, y - 8, 44, 50);
-    // Headboard posts
-    g.fillStyle(0x3a2818, 1);
-    g.fillRect(x - 30, y - 56, 6, 12);
-    g.fillRect(x + 24, y - 56, 6, 12);
-  }
-
-  private drawFireplace(x: number, y: number) {
-    const g = this.add.graphics();
-    g.setDepth(2);
-    // Stone fireplace
-    g.fillStyle(0x6e6856, 1);
-    g.fillRect(x - 30, y - 30, 60, 60);
-    g.lineStyle(2, 0x3e3826, 1);
-    g.strokeRect(x - 30, y - 30, 60, 60);
-    // Stone pattern
-    g.lineStyle(1, 0x4a4538, 0.7);
-    g.lineBetween(x - 30, y - 14, x + 30, y - 14);
-    g.lineBetween(x - 30, y + 4, x + 30, y + 4);
-    g.lineBetween(x - 14, y - 30, x - 14, y + 30);
-    g.lineBetween(x + 14, y - 30, x + 14, y + 30);
-    // Inner opening (dark)
-    g.fillStyle(0x1a0e08, 1);
-    g.fillRect(x - 20, y - 12, 40, 32);
-    // Logs
-    g.fillStyle(0x6b3a18, 1);
-    g.fillRect(x - 16, y + 12, 32, 4);
-    g.fillRect(x - 14, y + 8, 28, 4);
-    // Flame (animated via tween)
-    const flame = this.add.graphics();
-    flame.setDepth(3);
-    flame.fillStyle(0xe07060, 1);
-    flame.fillTriangle(x - 8, y + 8, x + 8, y + 8, x, y - 8);
-    flame.fillStyle(0xe0b060, 1);
-    flame.fillTriangle(x - 4, y + 6, x + 4, y + 6, x, y - 4);
-    this.tweens.add({
-      targets: flame,
-      scaleY: 0.85,
-      duration: 600,
-      yoyo: true,
-      repeat: -1,
-      ease: 'Sine.easeInOut',
-    });
-    // Mantle
-    g.fillStyle(0x8a6f4a, 1);
-    g.fillRect(x - 36, y - 36, 72, 8);
-    g.lineStyle(2, 0x3a2818, 1);
-    g.strokeRect(x - 36, y - 36, 72, 8);
-  }
-
-  private drawRug(x: number, y: number) {
-    const g = this.add.graphics();
-    g.setDepth(0);  // below player, above floor
-    // Round rug
-    g.fillStyle(0x8a4a4a, 1);
-    g.fillCircle(x, y, 60);
-    g.lineStyle(2, 0x4a2828, 1);
-    g.strokeCircle(x, y, 60);
-    // Inner pattern
-    g.fillStyle(0xb8a472, 0.8);
-    g.fillCircle(x, y, 36);
-    g.fillStyle(0x8a4a4a, 1);
-    g.fillCircle(x, y, 18);
-    g.fillStyle(0xede5cf, 0.9);
-    g.fillCircle(x, y, 6);
-  }
-
-  private drawWindow(x: number, y: number) {
-    const g = this.add.graphics();
-    g.setDepth(2);
-    // Window frame
-    g.fillStyle(0x4a3826, 1);
-    g.fillRect(x - 24, y - 24, 48, 36);
-    g.lineStyle(2, 0x2a1e10, 1);
-    g.strokeRect(x - 24, y - 24, 48, 36);
-    // Glass (light blue, day)
-    g.fillStyle(0xb8c8d8, 0.9);
-    g.fillRect(x - 20, y - 20, 40, 28);
-    // Cross frame
-    g.lineStyle(2, 0x4a3826, 1);
-    g.lineBetween(x, y - 20, x, y + 8);
-    g.lineBetween(x - 20, y - 6, x + 20, y - 6);
-    // Distant tree silhouette
-    g.fillStyle(0x4a7050, 0.6);
-    g.fillCircle(x - 12, y - 10, 5);
-    g.fillCircle(x + 8, y - 8, 4);
-  }
-
-  // ============ ANIMATION ============
-
-  private createCharacterAnims(textureKey: string) {
-    const animations = [
-      { name: 'idle-down', start: 0, end: 5, rate: 6 },
-      { name: 'idle-right', start: 6, end: 11, rate: 6 },
-      { name: 'idle-up', start: 12, end: 17, rate: 6 },
-      { name: 'walk-down', start: 18, end: 23, rate: 10 },
-      { name: 'walk-right', start: 24, end: 29, rate: 10 },
-      { name: 'walk-up', start: 30, end: 35, rate: 10 },
-    ];
-    animations.forEach((a) => {
-      const key = `${textureKey}-${a.name}`;
-      if (this.anims.exists(key)) return;
-      this.anims.create({
-        key,
-        frames: this.anims.generateFrameNumbers(textureKey, { start: a.start, end: a.end }),
-        frameRate: a.rate, repeat: -1,
-      });
-    });
-  }
-
-  // ============ INTERACTION ============
+  // ============ INTERACTIONS ============
 
   private exit() {
-    this.cameras.main.fadeOut(300, 0, 0, 0);
-    this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
-      this.scene.start('Main', { returnX: this.returnX, returnY: this.returnY });
-    });
+    this.scene.start('Main', { returnX: this.returnX, returnY: this.returnY });
   }
 
   private triggerWall() {
@@ -400,26 +224,21 @@ export class HomeScene extends Phaser.Scene {
 
   private triggerDesk() {
     EventBus.emit('show-dialogue', {
-      name: '📔 笔记本',
+      name: '📔 笔记',
       lines: [
-        '（桌上摊着一本手记，墨迹尚新）',
-        '',
-        '"今日所记 — 自家小屋落成。"',
-        '"墙上挂了一面纪念展示墙——"',
-        '"凡所贡献，皆将留痕于此。"',
-        '',
-        '"——这屋子小，但是属于我的。"',
+        '（你翻开桌上的笔记本）',
+        '"今天又往前走了一步——"',
+        '"再小的一步也算——"',
       ],
     });
   }
 
   private triggerBed() {
     EventBus.emit('show-dialogue', {
-      name: '🛏️ 床铺',
+      name: '🛏 床',
       lines: [
-        '（一张温暖的木床，铺着褐红毛毯）',
-        '"忙完了一天，至少还有这里可以躺。"',
-        '（你没有真的躺下——还有事要做）',
+        '（柔软的红被子）',
+        '"等任务都做完了再来歇一会吧。"',
       ],
     });
   }
@@ -454,7 +273,6 @@ export class HomeScene extends Phaser.Scene {
 
     this.player.setVelocity(vx, vy);
 
-    // F6.0: sync hair graphics
     if (this.playerFace) {
       this.playerFace.syncToSprite(this.player);
     }
@@ -492,7 +310,7 @@ export class HomeScene extends Phaser.Scene {
     const nearFire = distFire < INTERACT_DISTANCE;
 
     if (nearExit) {
-      this.exitHint.setPosition(this.exitX, this.exitY - 36).setVisible(true);
+      this.exitHint.setText('[E] 出门').setPosition(this.exitX, this.exitY - 36).setVisible(true);
       this.interactHint.setVisible(false);
       if (Phaser.Input.Keyboard.JustDown(this.eKey)) this.exit();
     } else if (nearWall) {
