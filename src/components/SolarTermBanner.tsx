@@ -1,15 +1,13 @@
 import { useEffect, useState } from 'react';
 import { EventBus } from '../game/EventBus';
-import {
-  SOLAR_TERM_DESCRIPTIONS,
-} from '../lib/solarTermNotifier';
+import { SOLAR_TERM_DESCRIPTIONS } from '../lib/solarTermNotifier';
 import { seasonEmoji, type SolarTerm, type Season } from '../lib/timeStore';
 
 /**
- * 节气切换 Banner
+ * 节气切换 Banner · Wave 7.E.2 像素风
  *
- * 监听 solar-term-change 事件 → 屏幕中央弹一个 8 秒 banner
- * 例如："📜 节气更迭 · 今日是「立春」 — 万物初醒，春之始"
+ * 视觉：羊皮纸 + 木框 + 金色印章感
+ * Logic 不变：监听 solar-term-change · 8 秒自动消失 · 点击关闭
  */
 
 interface BannerData {
@@ -26,17 +24,13 @@ export function SolarTermBanner() {
     const onChange = (data: unknown) => {
       const d = data as { newTerm?: SolarTerm; season?: Season };
       if (!d?.newTerm || !d?.season) return;
-
       counter++;
       const id = counter;
       setBanner({ id, newTerm: d.newTerm, season: d.season });
-
-      // 8 秒后自动消失
       window.setTimeout(() => {
         setBanner((b) => (b?.id === id ? null : b));
       }, 8000);
     };
-
     EventBus.on('solar-term-change', onChange);
     return () => {
       EventBus.off('solar-term-change', onChange);
@@ -55,67 +49,87 @@ export function SolarTermBanner() {
         top: '38%',
         left: '50%',
         transform: 'translate(-50%, -50%)',
-        background: 'linear-gradient(135deg, rgba(31, 34, 48, 0.97), rgba(21, 23, 31, 0.97))',
-        border: '2px solid rgba(224, 176, 96, 0.6)',
-        borderRadius: 8,
-        padding: '20px 36px',
-        boxShadow: '0 12px 40px rgba(0,0,0,0.7), 0 0 24px rgba(224, 176, 96, 0.3)',
+        background: 'var(--paper-1, #fdf0cf)',
+        border: '4px solid var(--wood-3, #8b4513)',
+        boxShadow:
+          '0 0 0 4px var(--wood-4, #5d3a1a), inset 0 0 0 3px var(--paper-3, #e8c98a), 8px 8px 0 0 rgba(60, 30, 10, 0.3)',
+        padding: '24px 40px',
         zIndex: 90,
         textAlign: 'center',
         cursor: 'pointer',
         fontFamily:
-          '-apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif',
-        animation: 'solar-term-banner-in 0.6s ease-out',
+          'var(--f-title, "Songti SC", "Noto Serif SC", serif)',
+        animation: 'pixel-banner-in 0.6s ease-out',
         minWidth: 380,
+        maxWidth: 500,
       }}
     >
+      {/* 上装饰条 */}
       <div
         style={{
-          fontSize: 11,
-          color: '#a8a08e',
-          letterSpacing: '0.2em',
-          marginBottom: 8,
+          fontFamily: 'var(--f-pixel, "Courier New", monospace)',
+          fontSize: 10,
+          color: 'var(--wood-2, #a0522d)',
+          letterSpacing: '0.3em',
+          marginBottom: 10,
+          textTransform: 'uppercase',
         }}
       >
         ✦ 节气更迭 ✦
       </div>
+
+      {/* 主标题 (季节 emoji + 节气名) */}
       <div
         style={{
-          fontSize: 32,
+          fontSize: 36,
           fontWeight: 700,
-          color: '#e0b060',
-          marginBottom: 6,
-          letterSpacing: '0.1em',
-          fontFamily: 'serif',
+          color: 'var(--wood-3, #8b4513)',
+          marginBottom: 8,
+          letterSpacing: '0.15em',
+          fontFamily: 'var(--f-title, "Songti SC", "Noto Serif SC", serif)',
+          textShadow:
+            '2px 2px 0 var(--paper-3, #e8c98a), 3px 3px 0 var(--paper-shadow, #c9a55b)',
         }}
       >
-        {seasonEmoji(banner.season)} {banner.newTerm}
+        <span style={{ marginRight: 12 }}>{seasonEmoji(banner.season)}</span>
+        <span>{banner.newTerm}</span>
       </div>
+
+      {/* 描述 */}
       <div
         style={{
-          fontSize: 13,
-          color: '#d8cfa8',
+          fontSize: 14,
+          color: 'var(--ink, #3a2a1a)',
           fontStyle: 'italic',
-          letterSpacing: '0.05em',
+          letterSpacing: '0.08em',
+          fontFamily: 'var(--f-title, "Songti SC", "Noto Serif SC", serif)',
+          marginBottom: 4,
         }}
       >
         {desc}
       </div>
+
+      {/* 下装饰条 */}
       <div
         style={{
+          marginTop: 14,
+          paddingTop: 10,
+          borderTop: '2px dashed var(--paper-shadow, #c9a55b)',
+          fontFamily: 'var(--f-pixel, "Courier New", monospace)',
           fontSize: 10,
-          color: '#6e6856',
-          marginTop: 10,
-          letterSpacing: '0.05em',
+          color: 'var(--ink-faint, #9c7c54)',
+          letterSpacing: '0.2em',
+          textTransform: 'uppercase',
         }}
       >
-        点击关闭
+        ▼ 点击关闭 ▼
       </div>
+
       <style>{`
-        @keyframes solar-term-banner-in {
+        @keyframes pixel-banner-in {
           from {
             opacity: 0;
-            transform: translate(-50%, -50%) scale(0.8);
+            transform: translate(-50%, -50%) scale(0.85);
           }
           to {
             opacity: 1;

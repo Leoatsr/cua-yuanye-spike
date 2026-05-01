@@ -13,6 +13,7 @@ import { ReviewBadge } from './components/ReviewBadge';
 import { ReviewSeeder } from './components/ReviewSeeder';
 import { AppealProcessor } from './components/AppealProcessor';
 import { AuthBadge } from './components/AuthBadge';
+import { PixelAccountMenu } from './components/PixelAccountMenu';
 import { LevelUpAnimation } from './components/LevelUpAnimation';
 import { FaceCustomizer } from './components/FaceCustomizer';
 import { ProfilePanel } from './components/ProfilePanel';
@@ -201,15 +202,16 @@ function MainGameApp() {
       >
         {gameStarted && (
           <>
-            <AuthBadge />
-            <QuestPanel />
-            <TitleList />
+            {/* <AuthBadge /> · 7.E 由 PixelAccountMenu 接管 */}
+            <PixelAccountMenu />
+            {/* <QuestPanel /> · 7.E NewQuestLog 接管 */}
+            {/* <TitleList /> · 7.E 删除 */}
             <DialogueBox />
             <WorldMap />
             <NewQuestLog />
             <NewMailBox />
-            <MailBadge />
-            <ReviewBadge />
+            {/* <MailBadge /> · 7.C 跟 hotbar 重复 */}
+            {/* <ReviewBadge /> · 7.C 跟 hotbar 重复 */}
             <ReviewPanel />
             <NewRoadmapPanel />
             <NewAppealDeskPanel />
@@ -221,8 +223,8 @@ function MainGameApp() {
             <FaceCustomizer />
             <ProfilePanel />
             <ProfilePanelKeyListener />
-            <ProfileLink />
-            <OnlineRoster />
+            {/* <ProfileLink /> · 7.E 已合并到菜单 */}
+            {/* <OnlineRoster /> · 7.E 顶部 chip 接管 */}
             <NewChatPanel />
           <NewAnnouncementPanel />
             <ChatPanelKeyListener />
@@ -234,17 +236,17 @@ function MainGameApp() {
             <NotificationToast />
             <NotificationPanel />
             <NotificationKeyListener />
-            <NotificationBadge />
+            {/* <NotificationBadge /> · 7.E.1 */}
             <NewFriendsPanel />
             <FriendsKeyListener />
             <EmotePanel />
             <EmoteOverlay />
             <DashboardPanel />
             <DashboardKeyListener />
-            <HelpButton />
+            {/* <HelpButton /> · 7.C 用户要求删 */}
             <TutorialOverlay />
-            <TimeOverlay />
-            <TimeSettingsButton />
+            {/* <TimeOverlay /> · 7.E.1 */}
+            {/* <TimeSettingsButton /> · 7.E.1 */}
             <NpcGreetingToast />
             <SolarTermBanner />
             {/* Headless components */}

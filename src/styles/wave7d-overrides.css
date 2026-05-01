@@ -1,0 +1,55 @@
+/**
+ * Wave 7.D overrides
+ *
+ * 加载顺序：必须晚于 wave7c-overrides.css
+ *
+ * 修复：
+ * - bug 1: 把 body/#root 背景从米色改成草地绿，让 canvas 没填到的边
+ *          露出来也是草地色，视觉无缝（最稳的白边修法，不动 Phaser config）
+ * - bug 3a: hide OnlineRoster（NewGameAppHUD 顶部 chip 已经替代）
+ * - bug 3b: 尝试 hide 右上"任务 6/9"按钮
+ */
+
+/* ==========================================================
+   bug 1: 草地绿背景 — 让 viewport 边缘露出的部分跟草地无缝
+   ========================================================== */
+html, body, #root {
+  background: #8fbc5c !important;
+}
+
+/* PhaserGame container 也设草地色（如果它没填满 canvas） */
+canvas {
+  background: #8fbc5c !important;
+}
+
+/* ==========================================================
+   bug 3a: 隐藏旧 OnlineRoster
+   它原来在顶部中心显示"在线 X / 此地 Y"黑底 chip
+   NewGameAppHUD 已经在同位置渲染了像素风版本 → 旧的隐藏避免重叠
+   ========================================================== */
+/* OnlineRoster 没有 class name，但它的 inline style 有标志特征：
+   position: fixed + top: 16 + left: 50% + 黑底 rgba(20, 24, 30, 0.85) */
+div[style*="position: fixed"][style*="top: 16"][style*="left: 50%"][style*="background: rgba(20, 24, 30"] {
+  display: none !important;
+}
+
+/* ==========================================================
+   bug 3b: 尝试隐藏右上"任务 6/9"按钮（NewQuestLog collapsed 头部）
+   不知道精确 selector · 多 selector 撞一遍
+   ========================================================== */
+/* 常见 class 命名 */
+.questlog-collapsed,
+.quest-counter,
+.quest-toggle,
+[data-questlog-toggle],
+[data-quest-collapsed],
+[class*="QuestLogToggle"],
+[class*="QuestCounter"] {
+  display: none !important;
+}
+
+/* aria/title 含"任务"且看起来像 collapsed badge */
+button[aria-label*="任务" i][class*="badge" i],
+button[title*="任务" i][class*="collapsed" i] {
+  display: none !important;
+}

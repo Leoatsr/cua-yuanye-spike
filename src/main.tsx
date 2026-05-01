@@ -1,4 +1,9 @@
 import './styles/design-system.css';
+import './styles/wave7c-overrides.css';
+import './styles/wave7d-overrides.css';
+import './styles/wave7e-overrides.css';
+import './styles/wave7e1-overrides.css';
+import './styles/wave7e2-overrides.css';
 import { createRoot } from 'react-dom/client';
 import App from './App';
 import { initSentry } from './lib/sentry';
