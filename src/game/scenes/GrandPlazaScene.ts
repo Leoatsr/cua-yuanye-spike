@@ -68,7 +68,7 @@ export class GrandPlazaScene extends Phaser.Scene {
   private spawnOverride: { x: number; y: number } | null = null;
   private inputLockUntil = 0;
 
-  private bgm?: Phaser.Sound.BaseSound;
+  // private bgm 已迁移到 bgmManager (Wave 10.bgm-fix)
 
   constructor() {
     super('GrandPlaza');

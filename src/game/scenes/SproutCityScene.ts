@@ -140,7 +140,7 @@ export class SproutCityScene extends Phaser.Scene {
   private eastPortY = 0;
 
   // BGM
-  private bgm?: Phaser.Sound.BaseSound;
+  // private bgm 已迁移到 bgmManager (Wave 10.bgm-fix)
 
   // SFX
   private sfxHandlerBound = false;
