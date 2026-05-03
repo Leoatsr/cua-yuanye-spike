@@ -60,56 +60,54 @@ export class WangqiLouScene extends Phaser.Scene {
     this.inputLockUntil = this.time.now + 250;
     this.physics.world.setBounds(0, 0, ROOM_WIDTH, ROOM_HEIGHT);
 
-    // ---- Floor (rich navy with brass trim, observatory feel) ----
+    // ---- Floor (Wave 7.K · 落地页米色) ----
     const g = this.add.graphics();
     g.setDepth(-5);
-    g.fillStyle(0x0a0e1f, 1);
+    g.fillStyle(0x8b4513, 1);
     g.fillRect(0, 0, ROOM_WIDTH, ROOM_HEIGHT);
-    g.fillStyle(0x1a2540, 1);
+    g.fillStyle(0xfdf0cf, 1);
     g.fillRect(60, 70, ROOM_WIDTH - 120, ROOM_HEIGHT - 130);
-    g.lineStyle(3, 0xb8a472, 0.7);
+    g.lineStyle(3, 0x5d3a1a, 1);
     g.strokeRect(60, 70, ROOM_WIDTH - 120, ROOM_HEIGHT - 130);
-    // Compass rose at center floor
-    g.lineStyle(1, 0xb8a472, 0.4);
-    const cx = ROOM_WIDTH / 2;
-    const cy = ROOM_HEIGHT / 2 + 20;
-    g.strokeCircle(cx, cy, 80);
-    g.strokeCircle(cx, cy, 60);
-    [0, 1, 2, 3].forEach((i) => {
-      const a = (i / 4) * Math.PI * 2;
-      g.lineBetween(cx + Math.cos(a) * 40, cy + Math.sin(a) * 40,
-        cx + Math.cos(a) * 80, cy + Math.sin(a) * 80);
-    });
-    [0, 1, 2, 3].forEach((i) => {
-      const a = ((i / 4) * Math.PI * 2) + Math.PI / 4;
-      g.lineBetween(cx + Math.cos(a) * 30, cy + Math.sin(a) * 30,
-        cx + Math.cos(a) * 60, cy + Math.sin(a) * 60);
-    });
+    // 横向木板缝
+    g.lineStyle(1, 0xc9a55b, 0.3);
+    for (let y = 102; y < ROOM_HEIGHT - 60; y += 64) {
+      g.lineBetween(64, y, ROOM_WIDTH - 64, y);
+    }
 
-    // ---- North wall (brass trim) ----
-    g.fillStyle(0x4a3826, 1);
+    // ---- 北墙顶梁 (Wave 7.K · 暖木) ----
+    g.fillStyle(0x5d3a1a, 1);
     g.fillRect(60, 60, ROOM_WIDTH - 120, 14);
-    g.fillStyle(0xb8a472, 0.6);
-    g.fillRect(60, 72, ROOM_WIDTH - 120, 2);
 
-    // ---- World map with pins (north — main feature) ----
-    this.mapX = ROOM_WIDTH / 2;
+    // ---- Wave 7.K B 布局：上下双区分隔线 (中线 · 暗木条) ----
+    const dividerY = ROOM_HEIGHT / 2 + 5;
+    g.fillStyle(0x5d3a1a, 1);
+    g.fillRect(80, dividerY - 1, ROOM_WIDTH - 160, 2);
+    g.fillStyle(0xc9a55b, 0.5);
+    g.fillRect(80, dividerY + 1, ROOM_WIDTH - 160, 1);
+
+    // ====== 上半工作区 ======
+    // 左上：档案柜阵列 4 抽屉横向 (drawIntelDesk · 装饰不互动)
+    this.drawIntelDesk(ROOM_WIDTH / 4, 130);
+
+    // 右上：情报地图墙 (主道具 · 占 mapX/Y)
+    this.mapX = ROOM_WIDTH * 3 / 4;
     this.mapY = 130;
     this.drawWorldMap(this.mapX, this.mapY);
 
-    // ---- Telescope (west — pointed at window) ----
-    this.telescopeX = 140;
-    this.telescopeY = ROOM_HEIGHT / 2;
+    // ====== 下半阅读区 ======
+    // 左下：望远镜 (落地式 · 占 telescopeX/Y)
+    this.telescopeX = 130;
+    this.telescopeY = ROOM_HEIGHT / 2 + 70;
     this.drawTelescope(this.telescopeX, this.telescopeY);
 
-    // ---- Encrypted vault (east) ----
-    this.vaultX = ROOM_WIDTH - 130;
-    this.vaultY = ROOM_HEIGHT / 2;
-    this.drawVault(this.vaultX, this.vaultY);
+    // 中下：高背阅读桌 (装饰 · 不互动 · 用 inline 方法画)
+    this.drawReadingDesk(ROOM_WIDTH / 2, ROOM_HEIGHT / 2 + 70);
 
-    // ---- Intel analysis desks ----
-    this.drawIntelDesk(ROOM_WIDTH / 2 - 90, ROOM_HEIGHT / 2 + 100);
-    this.drawIntelDesk(ROOM_WIDTH / 2 + 90, ROOM_HEIGHT / 2 + 100);
+    // 右下：月报架 (副件 · 占 vaultX/Y)
+    this.vaultX = ROOM_WIDTH - 130;
+    this.vaultY = ROOM_HEIGHT / 2 + 70;
+    this.drawVault(this.vaultX, this.vaultY);
 
     // ---- Player ----
     this.createCharacterAnims('player');
@@ -156,211 +154,212 @@ export class WangqiLouScene extends Phaser.Scene {
     doorG.fillCircle(this.exitX + 12, this.exitY, 3);
 
     // ---- Title ----
-    this.add.text(ROOM_WIDTH / 2, 30, '— 望气楼 · 内参工作组 —', {
+    this.add.text(ROOM_WIDTH / 2, 80, '— 内参工坊 —', {
       fontFamily: 'serif', fontSize: '15px',
-      color: '#fbbf24', backgroundColor: '#0a0e1faa',
+      color: '#444441', backgroundColor: '#fdf0cfee',
       padding: { left: 10, right: 10, top: 4, bottom: 4 },
     }).setOrigin(0.5).setDepth(10);
 
     this.exitHint = this.add.text(0, 0, '[E] 离开', {
       fontFamily: 'sans-serif', fontSize: '11px',
-      color: '#ffffff', backgroundColor: '#3a4a6add',
+      color: '#fdf0cf', backgroundColor: '#5d3a1add',
       padding: { left: 6, right: 6, top: 3, bottom: 3 },
     }).setOrigin(0.5).setVisible(false).setDepth(100);
 
     this.interactHint = this.add.text(0, 0, '[E]', {
       fontFamily: 'sans-serif', fontSize: '11px',
-      color: '#ffffff', backgroundColor: '#000000aa',
+      color: '#fdf0cf', backgroundColor: '#5d3a1add',
       padding: { left: 4, right: 4, top: 2, bottom: 2 },
     }).setOrigin(0.5).setVisible(false).setDepth(100);
   }
 
-  // ============ DRAWING ============
+  // ============ DRAWING (Wave 7.K · B 上下双区布局 · 保留方法名) ============
 
+  /** 主道具：情报地图墙 (右上 · 占 mapX/Y · 灰主题) */
   private drawWorldMap(x: number, y: number) {
     const g = this.add.graphics();
     g.setDepth(2);
-    // Frame (brass)
-    g.fillStyle(0xb8a472, 1);
-    g.fillRect(x - 220, y - 50, 440, 100);
-    g.lineStyle(3, 0x6b5230, 1);
-    g.strokeRect(x - 220, y - 50, 440, 100);
-    // Map paper (aged sepia)
-    g.fillStyle(0xede5cf, 1);
-    g.fillRect(x - 212, y - 42, 424, 84);
-
-    // Continent shapes (rough silhouettes)
-    g.fillStyle(0x9a8350, 0.7);
-    // North America (left)
-    g.fillTriangle(x - 200, y - 25, x - 165, y - 35, x - 145, y);
-    g.fillRect(x - 200, y - 25, 60, 25);
-    // South America
-    g.fillTriangle(x - 175, y + 5, x - 160, y + 10, x - 165, y + 35);
-    // Europe + Asia (continuous blob)
-    g.fillRect(x - 100, y - 30, 100, 30);
-    g.fillTriangle(x, y, x + 40, y + 15, x + 30, y - 20);
-    g.fillRect(x + 30, y - 25, 50, 30);
-    // Africa
-    g.fillRect(x - 80, y, 25, 35);
-    g.fillTriangle(x - 80, y + 35, x - 55, y + 35, x - 70, y + 42);
-    // Australia
-    g.fillTriangle(x + 80, y + 25, x + 110, y + 25, x + 95, y + 35);
-
-    // 8 pinned events (red/yellow/blue thumbtacks)
-    const pins: Array<[number, number, number, string]> = [
-      [-160, -10, 0xff3030, 'AI'],     // San Francisco
-      [-150, 25, 0xfbbf24, 'CN'],      // Latin America
-      [-50, -5, 0x60a5fa, 'EU'],       // London
-      [40, -10, 0xff3030, 'CN'],       // Beijing
-      [60, 5, 0xfbbf24, 'JP'],         // Tokyo
-      [70, 25, 0xfbbf24, 'IN'],        // Bangalore
-      [-65, 15, 0x60a5fa, 'EU'],       // Africa
-      [95, 30, 0xff3030, 'AU'],        // Australia
+    // 暖木外框
+    g.fillStyle(0x5d3a1a, 1);
+    g.fillRect(x - 88, y - 28, 176, 56);
+    // 灰主题色边
+    g.fillStyle(0x5f5e5a, 1);
+    g.fillRect(x - 84, y - 24, 168, 48);
+    // 米色地图底
+    g.fillStyle(0xfdf0cf, 1);
+    g.fillRect(x - 80, y - 20, 160, 40);
+    // 顶部"INTEL"灰条
+    g.fillStyle(0x444441, 1);
+    g.fillRect(x - 80, y - 20, 160, 5);
+    // 大陆轮廓 (浅灰块)
+    g.fillStyle(0xb4b2a9, 1);
+    g.fillRect(x - 70, y - 10, 30, 18);
+    g.fillRect(x - 36, y - 12, 26, 22);
+    g.fillRect(x - 6, y - 8, 24, 14);
+    g.fillRect(x + 22, y - 6, 22, 12);
+    g.fillRect(x + 48, y - 10, 22, 16);
+    // 海洋纹理 (浅蓝点)
+    g.fillStyle(0x85b7eb, 0.4);
+    for (let i = 0; i < 6; i++) {
+      g.fillCircle(x - 70 + i * 24, y + 14, 1);
+    }
+    // 红/黄/蓝图钉 (8 个)
+    const pins: [number, number, number][] = [
+      [-58, -2, 0xa32d2d], [-44, 4, 0xa32d2d],
+      [-22, -2, 0xef9f27], [-12, 4, 0xef9f27],
+      [4, -4, 0x378ADD], [16, 0, 0x378ADD],
+      [38, -2, 0xa32d2d], [56, -4, 0xef9f27],
     ];
-    pins.forEach(([dx, dy, color]) => {
-      // Pin shadow
-      g.fillStyle(0x000000, 0.2);
-      g.fillCircle(x + dx + 1, y + dy + 1, 4);
-      // Pin head
-      g.fillStyle(color, 1);
-      g.fillCircle(x + dx, y + dy, 3.5);
-      g.fillStyle(0xffffff, 0.5);
-      g.fillCircle(x + dx - 1, y + dy - 1, 1.5);
-      // Connecting string to bottom-left list
-      g.lineStyle(0.5, color, 0.5);
-      g.lineBetween(x + dx, y + dy, x - 200, y + 38 - (pins.indexOf(pins.find(([a, b]) => a === dx && b === dy)!) * 0.5));
+    pins.forEach(([dx, dy, c]) => {
+      g.fillStyle(c, 1);
+      g.fillCircle(x + dx, y + dy, 2);
+      g.fillStyle(0x2c2c2a, 1);
+      g.fillCircle(x + dx, y + dy, 0.8);
     });
-
-    // Compass rose (top-left of map)
-    g.lineStyle(1, 0x6b5230, 1);
-    g.strokeCircle(x - 195, y - 30, 8);
-    g.lineBetween(x - 195, y - 38, x - 195, y - 22);
-    g.lineBetween(x - 203, y - 30, x - 187, y - 30);
   }
 
+  /** 副件 L：望远镜落地式 (左下 · 占 telescopeX/Y) */
   private drawTelescope(x: number, y: number) {
     const g = this.add.graphics();
     g.setDepth(2);
-    // Tripod base
-    g.lineStyle(3, 0x4a3826, 1);
-    g.lineBetween(x - 18, y + 36, x, y);
-    g.lineBetween(x + 18, y + 36, x, y);
-    g.lineBetween(x - 8, y + 36, x, y + 4);
-    // Mount (brass)
-    g.fillStyle(0xb8a472, 1);
-    g.fillCircle(x, y, 8);
-    g.lineStyle(2, 0x6b5230, 1);
-    g.strokeCircle(x, y, 8);
-    // Telescope tube (long, pointing up-right)
-    g.fillStyle(0x4a3826, 1);
-    g.fillRect(x - 4, y - 50, 8, 50);
-    g.lineStyle(2, 0x2a1e10, 1);
-    g.strokeRect(x - 4, y - 50, 8, 50);
-    // Telescope segments (brass rings)
-    g.fillStyle(0xb8a472, 1);
-    g.fillRect(x - 6, y - 50, 12, 4);
-    g.fillRect(x - 6, y - 30, 12, 3);
-    g.fillRect(x - 6, y - 14, 12, 3);
-    // Eyepiece
-    g.fillStyle(0x18121a, 1);
-    g.fillCircle(x, y - 54, 4);
-    g.lineStyle(1, 0xb8a472, 1);
-    g.strokeCircle(x, y - 54, 4);
-
-    // Window behind (showing stars)
-    const wg = this.add.graphics();
-    wg.setDepth(1);
-    wg.fillStyle(0x0a0e1f, 1);
-    wg.fillRect(x - 30, y - 88, 60, 38);
-    wg.lineStyle(2, 0x4a3826, 1);
-    wg.strokeRect(x - 30, y - 88, 60, 38);
-    // Stars
-    wg.fillStyle(0xffe0a0, 1);
-    [[-22, -78], [-12, -82], [0, -76], [10, -84], [18, -78], [22, -68], [-18, -64], [4, -70], [14, -62]].forEach(([sx, sy]) => {
-      wg.fillCircle(x + sx, y + sy, 0.8);
-    });
-    // Moon
-    wg.fillStyle(0xede5cf, 0.9);
-    wg.fillCircle(x + 20, y - 70, 6);
-    wg.fillStyle(0x0a0e1f, 1);
-    wg.fillCircle(x + 22, y - 71, 5);
+    // 三脚架
+    g.lineStyle(3, 0x3a2a1a, 1);
+    g.lineBetween(x, y + 18, x - 12, y + 36);
+    g.lineBetween(x, y + 18, x, y + 36);
+    g.lineBetween(x, y + 18, x + 12, y + 36);
+    // 三脚架交汇点 (金圈)
+    g.fillStyle(0xdaa520, 1);
+    g.fillCircle(x, y + 18, 3);
+    // 镜筒 (深棕长筒)
+    g.fillStyle(0x3a2a1a, 1);
+    g.fillRect(x - 4, y - 24, 8, 42);
+    g.lineStyle(1, 0x888780, 1);
+    g.strokeRect(x - 4, y - 24, 8, 42);
+    // 镜筒装饰环 (3 道)
+    g.fillStyle(0x888780, 1);
+    g.fillRect(x - 5, y - 16, 10, 2);
+    g.fillRect(x - 5, y - 4, 10, 2);
+    g.fillRect(x - 5, y + 8, 10, 2);
+    // 上端目镜 (突出的小圈)
+    g.fillStyle(0x2c2c2a, 1);
+    g.fillRect(x - 6, y - 28, 12, 6);
+    g.fillStyle(0xdaa520, 1);
+    g.fillCircle(x, y - 25, 2);
+    // 下端物镜 (大蓝色玻璃)
+    g.fillStyle(0x185fa5, 1);
+    g.fillCircle(x, y + 16, 5);
+    g.fillStyle(0x85b7eb, 0.4);
+    g.fillCircle(x - 1, y + 14, 2);
   }
 
+  /** 副件 R：月报架 (右下 · 占 vaultX/Y) */
   private drawVault(x: number, y: number) {
     const g = this.add.graphics();
     g.setDepth(2);
-    // Vault body (heavy iron)
-    g.fillStyle(0x2a2e36, 1);
-    g.fillRect(x - 36, y - 50, 72, 100);
-    g.lineStyle(3, 0x18181a, 1);
-    g.strokeRect(x - 36, y - 50, 72, 100);
-    // Inner vault door
-    g.fillStyle(0x4a4d56, 1);
-    g.fillRect(x - 30, y - 44, 60, 88);
-    g.lineStyle(2, 0x18181a, 1);
-    g.strokeRect(x - 30, y - 44, 60, 88);
-    // Big circular dial (brass)
-    g.fillStyle(0xb8a472, 1);
-    g.fillCircle(x, y, 14);
-    g.lineStyle(2, 0x6b5230, 1);
-    g.strokeCircle(x, y, 14);
-    // Dial markings (4 directions + sub)
-    g.lineStyle(1, 0x6b5230, 1);
-    [0, 1, 2, 3].forEach((i) => {
-      const a = (i / 4) * Math.PI * 2;
-      g.lineBetween(x + Math.cos(a) * 10, y + Math.sin(a) * 10,
-        x + Math.cos(a) * 14, y + Math.sin(a) * 14);
-    });
-    [0, 1, 2, 3, 4, 5, 6, 7].forEach((i) => {
-      const a = (i / 8) * Math.PI * 2 + Math.PI / 16;
-      g.lineBetween(x + Math.cos(a) * 12, y + Math.sin(a) * 12,
-        x + Math.cos(a) * 14, y + Math.sin(a) * 14);
-    });
-    // Pointer (red mark at top)
-    g.fillStyle(0xff3030, 1);
-    g.fillTriangle(x - 2, y - 16, x + 2, y - 16, x, y - 12);
-    // Handle (vertical bar)
-    g.fillStyle(0x18181a, 1);
-    g.fillRect(x - 2, y + 16, 4, 24);
-    g.fillStyle(0xb8a472, 1);
-    g.fillCircle(x, y + 18, 3);
-    g.fillCircle(x, y + 38, 3);
-    // Small label (TOP SECRET)
-    g.fillStyle(0xff3030, 1);
-    g.fillRect(x - 18, y - 38, 36, 6);
-    g.fillStyle(0xede5cf, 1);
-    g.fillRect(x - 16, y - 36, 32, 2);
+    // 木架
+    g.fillStyle(0x5d3a1a, 1);
+    g.fillRect(x - 22, y - 36, 44, 72);
+    g.fillStyle(0x8b4513, 1);
+    g.fillRect(x - 20, y - 34, 40, 68);
+    // 顶部标签条 (灰)
+    g.fillStyle(0x444441, 1);
+    g.fillRect(x - 20, y - 34, 40, 6);
+    // 5 期月报 (堆叠 · 不同色封面 · 金封边)
+    const reports = [0x791f1f, 0x854f0b, 0x3b6d11, 0x0c447c, 0x3c3489];
+    for (let i = 0; i < 5; i++) {
+      const ry = y - 26 + i * 12;
+      g.fillStyle(reports[i], 1);
+      g.fillRect(x - 16, ry, 32, 10);
+      // 封面文字白条
+      g.fillStyle(0xfdf0cf, 1);
+      g.fillRect(x - 14, ry + 2, 28, 2);
+      g.fillStyle(reports[i], 0.6);
+      g.fillRect(x - 14, ry + 6, 18, 1);
+      // 封边
+      g.fillStyle(0xdaa520, 1);
+      g.fillRect(x - 16, ry, 2, 10);
+    }
   }
 
+  /** 上半装饰：档案柜阵列 4 抽屉横向 (drawIntelDesk · 装饰不互动) */
   private drawIntelDesk(x: number, y: number) {
     const g = this.add.graphics();
     g.setDepth(2);
-    // Desk (dark wood)
-    g.fillStyle(0x4a3826, 1);
-    g.fillRect(x - 32, y - 14, 64, 28);
-    g.lineStyle(2, 0x2a1e10, 1);
-    g.strokeRect(x - 32, y - 14, 64, 28);
-    // Reports stacked
-    g.fillStyle(0xede5cf, 1);
-    g.fillRect(x - 22, y - 10, 18, 14);
-    g.fillRect(x - 20, y - 12, 18, 14);
-    g.lineStyle(1, 0x6b5230, 0.6);
-    g.strokeRect(x - 22, y - 10, 18, 14);
-    g.strokeRect(x - 20, y - 12, 18, 14);
-    // Confidential stamp (red ring)
-    g.lineStyle(1, 0xff3030, 0.7);
-    g.strokeCircle(x - 11, y - 5, 5);
-    // Magnifying glass
-    g.lineStyle(2, 0xb8a472, 1);
-    g.strokeCircle(x + 12, y - 4, 6);
-    g.lineBetween(x + 16, y, x + 22, y + 6);
-    // Quill pen
-    g.lineStyle(2, 0x18121a, 1);
-    g.lineBetween(x + 4, y + 8, x + 20, y - 8);
-    // Legs
-    g.fillStyle(0x2a1e10, 1);
-    g.fillRect(x - 30, y + 14, 4, 24);
-    g.fillRect(x + 26, y + 14, 4, 24);
+    // 暖木外框
+    g.fillStyle(0x5d3a1a, 1);
+    g.fillRect(x - 88, y - 28, 176, 56);
+    // 灰背板
+    g.fillStyle(0x5f5e5a, 1);
+    g.fillRect(x - 84, y - 24, 168, 48);
+    // 4 抽屉横向阵列
+    for (let i = 0; i < 4; i++) {
+      const dx = x - 78 + i * 40;
+      // 抽屉框
+      g.fillStyle(0x444441, 1);
+      g.fillRect(dx, y - 20, 36, 40);
+      g.lineStyle(1, 0x888780, 0.6);
+      g.strokeRect(dx, y - 20, 36, 40);
+      // 把手 (横条)
+      g.fillStyle(0x888780, 1);
+      g.fillRect(dx + 8, y, 20, 3);
+      // 标签 (米色 · 写编号)
+      g.fillStyle(0xfdf0cf, 1);
+      g.fillRect(dx + 4, y - 16, 28, 6);
+      g.fillStyle(0x444441, 0.7);
+      g.fillRect(dx + 6, y - 14, 20, 1);
+      g.fillRect(dx + 6, y - 12, 14, 1);
+      // 锁孔 (金)
+      g.fillStyle(0xdaa520, 1);
+      g.fillCircle(dx + 30, y + 2, 1.5);
+    }
+  }
+
+  /** 下半装饰：高背阅读桌 (drawReadingDesk · 装饰不互动) */
+  private drawReadingDesk(x: number, y: number) {
+    const g = this.add.graphics();
+    g.setDepth(2);
+    // 高背椅 (椅背向上)
+    g.fillStyle(0x5d3a1a, 1);
+    g.fillRect(x - 14, y - 36, 28, 32);
+    g.fillStyle(0x791f1f, 1);
+    g.fillRect(x - 12, y - 34, 24, 28);
+    // 椅背高光
+    g.fillStyle(0xa32d2d, 1);
+    g.fillRect(x - 10, y - 32, 20, 4);
+    // 桌面 (暖木)
+    g.fillStyle(0x8b4513, 1);
+    g.fillRect(x - 38, y - 6, 76, 22);
+    g.fillStyle(0xa0673b, 1);
+    g.fillRect(x - 36, y - 4, 72, 18);
+    // 桌脚
+    g.fillStyle(0x3a2a1a, 1);
+    g.fillRect(x - 36, y + 16, 4, 14);
+    g.fillRect(x + 32, y + 16, 4, 14);
+    // 桌上一份打开的报告 (米色)
+    g.fillStyle(0xfdf0cf, 1);
+    g.fillRect(x - 18, y - 2, 36, 14);
+    g.lineStyle(1, 0x444441, 0.5);
+    g.strokeRect(x - 18, y - 2, 36, 14);
+    // 红色顶部条
+    g.fillStyle(0x791f1f, 1);
+    g.fillRect(x - 16, y, 32, 3);
+    // 文字行
+    g.fillStyle(0x444441, 0.5);
+    g.fillRect(x - 16, y + 5, 28, 1);
+    g.fillRect(x - 16, y + 7, 24, 1);
+    g.fillRect(x - 16, y + 9, 18, 1);
+    // 桌左：钢笔
+    g.fillStyle(0x0c447c, 1);
+    g.fillRect(x - 32, y + 2, 10, 2);
+    g.fillStyle(0xdaa520, 1);
+    g.fillRect(x - 24, y + 2, 2, 2);
+    // 桌右：绿罩台灯
+    g.fillStyle(0x3b6d11, 1);
+    g.fillRect(x + 22, y - 4, 12, 4);
+    g.fillStyle(0xfac775, 0.8);
+    g.fillRect(x + 24, y, 8, 3);
+    g.fillStyle(0x444441, 1);
+    g.fillRect(x + 27, y + 3, 2, 4);
   }
 
   // ============ ANIMATION ============
@@ -396,18 +395,16 @@ export class WangqiLouScene extends Phaser.Scene {
 
   private triggerMap() {
     EventBus.emit('show-dialogue', {
-      name: '🗺️ 世界形势图',
+      name: '🗺️ 情报地图墙',
       lines: [
-        '（巨大的世界地图，8 处用彩色图钉标着事件）',
+        '（米色地图底 · 8 处彩色图钉标着事件）',
         '',
         '红钉：突发事件 / 行业地震',
         '黄钉：值得跟进的趋势',
         '蓝钉：长期观察对象',
         '',
-        '"望气——观天下之气，知风之所向。"',
-        '',
-        '"不站队、不站票——只观察、只记录、只输出。"',
-        '"内参周报每周一发布。"',
+        '"望气——观天下之气 · 知风之所向。"',
+        '"不站队 · 不预判——只观察 · 只记录。"',
       ],
     });
   }
@@ -416,13 +413,13 @@ export class WangqiLouScene extends Phaser.Scene {
     EventBus.emit('show-dialogue', {
       name: '🔭 望远镜',
       lines: [
-        '（穿过眼罩，看见窗外群星）',
+        '（落地式三脚架望远镜 · 物镜对着外面的天）',
         '',
-        '"夜空里能看到的，比白天多。"',
-        '"行业里值得看的，也比表面多。"',
+        '"夜空里能看到的 · 比白天多。"',
+        '"行业里值得看的 · 也比表面多。"',
         '',
         '"望气——古时候是看星象。"',
-        '"现在，是看 GitHub Trending、看公司财报、看技术博客。"',
+        '"现在 · 是看 GitHub Trending · 看技术博客 · 看会议纪要。"',
         '',
         '"——风起于青萍之末。"',
       ],
@@ -431,19 +428,16 @@ export class WangqiLouScene extends Phaser.Scene {
 
   private triggerVault() {
     EventBus.emit('show-dialogue', {
-      name: '🔐 加密保险柜',
+      name: '📰 内参月报',
       lines: [
-        '（厚重的铁柜，红色"绝密"标签）',
+        '（架上 5 期月报 · 不同色封面 · 金色封边）',
         '',
-        '"内参源材料、未公开访谈、敏感情报——都在这里。"',
+        '红：行业地震 · 棕：投融资变化',
+        '绿：开源生态 · 蓝：政策与监管',
+        '紫：人物与组织变动',
         '',
-        '"打开需 3 把钥匙：" ',
-        '─ 工作组长 (1 把)',
-        '─ 当值分析师 (1 把)',
-        '─ 来源代号 (1 把 · 知情者本人)',
-        '',
-        '"——非紧急时，谁也不动这个柜子。"',
-        '（红色指针纹丝不动）',
+        '"内参月报 · 每月初发布。"',
+        '"——读多了你会发现 · 真相往往藏在颜色之间。"',
       ],
     });
   }
@@ -498,17 +492,17 @@ export class WangqiLouScene extends Phaser.Scene {
       this.exitHint.setPosition(this.exitX, this.exitY - 36).setVisible(true);
       this.interactHint.setVisible(false);
       if (Phaser.Input.Keyboard.JustDown(this.eKey)) this.exit();
-    } else if (distMap < INTERACT_DISTANCE * 1.8) {
+    } else if (distMap < INTERACT_DISTANCE * 1.5) {
       this.exitHint.setVisible(false);
-      this.interactHint.setText('[E] 看世界图').setPosition(this.mapX, this.mapY - 60).setVisible(true);
+      this.interactHint.setText('[E] 看情报地图').setPosition(this.mapX, this.mapY + 36).setVisible(true);
       if (Phaser.Input.Keyboard.JustDown(this.eKey)) this.triggerMap();
     } else if (distTel < INTERACT_DISTANCE) {
       this.exitHint.setVisible(false);
-      this.interactHint.setText('[E] 用望远镜').setPosition(this.telescopeX, this.telescopeY - 80).setVisible(true);
+      this.interactHint.setText('[E] 用望远镜').setPosition(this.telescopeX, this.telescopeY - 50).setVisible(true);
       if (Phaser.Input.Keyboard.JustDown(this.eKey)) this.triggerTelescope();
     } else if (distVault < INTERACT_DISTANCE) {
       this.exitHint.setVisible(false);
-      this.interactHint.setText('[E] 看保险柜').setPosition(this.vaultX, this.vaultY - 70).setVisible(true);
+      this.interactHint.setText('[E] 翻月报').setPosition(this.vaultX, this.vaultY - 50).setVisible(true);
       if (Phaser.Input.Keyboard.JustDown(this.eKey)) this.triggerVault();
     } else {
       this.exitHint.setVisible(false);

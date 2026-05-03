@@ -1,0 +1,33 @@
+/**
+ * Wave 7.E overrides
+ * 加载顺序：晚于 wave7d-overrides.css
+ *
+ * - hide 旧 QuestPanel (右上"任务 6/9" 折叠头部 + 展开任务清单 panel)
+ * - hide 旧 TitleList
+ * - hide 旧 OnlineRoster (wave7d 已 hide · 这里加更宽松的 selector)
+ *
+ * 这些组件的 functionality 已经被新组件接管 ——
+ * 任务清单 → NewQuestLog (左下 hotbar 触发)
+ * 称号列表 → 跟现有 ProfilePanel 重复
+ * 在线人数 → NewGameAppHUD 顶部 chip
+ */
+
+/* QuestPanel 旧组件 — 通常用 inline style fixed top right */
+/* 它的特征：fixed positioned + 包含"任务"文字 + 黑底 */
+[class*="QuestPanel"],
+[class*="quest-panel"][class*="collapsed"],
+[data-quest-panel] {
+  display: none !important;
+}
+
+/* TitleList 旧组件 */
+[class*="TitleList"],
+[class*="title-list"],
+[data-title-list] {
+  display: none !important;
+}
+
+/* 加宽 OnlineRoster 隐藏 selector（wave7d 没命中 fallback） */
+div[style*="position: fixed"][style*="background: rgba(20, 24, 30"][style*="left: 50%"] {
+  display: none !important;
+}

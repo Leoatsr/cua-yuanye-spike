@@ -1,0 +1,36 @@
+/**
+ * Wave 7.E.1 overrides
+ * 加载顺序：晚于 wave7e-overrides.css
+ *
+ * - hide 右上齿轮 (TimeSettingsButton) · 时间用现实世界 · 不再需要设置面板
+ * - hide 右上铃铛 (NotificationBadge) · 用户要求删
+ * - hide TimeOverlay 昼夜遮罩 · 用真实时间不需要色调
+ */
+
+/* TimeSettingsButton 齿轮 */
+[class*="TimeSettings"],
+[class*="time-settings"],
+[data-time-settings],
+button[title*="时间设置" i],
+button[title*="时间系统" i],
+button[aria-label*="时间设置" i],
+button[aria-label*="settings" i][class*="time"] {
+  display: none !important;
+}
+
+/* NotificationBadge 铃铛 */
+[class*="NotificationBadge"],
+[class*="notification-badge"],
+[data-notification-badge],
+button[title*="通知" i],
+button[aria-label*="通知" i],
+button[aria-label*="notification" i] {
+  display: none !important;
+}
+
+/* TimeOverlay 色调遮罩 — 永远白昼 */
+[class*="TimeOverlay"],
+[class*="time-overlay"],
+[data-time-overlay] {
+  display: none !important;
+}

@@ -7,6 +7,7 @@ const INTERACT_DISTANCE = 56;
 
 const ROOM_WIDTH = 700;
 const ROOM_HEIGHT = 500;
+// Wave 8.MirrorPavilion · 天平中心 · 公正大堂
 
 interface SceneInitData {
   returnX?: number;
@@ -14,7 +15,7 @@ interface SceneInitData {
 }
 
 /**
- * 明镜阁室内 (Mirror Pavilion) — appeals & oversight.
+ * 明镜阁室内 (Mirror Pavilion) · 天平中心 — appeals & oversight.
  * In C6.0, just the room. C6.2 will hook into the existing C-9 appeal system.
  */
 export class MirrorPavilionScene extends Phaser.Scene {
@@ -34,10 +35,12 @@ export class MirrorPavilionScene extends Phaser.Scene {
   private exitHint!: Phaser.GameObjects.Text;
   private interactHint!: Phaser.GameObjects.Text;
 
-  private mirrorX = 0;
-  private mirrorY = 0;
-  private deskX = 0;
-  private deskY = 0;
+  private scaleX = 0;
+  private scaleY = 0;
+  private petitionX = 0;
+  private petitionY = 0;
+  private archiveX = 0;
+  private archiveY = 0;
 
   private returnX = 0;
   private returnY = 0;
@@ -56,42 +59,59 @@ export class MirrorPavilionScene extends Phaser.Scene {
     this.inputLockUntil = this.time.now + 250;
     this.physics.world.setBounds(0, 0, ROOM_WIDTH, ROOM_HEIGHT);
 
-    // Floor
+    // === Wave 8 · 米色羊皮纸地板 (替代灰蓝) ===
     const g = this.add.graphics();
     g.setDepth(-5);
-    g.fillStyle(0x1a1a22, 1);
+    // 暖木墙边
+    g.fillStyle(0x5d3a1a, 1);
     g.fillRect(0, 0, ROOM_WIDTH, ROOM_HEIGHT);
-    // Octagonal-feel floor
-    g.fillStyle(0xefe9d9, 1);
-    g.fillRoundedRect(60, 60, ROOM_WIDTH - 120, ROOM_HEIGHT - 120, 50);
-    g.lineStyle(3, 0xb8a472, 1);
-    g.strokeRoundedRect(60, 60, ROOM_WIDTH - 120, ROOM_HEIGHT - 120, 50);
-
-    // Subtle radial pattern (mirror motif on floor)
-    g.lineStyle(1, 0xc0b89d, 0.4);
-    for (let r = 60; r < 200; r += 25) {
-      g.strokeCircle(ROOM_WIDTH / 2, ROOM_HEIGHT / 2 - 20, r);
+    // 米色羊皮纸地板
+    g.fillStyle(0xfdf0cf, 1);
+    g.fillRect(60, 60, ROOM_WIDTH - 120, ROOM_HEIGHT - 120);
+    g.lineStyle(3, 0x8b6f4a, 1);
+    g.strokeRect(60, 60, ROOM_WIDTH - 120, ROOM_HEIGHT - 120);
+    // 散点纹理
+    g.fillStyle(0xead4a0, 0.4);
+    for (let i = 0; i < 50; i++) {
+      const px = 80 + Math.random() * (ROOM_WIDTH - 160);
+      const py = 80 + Math.random() * (ROOM_HEIGHT - 160);
+      g.fillCircle(px, py, 1.5);
+    }
+    // 中央同心圆地纹 (天平基座)
+    g.lineStyle(1, 0x2a4a4a, 0.4);
+    for (let r = 50; r < 180; r += 22) {
+      g.strokeCircle(ROOM_WIDTH / 2, ROOM_HEIGHT / 2, r);
     }
 
-    // Slim columns (4 corners)
-    this.drawColumn(120, 120);
-    this.drawColumn(ROOM_WIDTH - 120, 120);
-    this.drawColumn(120, ROOM_HEIGHT - 120);
-    this.drawColumn(ROOM_WIDTH - 120, ROOM_HEIGHT - 120);
+    // === 顶梁 (青色 · 跟外景圆顶呼应) ===
+    g.fillStyle(0x2a4a4a, 1);
+    g.fillRect(0, 0, ROOM_WIDTH, 36);
+    g.fillStyle(0x4a6a6a, 1);
+    g.fillRect(0, 0, ROOM_WIDTH, 6);
 
-    // Big mirror (north wall — focal piece)
-    this.mirrorX = ROOM_WIDTH / 2;
-    this.mirrorY = 130;
-    this.drawMirror(this.mirrorX, this.mirrorY);
+    // === 4 角白柱 ===
+    this.drawColumn(110, 100);
+    this.drawColumn(ROOM_WIDTH - 110, 100);
+    this.drawColumn(110, ROOM_HEIGHT - 110);
+    this.drawColumn(ROOM_WIDTH - 110, ROOM_HEIGHT - 110);
 
-    // Petitioner desk (center-south)
-    this.deskX = ROOM_WIDTH / 2;
-    this.deskY = ROOM_HEIGHT / 2 + 30;
-    this.drawDesk(this.deskX, this.deskY);
+    // === 装饰：北墙小铜镜 (不互动 · 只点缀) ===
+    this.drawSmallMirror(ROOM_WIDTH / 2, 90);
 
-    // Decorative water basins (east + west)
-    this.drawBasin(180, ROOM_HEIGHT / 2 + 30);
-    this.drawBasin(ROOM_WIDTH - 180, ROOM_HEIGHT / 2 + 30);
+    // === 主互动 1：巨大天平 (中央 · 公正大堂主角) ===
+    this.scaleX = ROOM_WIDTH / 2;
+    this.scaleY = ROOM_HEIGHT / 2;
+    this.drawGiantScale(this.scaleX, this.scaleY);
+
+    // === 主互动 2：申诉箱 (左下) ===
+    this.petitionX = 160;
+    this.petitionY = ROOM_HEIGHT - 140;
+    this.drawPetitionBox(this.petitionX, this.petitionY);
+
+    // === 主互动 3：案卷柜 (右下) ===
+    this.archiveX = ROOM_WIDTH - 160;
+    this.archiveY = ROOM_HEIGHT - 140;
+    this.drawArchiveCabinet(this.archiveX, this.archiveY);
 
     // ---- Player ----
     this.createCharacterAnims('player');
@@ -159,68 +179,182 @@ export class MirrorPavilionScene extends Phaser.Scene {
   private drawColumn(x: number, y: number) {
     const g = this.add.graphics();
     g.setDepth(2);
-    g.fillStyle(0xe6deca, 1);
-    g.fillRect(x - 8, y - 36, 16, 72);
-    g.fillStyle(0xc8c0a3, 1);
-    g.fillRect(x - 12, y - 36, 24, 4);
-    g.fillRect(x - 12, y + 32, 24, 4);
+    // 米色柱身
+    g.fillStyle(0xfdf0cf, 1);
+    g.fillRect(x - 8, y - 50, 16, 100);
+    g.lineStyle(1, 0x8b6f4a, 0.8);
+    g.strokeRect(x - 8, y - 50, 16, 100);
+    // 柱头
+    g.fillStyle(0xc9a55b, 1);
+    g.fillRect(x - 12, y - 50, 24, 6);
+    g.fillRect(x - 12, y + 44, 24, 6);
+    // 柱身纹
+    g.lineStyle(1, 0xc9a55b, 0.5);
+    g.lineBetween(x - 3, y - 44, x - 3, y + 44);
+    g.lineBetween(x + 3, y - 44, x + 3, y + 44);
   }
 
-  private drawMirror(x: number, y: number) {
+  /** 北墙小铜镜 (装饰 · 不互动) */
+  private drawSmallMirror(x: number, y: number) {
     const g = this.add.graphics();
     g.setDepth(2);
-    // Outer frame (gilded oval)
-    g.fillStyle(0xb8a472, 1);
-    g.fillEllipse(x, y, 130, 90);
-    g.lineStyle(3, 0x9a8d6c, 1);
-    g.strokeEllipse(x, y, 130, 90);
-    // Inner mirror (silver/blue tint)
-    g.fillStyle(0xb8c8d8, 1);
-    g.fillEllipse(x, y, 110, 70);
-    // Mirror highlight (gradient effect with arcs)
-    g.lineStyle(2, 0xe0eaf0, 0.6);
-    g.strokeEllipse(x - 20, y - 12, 50, 30);
-    // Decorative ornaments above mirror
-    g.fillStyle(0xb8a472, 1);
-    g.fillTriangle(x, y - 56, x - 8, y - 48, x + 8, y - 48);
+    // 金边框
+    g.fillStyle(0xdaa520, 1);
+    g.fillEllipse(x, y, 70, 50);
+    g.lineStyle(2, 0x8b6f4a, 1);
+    g.strokeEllipse(x, y, 70, 50);
+    // 镜面 (青色调)
+    g.fillStyle(0x7aa0a0, 1);
+    g.fillEllipse(x, y, 56, 38);
+    // 镜面高光
+    g.lineStyle(1.5, 0xc8e0e0, 0.7);
+    g.strokeEllipse(x - 10, y - 6, 22, 14);
+    // 顶饰金叶
+    g.fillStyle(0xdaa520, 1);
+    g.fillTriangle(x, y - 32, x - 6, y - 26, x + 6, y - 26);
   }
 
-  private drawDesk(x: number, y: number) {
+  /** 巨大天平 (中央 · 主互动 1) */
+  private drawGiantScale(x: number, y: number) {
     const g = this.add.graphics();
     g.setDepth(2);
-    // Desk top
-    g.fillStyle(0x6b5a3e, 1);
-    g.fillRect(x - 60, y - 12, 120, 24);
-    g.lineStyle(2, 0x4a3e26, 1);
-    g.strokeRect(x - 60, y - 12, 120, 24);
-    // Legs
-    g.fillStyle(0x4a3e26, 1);
-    g.fillRect(x - 56, y + 12, 6, 30);
-    g.fillRect(x + 50, y + 12, 6, 30);
-    // Scroll on desk
-    g.fillStyle(0xede5cf, 1);
-    g.fillRect(x - 30, y - 8, 36, 6);
-    g.lineStyle(1, 0x6b5a3e, 1);
-    g.strokeRect(x - 30, y - 8, 36, 6);
-    // Inkwell
-    g.fillStyle(0x2a1e16, 1);
-    g.fillCircle(x + 24, y - 4, 5);
+    // === 立柱 (青铜) ===
+    g.fillStyle(0x4a6a6a, 1);
+    g.fillRect(x - 8, y - 30, 16, 100);
+    g.lineStyle(2, 0x2a4a4a, 1);
+    g.strokeRect(x - 8, y - 30, 16, 100);
+    // 立柱顶饰 (金球)
+    g.fillStyle(0xdaa520, 1);
+    g.fillCircle(x, y - 35, 8);
+    g.lineStyle(1, 0x8b6f4a, 1);
+    g.strokeCircle(x, y - 35, 8);
+    // === 横梁 (粗) ===
+    g.fillStyle(0x6a8a8a, 1);
+    g.fillRect(x - 110, y - 26, 220, 10);
+    g.lineStyle(2, 0x2a4a4a, 1);
+    g.strokeRect(x - 110, y - 26, 220, 10);
+    // 横梁中心金徽
+    g.fillStyle(0xdaa520, 1);
+    g.fillCircle(x, y - 21, 5);
+    // === 双吊链 ===
+    g.lineStyle(2, 0x2a4a4a, 1);
+    for (let dx of [-100, 100]) {
+      // 链条 (3 段)
+      for (let i = 0; i < 3; i++) {
+        g.fillStyle(0x4a6a6a, 1);
+        g.fillCircle(x + dx, y - 15 + i * 6, 2.5);
+      }
+    }
+    // === 左盘 (米色羊皮纸 · 含申诉权重) ===
+    g.fillStyle(0xfdf0cf, 1);
+    g.fillEllipse(x - 100, y + 8, 60, 14);
+    g.lineStyle(2, 0x2a4a4a, 1);
+    g.strokeEllipse(x - 100, y + 8, 60, 14);
+    g.fillStyle(0xc9a55b, 1);
+    g.fillEllipse(x - 100, y + 12, 60, 14);
+    // 左盘内"申诉"标记
+    g.fillStyle(0x6b3434, 1);
+    g.fillCircle(x - 100, y + 5, 4);
+    // === 右盘 (米色 · 含决议权重) ===
+    g.fillStyle(0xfdf0cf, 1);
+    g.fillEllipse(x + 100, y + 8, 60, 14);
+    g.lineStyle(2, 0x2a4a4a, 1);
+    g.strokeEllipse(x + 100, y + 8, 60, 14);
+    g.fillStyle(0xc9a55b, 1);
+    g.fillEllipse(x + 100, y + 12, 60, 14);
+    // 右盘内"决议"金块
+    g.fillStyle(0xdaa520, 1);
+    g.fillRect(x + 96, y, 8, 8);
+    // === 底座 (青铜阶梯) ===
+    g.fillStyle(0x4a6a6a, 1);
+    g.fillRect(x - 30, y + 70, 60, 8);
+    g.fillStyle(0x6a8a8a, 1);
+    g.fillRect(x - 24, y + 64, 48, 6);
+    g.fillStyle(0x4a6a6a, 1);
+    g.fillRect(x - 18, y + 58, 36, 6);
+    // 底座金徽
+    g.fillStyle(0xdaa520, 1);
+    g.fillCircle(x, y + 75, 4);
+    // === 标签 ===
+    this.add.text(x, y - 50, '公正之衡', {
+      fontFamily: 'serif', fontSize: '12px',
+      color: '#fdf0cf', backgroundColor: '#2a4a4aee',
+      padding: { left: 6, right: 6, top: 1, bottom: 1 },
+      fontStyle: 'bold',
+    }).setOrigin(0.5).setDepth(3);
   }
 
-  private drawBasin(x: number, y: number) {
+  /** 申诉箱 (左下 · 主互动 2) */
+  private drawPetitionBox(x: number, y: number) {
     const g = this.add.graphics();
     g.setDepth(2);
-    // Basin (stone bowl with water)
-    g.fillStyle(0xc8c0a3, 1);
-    g.fillEllipse(x, y, 50, 18);
-    g.lineStyle(2, 0x9a8d6c, 1);
-    g.strokeEllipse(x, y, 50, 18);
-    // Water surface
-    g.fillStyle(0x7080a0, 1);
-    g.fillEllipse(x, y - 2, 40, 12);
-    // Reflection highlight
-    g.fillStyle(0xc8d8e8, 0.6);
-    g.fillEllipse(x - 8, y - 4, 16, 4);
+    // 木箱主体
+    g.fillStyle(0x5d3a1a, 1);
+    g.fillRect(x - 30, y - 30, 60, 50);
+    g.lineStyle(2, 0x3a2a1a, 1);
+    g.strokeRect(x - 30, y - 30, 60, 50);
+    // 顶盖 (深色 · 略凸)
+    g.fillStyle(0x3a2a1a, 1);
+    g.fillRect(x - 32, y - 32, 64, 6);
+    // 投递口 (顶部细缝)
+    g.fillStyle(0x000000, 1);
+    g.fillRect(x - 18, y - 31, 36, 2);
+    // 青色锁 (前面)
+    g.fillStyle(0x2a4a4a, 1);
+    g.fillRect(x - 8, y - 8, 16, 12);
+    g.fillStyle(0xdaa520, 1);
+    g.fillCircle(x, y - 2, 3);
+    // 标签条
+    g.fillStyle(0xfdf0cf, 1);
+    g.fillRect(x - 22, y + 8, 44, 10);
+    g.lineStyle(1, 0x8b6f4a, 1);
+    g.strokeRect(x - 22, y + 8, 44, 10);
+    // 标签文字
+    this.add.text(x, y + 13, '申诉', {
+      fontFamily: 'serif', fontSize: '10px',
+      color: '#5d3a1a', fontStyle: 'bold',
+    }).setOrigin(0.5).setDepth(3);
+    // 底座
+    g.fillStyle(0x3a2a1a, 1);
+    g.fillRect(x - 32, y + 20, 64, 4);
+  }
+
+  /** 案卷柜 (右下 · 主互动 3) */
+  private drawArchiveCabinet(x: number, y: number) {
+    const g = this.add.graphics();
+    g.setDepth(2);
+    // 柜身
+    g.fillStyle(0x5d3a1a, 1);
+    g.fillRect(x - 35, y - 32, 70, 64);
+    g.lineStyle(2, 0x3a2a1a, 1);
+    g.strokeRect(x - 35, y - 32, 70, 64);
+    // 顶盖
+    g.fillStyle(0x3a2a1a, 1);
+    g.fillRect(x - 38, y - 36, 76, 6);
+    // 3 抽屉
+    for (let i = 0; i < 3; i++) {
+      const dy = -22 + i * 20;
+      // 抽屉面
+      g.fillStyle(0x8b6f4a, 1);
+      g.fillRect(x - 30, y + dy, 60, 16);
+      g.lineStyle(1, 0x3a2a1a, 1);
+      g.strokeRect(x - 30, y + dy, 60, 16);
+      // 把手 (青铜)
+      g.fillStyle(0x2a4a4a, 1);
+      g.fillRect(x - 6, y + dy + 6, 12, 4);
+      g.fillStyle(0xdaa520, 1);
+      g.fillCircle(x, y + dy + 8, 1.5);
+    }
+    // 标签条
+    g.fillStyle(0xfdf0cf, 1);
+    g.fillRect(x - 25, y - 28, 50, 10);
+    this.add.text(x, y - 23, '案卷', {
+      fontFamily: 'serif', fontSize: '10px',
+      color: '#2a4a4a', fontStyle: 'bold',
+    }).setOrigin(0.5).setDepth(3);
+    // 底座
+    g.fillStyle(0x3a2a1a, 1);
+    g.fillRect(x - 38, y + 32, 76, 4);
   }
 
   private createCharacterAnims(textureKey: string) {
@@ -250,39 +384,61 @@ export class MirrorPavilionScene extends Phaser.Scene {
     });
   }
 
-  private triggerMirrorDialogue() {
+  private triggerScaleDialogue() {
     EventBus.emit('show-dialogue', {
-      name: '🪞 明镜',
+      name: '⚖️ 公正之衡',
       lines: [
-        '（你站在镜前，看见自己的倒影）',
-        '"明镜在此——照见公允，也照见瑕疵。"',
+        '（青铜立柱、横梁、双吊盘——天平静立中央）',
+        '"明镜照影，天平称重——监察之要，皆在此衡。"',
+        '',
+        '左盘：申诉权重',
+        '右盘：决议权重',
         '',
         '本阁主管：',
-        '  · 任务申诉（CV 评分异议）',
-        '  · 监察委员会复议',
+        '─ 任务申诉（CV 评分异议）',
+        '─ 监察委员会复议',
+        '─ 章程异议（向理事会反馈）',
         '',
-        '（如果你对某次评审结果不服——'  ,
-        ' 这里是申诉之地）',
-        '',
-        '提示：当前申诉入口在任务面板（J 键）',
-        '──后续将统一收归本阁。',
+        '"3 位复审员独立评议——只上调，不下调。"',
+        '"明镜不偏私，天平不徇情。"',
       ],
     });
   }
 
-  private triggerDeskDialogue() {
+  private triggerPetitionDialogue() {
     EventBus.emit('show-dialogue', {
-      name: '📜 申诉案桌',
+      name: '📥 申诉箱',
       lines: [
-        '（案桌上摆着一卷申诉书的样本和一支毛笔）',
-        '',
+        '（一只青锁木箱 · 顶部细缝可投递书信）',
         '"凡评审结果存疑——皆可申诉。"',
-        '"3 位复审员独立评议——只上调，不下调。"',
         '',
-        '当前已有的申诉案例：',
-        '─ 通过 J 键 → 任务面板 → 已结算任务 → 发起申诉',
+        '申诉流程：',
+        '─ 1. 在任务面板（J 键）发起申诉',
+        '─ 2. 系统自动分配 3 位复审员',
+        '─ 3. 独立评议 · 7 日内出复审结论',
+        '─ 4. 复审结论归档（案卷柜）',
         '',
         '"明镜不偏私，但也不轻易翻案。"',
+        '──',
+        '后续将统一收归本阁 · 通过 [E] 直接投递。',
+      ],
+    });
+  }
+
+  private triggerArchiveDialogue() {
+    EventBus.emit('show-dialogue', {
+      name: '🗄️ 案卷柜',
+      lines: [
+        '（三层抽屉的青铜把手柜 · 历次仲裁的归档之地）',
+        '',
+        '【上层】近期申诉案：暂无（系统初启）',
+        '【中层】历史决议案：暂无',
+        '【下层】章程异议：暂无',
+        '',
+        '"每一桩判定，皆有据可查。"',
+        '"被看见 · 被记录 · 被追溯——是公允的根基。"',
+        '──',
+        '后续将与申诉记录联动 · 自动归档。',
       ],
     });
   }
@@ -329,24 +485,30 @@ export class MirrorPavilionScene extends Phaser.Scene {
     if (Phaser.Input.Keyboard.JustDown(this.kKey)) EventBus.emit('open-mailbox');
 
     const distExit = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.exitX, this.exitY);
-    const distMirror = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.mirrorX, this.mirrorY);
-    const distDesk = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.deskX, this.deskY);
+    const distScale = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.scaleX, this.scaleY);
+    const distPetition = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.petitionX, this.petitionY);
+    const distArchive = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.archiveX, this.archiveY);
     const nearExit = distExit < 56;
-    const nearMirror = distMirror < INTERACT_DISTANCE;
-    const nearDesk = distDesk < INTERACT_DISTANCE;
+    const nearScale = distScale < INTERACT_DISTANCE * 1.4;
+    const nearPetition = distPetition < INTERACT_DISTANCE;
+    const nearArchive = distArchive < INTERACT_DISTANCE;
 
     if (nearExit) {
       this.exitHint.setPosition(this.exitX, this.exitY - 40).setVisible(true);
       this.interactHint.setVisible(false);
       if (Phaser.Input.Keyboard.JustDown(this.eKey)) this.exit();
-    } else if (nearMirror) {
+    } else if (nearScale) {
       this.exitHint.setVisible(false);
-      this.interactHint.setText('[E] 照镜').setPosition(this.mirrorX, this.mirrorY - 60).setVisible(true);
-      if (Phaser.Input.Keyboard.JustDown(this.eKey)) this.triggerMirrorDialogue();
-    } else if (nearDesk) {
+      this.interactHint.setText('[E] 看天平').setPosition(this.scaleX, this.scaleY - 70).setVisible(true);
+      if (Phaser.Input.Keyboard.JustDown(this.eKey)) this.triggerScaleDialogue();
+    } else if (nearPetition) {
       this.exitHint.setVisible(false);
-      this.interactHint.setText('[E] 看案卷').setPosition(this.deskX, this.deskY - 30).setVisible(true);
-      if (Phaser.Input.Keyboard.JustDown(this.eKey)) this.triggerDeskDialogue();
+      this.interactHint.setText('[E] 投申诉').setPosition(this.petitionX, this.petitionY - 50).setVisible(true);
+      if (Phaser.Input.Keyboard.JustDown(this.eKey)) this.triggerPetitionDialogue();
+    } else if (nearArchive) {
+      this.exitHint.setVisible(false);
+      this.interactHint.setText('[E] 看案卷').setPosition(this.archiveX, this.archiveY - 50).setVisible(true);
+      if (Phaser.Input.Keyboard.JustDown(this.eKey)) this.triggerArchiveDialogue();
     } else {
       this.exitHint.setVisible(false);
       this.interactHint.setVisible(false);

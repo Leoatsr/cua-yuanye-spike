@@ -1,0 +1,64 @@
+/**
+ * Wave 7.C overrides
+ *
+ * - bug 2: 强制 #root + Phaser canvas 占满 viewport，消除白边
+ * - bug 3: 隐藏右下角表情按钮（多种 selector 尝试）
+ *
+ * 加载顺序：必须晚于 design-system.css + pixel-ui.css
+ */
+
+/* ==========================================================
+   bug 2: 全屏 game canvas
+   让 Phaser canvas 占满整个 viewport，HUD chrome 用 fixed
+   position 浮在上面（PlayerIdentity / QuestPanel 等都已经是 fixed）
+   ========================================================== */
+html, body, #root {
+  width: 100vw !important;
+  height: 100vh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Phaser game container 通用 selector */
+#root > div:first-child:not([class*="page"]):not([class*="landing"]) {
+  width: 100vw;
+  height: 100vh;
+}
+
+/* Phaser canvas 本身 */
+canvas {
+  display: block !important;
+}
+
+/* ==========================================================
+   bug 3: 隐藏右下角表情按钮
+   尝试多种常见 selector — 命中一个即可
+   如果还能看到表情按钮，告诉 Claude 截图 + F12 看 element class
+   ========================================================== */
+.emote-trigger,
+.emote-button,
+[data-emote-trigger],
+[aria-label*="表情" i],
+[aria-label*="emote" i],
+[title*="表情"],
+[title*="emote"] {
+  display: none !important;
+}
+
+/* 备选：常见的右下角 fixed 圆形 emoji 按钮位置 */
+button[style*="bottom: 16"][style*="right: 16"] {
+  display: none !important;
+}
+
+
+/* ==========================================================
+   Wave 9.scrollfix - allow document pages to scroll
+   (Landing / PublicProfilePage / ManualPage / CodexPage / MapsPage)
+   #root previously locked overflow:hidden along with html/body.
+   Now keep html/body locked (no double scrollbar) but unlock #root.
+   PhaserGame is fixed/absolute inset:0 so game page is unaffected.
+   ========================================================== */
+#root {
+  overflow: auto !important;
+}

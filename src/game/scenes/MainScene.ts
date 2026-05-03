@@ -1,3 +1,4 @@
+import { attachMinimap } from '../minimap-bridge';
 import * as Phaser from 'phaser';
 import { NPC } from '../entities/NPC';
 import { SignPost } from '../entities/SignPost';
@@ -26,6 +27,7 @@ const STORAGE_KEY_LIBRARIAN_PAGES = 'cua-yuanye-librarian-pages-v1';
  * Adding more cottages = adding more configs like this and more enter points
  * in the door-detection block of update().
  */
+// @ts-expect-error - kept for Wave 10 rollback to tilemap interior path
 const AXIANG_COTTAGE_CONFIG: InteriorConfig = {
   mapKey: 'axiang-cottage',
   tilesetKey: 'tiles-interior',
@@ -62,6 +64,7 @@ const AXIANG_COTTAGE_CONFIG: InteriorConfig = {
 /**
  * Librarian's library — scholarly room with bookshelf walls and a green rug.
  */
+// @ts-expect-error - kept for Wave 10 rollback to tilemap interior path
 const LIBRARIAN_LIBRARY_CONFIG: InteriorConfig = {
   mapKey: 'librarian-library',
   tilesetKey: 'tiles-interior',
@@ -95,6 +98,7 @@ const LIBRARIAN_LIBRARY_CONFIG: InteriorConfig = {
 /**
  * Blacksmith's forge — stone-floored workshop with forge, anvil, and benches.
  */
+// @ts-expect-error - kept for Wave 10 rollback to tilemap interior path
 const BLACKSMITH_FORGE_CONFIG: InteriorConfig = {
   mapKey: 'blacksmith-forge',
   tilesetKey: 'tiles-interior',
@@ -262,6 +266,7 @@ export class MainScene extends Phaser.Scene {
   }
 
   create() {
+    attachMinimap(this, 'MainScene');
     // ---- Tilemap ----
     const map = this.make.tilemap({ key: 'sproutown' });
     const tileset = map.addTilesetImage('tiles', 'tiles');
@@ -1242,17 +1247,32 @@ export class MainScene extends Phaser.Scene {
       {
         x: 13 * 32 + 16, y: 5 * 32 + 16,
         label: '[E] 进入阿降的小屋',
-        enter: () => this.enterInterior(AXIANG_COTTAGE_CONFIG, 6),
+        enter: () => {
+          // Wave 10.villagehead - bypass InteriorScene
+          const returnX = this.player.x;
+          const returnY = this.player.y;
+          this.scene.start('VillageHead', { returnX, returnY });
+        },
       },
       {
         x: 21 * 32 + 16, y: 5 * 32 + 16,
         label: '[E] 进入典籍阁',
-        enter: () => this.enterInterior(LIBRARIAN_LIBRARY_CONFIG, 6),
+        enter: () => {
+          // Wave 10.library - bypass InteriorScene
+          const returnX = this.player.x;
+          const returnY = this.player.y;
+          this.scene.start('Library', { returnX, returnY });
+        },
       },
       {
         x: 5 * 32 + 16, y: 14 * 32 + 16,
         label: '[E] 进入铁匠铺',
-        enter: () => this.enterInterior(BLACKSMITH_FORGE_CONFIG, 15),
+        enter: () => {
+          // Wave 10.blacksmith
+          const returnX = this.player.x;
+          const returnY = this.player.y;
+          this.scene.start('Blacksmith', { returnX, returnY });
+        },
       },
       {
         // West-edge gateway to Sprout City
@@ -1311,6 +1331,7 @@ export class MainScene extends Phaser.Scene {
    * Generic interior entry. Pass the InteriorConfig and the y-tile to put the
    * player at when they come back outside (one tile south of the door).
    */
+  // @ts-expect-error - kept for Wave 10 rollback to tilemap interior path
   private enterInterior(config: InteriorConfig, returnTileY: number) {
     const returnX = this.player.x;
     const returnY = returnTileY * 32 + 16;

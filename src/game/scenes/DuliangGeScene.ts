@@ -60,46 +60,45 @@ export class DuliangGeScene extends Phaser.Scene {
     this.inputLockUntil = this.time.now + 250;
     this.physics.world.setBounds(0, 0, ROOM_WIDTH, ROOM_HEIGHT);
 
-    // ---- Floor (laboratory tile, light gray) ----
+    // ---- Floor (Wave 7.K · 落地页米色) ----
     const g = this.add.graphics();
     g.setDepth(-5);
-    g.fillStyle(0x1a1a22, 1);
+    // 外圈暖木墙
+    g.fillStyle(0x8b4513, 1);
     g.fillRect(0, 0, ROOM_WIDTH, ROOM_HEIGHT);
-    g.fillStyle(0xcfd0d4, 1);
+    // 内地板 米色
+    g.fillStyle(0xfdf0cf, 1);
     g.fillRect(60, 70, ROOM_WIDTH - 120, ROOM_HEIGHT - 130);
-    g.lineStyle(3, 0x8a8d96, 1);
+    // 内边深木线
+    g.lineStyle(3, 0x5d3a1a, 1);
     g.strokeRect(60, 70, ROOM_WIDTH - 120, ROOM_HEIGHT - 130);
-    // Tile pattern
-    g.lineStyle(1, 0xa0a3a8, 0.6);
-    for (let y = 70; y < ROOM_HEIGHT - 60; y += 40) {
-      g.lineBetween(60, y, ROOM_WIDTH - 60, y);
-    }
-    for (let x = 60; x < ROOM_WIDTH - 60; x += 40) {
-      g.lineBetween(x, 70, x, ROOM_HEIGHT - 60);
+    // 横向木板缝
+    g.lineStyle(1, 0xc9a55b, 0.3);
+    for (let y = 102; y < ROOM_HEIGHT - 60; y += 64) {
+      g.lineBetween(64, y, ROOM_WIDTH - 64, y);
     }
 
-    // ---- North wall ----
-    g.fillStyle(0x2a2e36, 1);
+    // ---- 北墙顶梁 (Wave 7.K · 暖木) ----
+    g.fillStyle(0x5d3a1a, 1);
     g.fillRect(60, 60, ROOM_WIDTH - 120, 14);
 
-    // ---- Dashboard wall (north — 3 horizontal screens with charts) ----
+    // ---- Wave 7.K 主道具：雷达图墙 (北墙居中 · 占 dashX/Y) ----
     this.dashX = ROOM_WIDTH / 2;
-    this.dashY = 130;
+    this.dashY = 120;
     this.drawDashboardWall(this.dashX, this.dashY);
 
-    // ---- Radar chart frame (west) ----
-    this.radarX = 140;
-    this.radarY = ROOM_HEIGHT / 2;
+    // ---- Wave 7.K 中央桌：天平砝码 (E 看跑分表 · 占 radarX/Y) ----
+    this.radarX = ROOM_WIDTH / 2;
+    this.radarY = ROOM_HEIGHT / 2 + 20;
     this.drawRadarChart(this.radarX, this.radarY);
 
-    // ---- Leaderboard (east) ----
-    this.leaderX = ROOM_WIDTH - 130;
-    this.leaderY = ROOM_HEIGHT / 2;
+    // ---- Wave 7.K 副件 R：试管架 (东墙 · 占 leaderX/Y) ----
+    this.leaderX = ROOM_WIDTH - 110;
+    this.leaderY = ROOM_HEIGHT / 2 + 30;
     this.drawLeaderboard(this.leaderX, this.leaderY);
 
-    // ---- Workstation desks (center-south) ----
-    this.drawWorkbench(ROOM_WIDTH / 2 - 90, ROOM_HEIGHT / 2 + 80);
-    this.drawWorkbench(ROOM_WIDTH / 2 + 90, ROOM_HEIGHT / 2 + 80);
+    // ---- Wave 7.K 副件 L：盆栽 (西墙 · 用 drawWorkbench 改写) ----
+    this.drawWorkbench(110, ROOM_HEIGHT / 2 + 30);
 
     // ---- Player ----
     this.createCharacterAnims('player');
@@ -146,201 +145,213 @@ export class DuliangGeScene extends Phaser.Scene {
     doorG.fillCircle(this.exitX + 12, this.exitY, 3);
 
     // ---- Title ----
-    this.add.text(ROOM_WIDTH / 2, 30, '— 度量阁 · 测评工作组 —', {
+    this.add.text(ROOM_WIDTH / 2, 80, '— 测评工坊 —', {
       fontFamily: 'serif', fontSize: '15px',
-      color: '#7fc090', backgroundColor: '#1a1a22aa',
+      color: '#854f0b', backgroundColor: '#fdf0cfee',
       padding: { left: 10, right: 10, top: 4, bottom: 4 },
     }).setOrigin(0.5).setDepth(10);
 
     this.exitHint = this.add.text(0, 0, '[E] 离开', {
       fontFamily: 'sans-serif', fontSize: '11px',
-      color: '#ffffff', backgroundColor: '#3a4a6add',
+      color: '#fdf0cf', backgroundColor: '#5d3a1add',
       padding: { left: 6, right: 6, top: 3, bottom: 3 },
     }).setOrigin(0.5).setVisible(false).setDepth(100);
 
     this.interactHint = this.add.text(0, 0, '[E]', {
       fontFamily: 'sans-serif', fontSize: '11px',
-      color: '#ffffff', backgroundColor: '#000000aa',
+      color: '#fdf0cf', backgroundColor: '#5d3a1add',
       padding: { left: 4, right: 4, top: 2, bottom: 2 },
     }).setOrigin(0.5).setVisible(false).setDepth(100);
   }
 
-  // ============ DRAWING ============
+  // ============ DRAWING (Wave 7.K · 4 区精简 · 保留方法名兼容旧 update) ============
 
+  /** 主道具：雷达图墙 (北墙居中 · 占 dashX/Y) */
   private drawDashboardWall(x: number, y: number) {
     const g = this.add.graphics();
     g.setDepth(2);
-    // Mounting bar
-    g.fillStyle(0x4a4d56, 1);
-    g.fillRect(x - 220, y - 50, 440, 6);
-    // 3 dashboard screens
-    const screens = [
-      { offset: -150, type: 'line' },
-      { offset: 0, type: 'bars' },
-      { offset: 150, type: 'metrics' },
-    ];
-    screens.forEach((s) => {
-      const sx = x + s.offset;
-      // Bezel
-      g.fillStyle(0x1a1a1a, 1);
-      g.fillRect(sx - 60, y - 44, 120, 70);
-      g.lineStyle(2, 0x4a4d56, 1);
-      g.strokeRect(sx - 60, y - 44, 120, 70);
-      // Screen
-      g.fillStyle(0x0a0a14, 1);
-      g.fillRect(sx - 56, y - 40, 112, 62);
-      // Screen content
-      if (s.type === 'line') {
-        // Line chart (going up)
-        g.lineStyle(2, 0x4ade80, 1);
-        const points = [-50, -45, -38, -42, -32, -28, -20, -22, -10, -5, 8, 12];
-        for (let i = 0; i < points.length - 1; i++) {
-          g.lineBetween(
-            sx - 50 + i * 9, y + points[i] / 2,
-            sx - 50 + (i + 1) * 9, y + points[i + 1] / 2,
-          );
-        }
-        // Y-axis
-        g.lineStyle(1, 0x4a4d56, 1);
-        g.lineBetween(sx - 50, y - 36, sx - 50, y + 18);
-        g.lineBetween(sx - 50, y + 18, sx + 48, y + 18);
-      } else if (s.type === 'bars') {
-        // Bar chart
-        const heights = [12, 18, 14, 28, 22, 16, 32, 24];
-        heights.forEach((h, i) => {
-          g.fillStyle(0x60a5fa, 0.85);
-          g.fillRect(sx - 48 + i * 12, y + 16 - h, 8, h);
-        });
-        g.lineStyle(1, 0x4a4d56, 1);
-        g.lineBetween(sx - 50, y + 16, sx + 48, y + 16);
-      } else {
-        // Metrics (4 large numbers)
-        g.fillStyle(0xfb923c, 0.9);
-        g.fillRect(sx - 50, y - 32, 48, 22);
-        g.fillStyle(0x4ade80, 0.9);
-        g.fillRect(sx + 4, y - 32, 48, 22);
-        g.fillStyle(0xa78bfa, 0.9);
-        g.fillRect(sx - 50, y - 4, 48, 22);
-        g.fillStyle(0xfbbf24, 0.9);
-        g.fillRect(sx + 4, y - 4, 48, 22);
-      }
-      // Power LED
-      g.fillStyle(0x00ff00, 1);
-      g.fillCircle(sx + 50, y + 20, 2);
-    });
+    // 暖木外框
+    g.fillStyle(0x5d3a1a, 1);
+    g.fillRect(x - 88, y - 28, 176, 56);
+    // 卡其主题色边
+    g.fillStyle(0xbfa66a, 1);
+    g.fillRect(x - 84, y - 24, 168, 48);
+    // 米色挂板
+    g.fillStyle(0xfdf0cf, 1);
+    g.fillRect(x - 80, y - 20, 160, 40);
+    // 顶部标签条
+    g.fillStyle(0x854f0b, 1);
+    g.fillRect(x - 80, y - 20, 160, 6);
+    // 雷达图 (5 边形 · 左半)
+    const cx = x - 50, cy = y + 4, r = 14;
+    const angles: number[] = [];
+    for (let i = 0; i < 5; i++) angles.push((i / 5) * Math.PI * 2 - Math.PI / 2);
+    // 边框 + spokes
+    g.lineStyle(1, 0x854f0b, 0.6);
+    for (let i = 0; i < 5; i++) {
+      const x1 = cx + Math.cos(angles[i]) * r;
+      const y1 = cy + Math.sin(angles[i]) * r;
+      const x2 = cx + Math.cos(angles[(i + 1) % 5]) * r;
+      const y2 = cy + Math.sin(angles[(i + 1) % 5]) * r;
+      g.lineBetween(x1, y1, x2, y2);
+      g.lineBetween(cx, cy, x1, y1);
+    }
+    // 评分多边形 (绿)
+    g.fillStyle(0x97c459, 0.5);
+    const scores = [0.85, 0.9, 0.7, 0.8, 0.75];
+    g.beginPath();
+    for (let i = 0; i < 5; i++) {
+      const px = cx + Math.cos(angles[i]) * r * scores[i];
+      const py = cy + Math.sin(angles[i]) * r * scores[i];
+      if (i === 0) g.moveTo(px, py);
+      else g.lineTo(px, py);
+    }
+    g.closePath();
+    g.fillPath();
+    // 评分数据点
+    g.fillStyle(0x639922, 1);
+    for (let i = 0; i < 5; i++) {
+      const px = cx + Math.cos(angles[i]) * r * scores[i];
+      const py = cy + Math.sin(angles[i]) * r * scores[i];
+      g.fillCircle(px, py, 1.5);
+    }
+    // 右侧条形分数条 (4 条)
+    for (let i = 0; i < 4; i++) {
+      const cy2 = y - 8 + i * 8;
+      // 标签点
+      g.fillStyle(0x854f0b, 1);
+      g.fillCircle(x - 4, cy2, 1.5);
+      // 满槽 (米黄底)
+      g.fillStyle(0xc9a55b, 0.4);
+      g.fillRect(x + 4, cy2 - 2, 60, 4);
+      // 分数填充 (绿)
+      const w = 30 + i * 7;
+      g.fillStyle(0x639922, 1);
+      g.fillRect(x + 4, cy2 - 2, w, 4);
+    }
   }
 
+  /**
+   * 中央桌：天平砝码 (E 看跑分表)
+   * 占用 radarX/Y 字段（保留 · 实现重写）
+   */
   private drawRadarChart(x: number, y: number) {
     const g = this.add.graphics();
     g.setDepth(2);
-    // Frame
-    g.fillStyle(0x4a4d56, 1);
-    g.fillRect(x - 60, y - 70, 120, 140);
-    g.lineStyle(2, 0x2a2e36, 1);
-    g.strokeRect(x - 60, y - 70, 120, 140);
-    // White paper
-    g.fillStyle(0xf0f0f0, 1);
-    g.fillRect(x - 54, y - 64, 108, 128);
-
-    // Radar chart: 6-sided polygon with grid
-    const cx = x;
-    const cy = y;
-    const radii = [40, 30, 20, 10];
-    const angles: number[] = [];
-    for (let i = 0; i < 6; i++) angles.push((i / 6) * Math.PI * 2 - Math.PI / 2);
-
-    // Grid hexagons
-    g.lineStyle(1, 0xa0a3a8, 0.6);
-    radii.forEach((r) => {
-      const points: number[] = [];
-      angles.forEach((a) => {
-        points.push(cx + Math.cos(a) * r, cy + Math.sin(a) * r);
-      });
-      g.strokePoints(points.flatMap((v, i, arr) => [v, arr[i + 1]]).filter((_, i) => i % 4 < 2), true);
-    });
-    // Spokes
-    angles.forEach((a) => {
-      g.lineBetween(cx, cy, cx + Math.cos(a) * 40, cy + Math.sin(a) * 40);
-    });
-    // Data polygon (mock score)
-    const scores = [32, 28, 38, 22, 35, 30];
-    const dataPts: Array<[number, number]> = [];
-    angles.forEach((a, i) => {
-      dataPts.push([cx + Math.cos(a) * scores[i], cy + Math.sin(a) * scores[i]]);
-    });
-    g.fillStyle(0x4ade80, 0.4);
-    g.beginPath();
-    g.moveTo(dataPts[0][0], dataPts[0][1]);
-    for (let i = 1; i < dataPts.length; i++) g.lineTo(dataPts[i][0], dataPts[i][1]);
-    g.closePath();
-    g.fillPath();
-    g.lineStyle(2, 0x16a34a, 1);
-    g.strokePath();
-    // Data points
-    g.fillStyle(0x16a34a, 1);
-    dataPts.forEach(([px, py]) => g.fillCircle(px, py, 2.5));
+    // 桌面 (暖木)
+    g.fillStyle(0x8b4513, 1);
+    g.fillRect(x - 50, y - 18, 100, 36);
+    g.fillStyle(0xa0673b, 1);
+    g.fillRect(x - 48, y - 16, 96, 32);
+    // 天平底座
+    g.fillStyle(0x5d3a1a, 1);
+    g.fillRect(x - 4, y - 4, 8, 12);
+    // 横梁
+    g.fillRect(x - 30, y - 6, 60, 2);
+    // 左托盘悬挂线
+    g.lineStyle(1, 0x5d3a1a, 1);
+    g.lineBetween(x - 28, y - 6, x - 26, y - 2);
+    g.lineBetween(x + 28, y - 6, x + 26, y - 2);
+    // 左托盘 (卡其)
+    g.fillStyle(0xbfa66a, 1);
+    g.fillRect(x - 32, y - 2, 12, 4);
+    // 砝码 (堆叠 2 个)
+    g.fillStyle(0x5d3a1a, 1);
+    g.fillRect(x - 30, y - 4, 8, 2);
+    g.fillRect(x - 28, y - 7, 4, 3);
+    // 右托盘 (卡其)
+    g.fillStyle(0xbfa66a, 1);
+    g.fillRect(x + 20, y - 2, 12, 4);
+    // 右托盘的小金币 (1 个)
+    g.fillStyle(0xdaa520, 1);
+    g.fillCircle(x + 26, y - 4, 2);
+    // 桌前一份记录 (米色纸 + 卡其条)
+    g.fillStyle(0xfdf0cf, 1);
+    g.fillRect(x - 22, y + 6, 44, 10);
+    g.fillStyle(0x854f0b, 1);
+    g.fillRect(x - 22, y + 6, 44, 2);
+    g.fillStyle(0x854f0b, 0.5);
+    g.fillRect(x - 18, y + 11, 30, 1);
+    // 桌脚
+    g.fillStyle(0x3a2a1a, 1);
+    g.fillRect(x - 48, y + 18, 4, 14);
+    g.fillRect(x + 44, y + 18, 4, 14);
   }
 
+  /**
+   * 副件 R：试管架 (东墙 · 占 leaderX/Y)
+   * 占用 leaderX/Y 字段（保留 · 实现重写）
+   */
   private drawLeaderboard(x: number, y: number) {
     const g = this.add.graphics();
     g.setDepth(2);
-    // Frame (gold trim)
-    g.fillStyle(0xb8a472, 1);
-    g.fillRect(x - 50, y - 80, 100, 160);
-    g.lineStyle(2, 0x6b5230, 1);
-    g.strokeRect(x - 50, y - 80, 100, 160);
-    // Inner panel
-    g.fillStyle(0xede5cf, 1);
-    g.fillRect(x - 44, y - 74, 88, 148);
-    // Title bar (gold)
-    g.fillStyle(0xb8a472, 1);
-    g.fillRect(x - 44, y - 74, 88, 16);
-    // Trophy icon at top
-    g.fillStyle(0xf4d35e, 1);
-    g.fillTriangle(x - 6, y - 70, x + 6, y - 70, x, y - 62);
-
-    // 6 ranking entries
-    for (let i = 0; i < 6; i++) {
-      const ey = y - 50 + i * 18;
-      // Rank number
-      g.fillStyle(i < 3 ? 0xf4d35e : 0xa0a0a0, 1);
-      g.fillCircle(x - 36, ey, 5);
-      // Score bar (decreasing)
-      const w = 50 - i * 6;
-      g.fillStyle(i < 3 ? 0xf4d35e : 0xb0b0b0, 0.7);
-      g.fillRect(x - 24, ey - 3, w, 6);
-      // Name line
-      g.fillStyle(0x6b5230, 0.6);
-      g.fillRect(x - 24, ey + 4, 20, 1.5);
+    // 木架
+    g.fillStyle(0x5d3a1a, 1);
+    g.fillRect(x - 22, y - 36, 44, 72);
+    g.fillStyle(0x8b4513, 1);
+    g.fillRect(x - 20, y - 34, 40, 68);
+    // 隔板
+    g.fillStyle(0x5d3a1a, 1);
+    g.fillRect(x - 20, y - 12, 40, 2);
+    g.fillRect(x - 20, y + 10, 40, 2);
+    // 上层 3 个试管
+    const tubeColors = [0xc0392b, 0x97c459, 0x378ADD];  // 红/绿/蓝
+    for (let i = 0; i < 3; i++) {
+      const tx = x - 12 + i * 12;
+      // 试管玻璃 (浅蓝 半透)
+      g.fillStyle(0xe6f1fb, 0.4);
+      g.fillRect(tx - 3, y - 30, 6, 18);
+      // 液体
+      g.fillStyle(tubeColors[i], 1);
+      g.fillRect(tx - 2, y - 22, 4, 10);
+      // 试管圆底
+      g.fillStyle(tubeColors[i], 1);
+      g.fillCircle(tx, y - 12, 2);
+      // 试管口浅色
+      g.fillStyle(0xfdf0cf, 1);
+      g.fillRect(tx - 3, y - 30, 6, 1);
     }
+    // 中层装饰：实验数据本
+    g.fillStyle(0xbfa66a, 1);
+    g.fillRect(x - 14, y - 8, 28, 18);
+    g.fillStyle(0xfdf0cf, 1);
+    g.fillRect(x - 12, y - 6, 24, 4);
+    g.fillStyle(0x854f0b, 0.5);
+    g.fillRect(x - 10, y - 1, 20, 1);
+    g.fillRect(x - 10, y + 2, 16, 1);
+    g.fillRect(x - 10, y + 5, 18, 1);
+    // 底层文件夹
+    g.fillStyle(0x6b5230, 1);
+    g.fillRect(x - 16, y + 14, 32, 18);
+    g.fillStyle(0xfdf0cf, 1);
+    g.fillRect(x - 14, y + 16, 28, 4);
   }
 
+  /** 副件 L：盆栽 (西墙 · drawWorkbench 改写为通用盆栽) */
   private drawWorkbench(x: number, y: number) {
     const g = this.add.graphics();
     g.setDepth(2);
-    // Bench top
-    g.fillStyle(0xe8e4d0, 1);
-    g.fillRect(x - 32, y - 14, 64, 28);
-    g.lineStyle(2, 0x9a8d6c, 1);
-    g.strokeRect(x - 32, y - 14, 64, 28);
-    // Desktop computer (CRT-ish)
-    g.fillStyle(0x2a2e36, 1);
-    g.fillRect(x - 18, y - 10, 36, 24);
-    g.fillStyle(0x000000, 1);
-    g.fillRect(x - 14, y - 6, 28, 16);
-    // Screen content (csv data)
-    g.lineStyle(1, 0x00ff00, 0.7);
-    for (let i = 0; i < 5; i++) {
-      g.lineBetween(x - 12, y - 4 + i * 3, x + 8, y - 4 + i * 3);
-    }
-    // Keyboard
-    g.fillStyle(0x4a4d56, 1);
-    g.fillRect(x - 16, y + 16, 32, 4);
-    // Legs
+    // 陶盆
     g.fillStyle(0x6b5230, 1);
-    g.fillRect(x - 30, y + 14, 4, 24);
-    g.fillRect(x + 26, y + 14, 4, 24);
+    g.fillRect(x - 14, y + 4, 28, 22);
+    g.fillStyle(0x8b6f3a, 1);
+    g.fillRect(x - 12, y + 6, 24, 18);
+    // 盆顶土
+    g.fillStyle(0x3a2a1a, 1);
+    g.fillRect(x - 12, y + 4, 24, 4);
+    // 叶
+    g.fillStyle(0x3b6d11, 1);
+    g.fillCircle(x - 8, y - 4, 6);
+    g.fillCircle(x + 8, y - 4, 6);
+    g.fillCircle(x, y - 12, 7);
+    g.fillCircle(x - 4, y + 2, 5);
+    g.fillCircle(x + 4, y + 2, 5);
+    // 高光
+    g.fillStyle(0x639922, 1);
+    g.fillCircle(x - 2, y - 14, 3);
+    g.fillCircle(x + 6, y - 6, 2);
   }
+
 
   // ============ ANIMATION ============
 
@@ -375,49 +386,47 @@ export class DuliangGeScene extends Phaser.Scene {
 
   private triggerDash() {
     EventBus.emit('show-dialogue', {
-      name: '📊 实时仪表盘',
+      name: '📐 雷达图墙',
       lines: [
-        '（3 块屏幕显示着实时数据流）',
+        '（墙上雷达五维评分图 + 4 条进度条）',
         '',
-        '#1 折线图：模型分数趋势（持续上升）',
-        '#2 柱状图：8 个测评维度分布',
-        '#3 关键指标：4 项核心数字（橙/绿/紫/黄）',
+        '"测评的核心：把模糊的「好」变成可量化的数字。"',
+        '"5 维：编码 / 推理 / 知识 / 对话 / 安全"',
         '',
-        '"测评不是为了打榜——是为了让结果可信。"',
+        '当前样本：编码 85 / 推理 90 / 知识 70',
+        '         对话 80 / 安全 75',
       ],
     });
   }
 
   private triggerRadar() {
     EventBus.emit('show-dialogue', {
-      name: '📐 雷达图',
+      name: '⚖ 跑分天平',
       lines: [
-        '（六维雷达图：编码、推理、知识、安全、对话、长文本）',
+        '（你低头看到桌上摆着天平）',
         '',
-        '"模型有偏科——单一榜单容易误判。"',
-        '"度量阁的标准：6 维全测，雷达呈现。"',
+        '"一边砝码（标准），一边金币（待测）——直到天平水平，分数就出来了。"',
         '',
-        '当前样本：某主流模型',
-        '─ 编码 32 / 推理 28 / 知识 38',
-        '─ 安全 22 / 对话 35 / 长文本 30',
+        '（桌前那张记录单写着）',
+        '"测评数据全部公开 · 任何质疑都欢迎复测。"',
       ],
     });
   }
 
   private triggerLeaderboard() {
     EventBus.emit('show-dialogue', {
-      name: '🏆 测评榜',
+      name: '🧪 试管样本',
       lines: [
-        '（金边牌，前 3 名金色光环）',
+        '（红/绿/蓝 3 个试管 · 不同的待测样本）',
         '',
-        '"每月一更新——按 6 维加权综合分。"',
-        '"前 3 名的模型一年内可被反复测试。"',
+        '"红 = 待测 · 绿 = 通过 · 蓝 = 复测中。"',
         '',
-        '榜单底部：',
-        '"测评数据全部公开 · 任何质疑都欢迎复测。"',
+        '"每个样本都要跑完 5 维测评，才能上榜。"',
+        '架上还有数据本，记录着每月新样本。',
       ],
     });
   }
+
 
   // ============ UPDATE ============
 
@@ -471,15 +480,15 @@ export class DuliangGeScene extends Phaser.Scene {
       if (Phaser.Input.Keyboard.JustDown(this.eKey)) this.exit();
     } else if (distDash < INTERACT_DISTANCE * 1.5) {
       this.exitHint.setVisible(false);
-      this.interactHint.setText('[E] 看仪表盘').setPosition(this.dashX, this.dashY - 70).setVisible(true);
+      this.interactHint.setText('[E] 看雷达图').setPosition(this.dashX, this.dashY + 36).setVisible(true);
       if (Phaser.Input.Keyboard.JustDown(this.eKey)) this.triggerDash();
     } else if (distRadar < INTERACT_DISTANCE) {
       this.exitHint.setVisible(false);
-      this.interactHint.setText('[E] 看雷达图').setPosition(this.radarX, this.radarY - 90).setVisible(true);
+      this.interactHint.setText('[E] 看跑分表').setPosition(this.radarX, this.radarY - 36).setVisible(true);
       if (Phaser.Input.Keyboard.JustDown(this.eKey)) this.triggerRadar();
     } else if (distLead < INTERACT_DISTANCE) {
       this.exitHint.setVisible(false);
-      this.interactHint.setText('[E] 看测评榜').setPosition(this.leaderX, this.leaderY - 100).setVisible(true);
+      this.interactHint.setText('[E] 看试管').setPosition(this.leaderX, this.leaderY - 50).setVisible(true);
       if (Phaser.Input.Keyboard.JustDown(this.eKey)) this.triggerLeaderboard();
     } else {
       this.exitHint.setVisible(false);

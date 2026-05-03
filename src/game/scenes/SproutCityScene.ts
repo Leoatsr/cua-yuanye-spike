@@ -1,3 +1,4 @@
+import { attachMinimap } from '../minimap-bridge';
 import * as Phaser from 'phaser';
 import { NPC } from '../entities/NPC';
 import { EventBus } from '../EventBus';
@@ -21,11 +22,11 @@ const BAIXIAO_JU_CONFIG: InteriorConfig = {
   spawnTileY: 8,    // just north of the door mat (door is at y=8-9, exit at y=8)
   exitTileX: 7,
   exitTileY: 9,
-  displayName: '百晓居',
+  displayName: '百科工坊',
   npcs: [
     {
       textureKey: 'librarian',  // reuse purple-robed librarian sprite for now
-      name: '百晓居首席 · 高粱',
+      name: '百科工坊首席 · 高粱',
       questId: 'gaoliang',
       tileX: 7,
       tileY: 5,
@@ -33,7 +34,7 @@ const BAIXIAO_JU_CONFIG: InteriorConfig = {
       dialogue: [
         '哎，进来了。',
         '（高粱抬起头，从一摞文献里探出来）',
-        '"我是高粱。这里——百晓居——是百科工作组的工坊。"',
+        '"我是高粱。这里——百科工坊——是百科板块的工坊。"',
         '"我们做的事情很朴素：一篇一篇地把 AI 行业的知识结构化、入库、维护。"',
         '"听起来不性感，但每一篇论文入库，都是 CUA 知识地图上多出的一颗星。"',
         '...',
@@ -65,24 +66,24 @@ interface WorkshopDef {
  * door tiles are one tile south of the workshop's wall row.
  */
 const WORKSHOPS: WorkshopDef[] = [
-  { id: 'kaiyuan',    name: '开源楼',  doorTileX: 5,  doorTileY: 6,  description: '开源工作组的基地。这里将是 CUA 开源项目协作的中心。',
+  { id: 'kaiyuan',    name: '开源工坊',  doorTileX: 5,  doorTileY: 6,  description: '共创板块 · 开源协作中心。CUA 开源项目在这里被构建、维护、推动。',
     customSceneKey: 'KaiyuanLou' },
-  { id: 'shengwen',   name: '声闻台',  doorTileX: 19, doorTileY: 6,  description: '播客工作组的基地。这里会有录音室、电波塔、嘉宾名册。',
+  { id: 'shengwen',   name: '播客工坊',  doorTileX: 19, doorTileY: 6,  description: '降噪板块 · 录音室与对话台。对谈、采访、圆桌输出行业洞察。',
     customSceneKey: 'ShengwenTai' },
-  { id: 'duliang',    name: '度量阁',  doorTileX: 33, doorTileY: 6,  description: '测评工作组的基地。AI 模型、产品的标准评测都从这里发出。',
+  { id: 'duliang',    name: '测评工坊',  doorTileX: 33, doorTileY: 6,  description: '共创板块 · AI 技术与产品测试评估的标准制定。',
     customSceneKey: 'DuliangGe' },
-  { id: 'yincai',     name: '引才坊',  doorTileX: 5,  doorTileY: 14, description: '招聘工作组的基地。CUA 成员的求职、内推、机会信息汇集于此。',
+  { id: 'yincai',     name: '招聘工坊',  doorTileX: 5,  doorTileY: 14, description: '链接板块 · 行业人才与社区贡献者的对接枢纽。',
     customSceneKey: 'YincaiFang' },
-  { id: 'sisuan',     name: '司算所',  doorTileX: 33, doorTileY: 14, description: '数据工作组的基地。CUA 自己的数据看板、行业数据汇编都在这里。',
+  { id: 'sisuan',     name: '数据工坊',  doorTileX: 33, doorTileY: 14, description: '降噪板块 · 人才/论文/项目数据收集清洗的中心。',
     customSceneKey: 'SisuanSuo' },
-  { id: 'yishi',      name: '议事厅',  doorTileX: 5,  doorTileY: 23, description: '会议工作组的基地。年度大会、专题会议从这里开始筹备。',
+  { id: 'yishi',      name: '会议工坊',  doorTileX: 5,  doorTileY: 23, description: '链接板块 · 线上线下技术交流的策划基地。',
     customSceneKey: 'YishiTing' },
-  // 百晓居 — first OPENED workshop
-  { id: 'baixiao',    name: '百晓居',  doorTileX: 19, doorTileY: 23, description: '百科工作组的基地。CUA 知识库、AI 行业百科的总编室。',
+  // 百科工坊 — first OPENED workshop
+  { id: 'baixiao',    name: '百科工坊',  doorTileX: 19, doorTileY: 23, description: '降噪板块 · CUA 行业百科知识沉淀的总编室。',
     interiorConfig: BAIXIAO_JU_CONFIG },
-  { id: 'wangqi',     name: '望气楼',  doorTileX: 33, doorTileY: 23, description: '内参工作组的基地。行业最前沿的观察、报告、洞见。',
+  { id: 'wangqi',     name: '内参工坊',  doorTileX: 33, doorTileY: 23, description: '降噪板块 · 深度行业调研与趋势分析的报告厅。',
     customSceneKey: 'WangqiLou' },
-  { id: 'gongde',     name: '功德堂',  doorTileX: 19, doorTileY: 26, description: '贡献工作组的基地——也是萌芽镇所有镇民的"功劳碑"。',
+  { id: 'gongde',     name: '生态工坊',  doorTileX: 19, doorTileY: 26, description: '共创板块 · 系统软件生态开放度追踪与维护。',
     customSceneKey: 'GongdeTang' },
 ];
 
@@ -168,6 +169,7 @@ export class SproutCityScene extends Phaser.Scene {
   }
 
   create() {
+    attachMinimap(this, 'SproutCity');
     this.inputLockUntil = this.time.now + 250;
 
     // ---- Tilemap ----
@@ -234,16 +236,7 @@ export class SproutCityScene extends Phaser.Scene {
         worldX: wx,
         worldY: wy,
       });
-
-      // Visual marker — a "🚧" floating above the door
-      const marker = this.add.text(wx, wy - 16, '🚧', {
-        fontSize: '16px',
-      }).setOrigin(0.5).setDepth(5);
-      this.tweens.add({
-        targets: marker, y: wy - 20,
-        duration: 1400, yoyo: true, repeat: -1,
-        ease: 'Sine.easeInOut',
-      });
+      // Wave 7.I/J · 删除 🚧 floating marker · 9 工坊都已 enterable
     });
 
     // ---- Arch back to Sproutown ----
@@ -326,10 +319,76 @@ export class SproutCityScene extends Phaser.Scene {
       EventBus.off('dialogue-advance', this.playDialogueSfx, this);
       EventBus.off('world-map-travel', onTravel);
       this.sfxHandlerBound = false;
+      // Wave 7.H.1.5 · cleanup fountain tweens
+      if (this.fountainTweens) {
+        this.fountainTweens.forEach(t => t.stop());
+        this.fountainTweens = [];
+      }
     });
+
+    // ---- Wave 7.H.1.5 · 实时喷泉 (3 柱水柱) ----
+    this.createFountain();
 
     // ---- World map (M key) → emit event to React ----
     // The React WorldMap component will listen for this and show the UI.
+  }
+
+  // Wave 7.H.1.5 · 喷泉 tween 清单（用于 shutdown 清理）
+  private fountainTweens: Phaser.Tweens.Tween[] = [];
+
+  /**
+   * 在中央广场水池上方画 3 柱水柱 · 每柱 sin 起伏循环
+   * 水池中心 = (col 19.5, row 13.5) = (640, 448)
+   */
+  private createFountain() {
+    const cx = 19.5 * 32 + 16;  // 640
+    const cy = 13.5 * 32 + 16;  // 448
+    const baseY = cy - 8;       // 水柱底部位置（水面上方一点）
+
+    // 3 柱配置：[偏移X, 最大高度, 宽度, 颜色]
+    const columns = [
+      { dx: -16, maxH: 18, w: 4, color: 0xb0e0f0, alpha: 0.85 },  // 左矮
+      { dx: 0,   maxH: 30, w: 5, color: 0xc8eaf5, alpha: 0.95 },  // 中高
+      { dx: 16,  maxH: 18, w: 4, color: 0xb0e0f0, alpha: 0.85 },  // 右矮
+    ];
+
+    columns.forEach((c, i) => {
+      const g = this.add.graphics();
+      g.setDepth(50);  // 高于水池 + 路 + player
+
+      // 用 phase offset 让 3 柱起伏不同步
+      const phaseOffset = i * 200;
+      const animState = { h: 0 };
+
+      // 持续渲染：每帧根据 animState.h 重画
+      this.events.on('update', () => {
+        g.clear();
+        const h = animState.h;
+        if (h <= 0) return;
+        // 主水柱（实心）
+        g.fillStyle(c.color, c.alpha);
+        g.fillRect(cx + c.dx - c.w / 2, baseY - h, c.w, h);
+        // 顶部水珠（圆点）
+        g.fillStyle(0xffffff, 1);
+        g.fillCircle(cx + c.dx, baseY - h - 1, c.w / 2 - 0.5);
+        // 落下水珠（在水柱下半部位置闪点）
+        g.fillStyle(0xe0f4f8, 0.6);
+        g.fillRect(cx + c.dx - c.w / 2 - 1, baseY - h * 0.4, 1, 2);
+        g.fillRect(cx + c.dx + c.w / 2, baseY - h * 0.6, 1, 2);
+      });
+
+      // sin 起伏 tween · h 在 [maxH*0.4, maxH] 之间循环
+      const tween = this.tweens.add({
+        targets: animState,
+        h: c.maxH,
+        duration: 900,
+        ease: 'Sine.easeInOut',
+        yoyo: true,
+        repeat: -1,
+        delay: phaseOffset,
+      });
+      this.fountainTweens.push(tween);
+    });
   }
 
   private playDialogueSfx() {

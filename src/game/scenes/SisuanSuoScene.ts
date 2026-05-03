@@ -60,46 +60,47 @@ export class SisuanSuoScene extends Phaser.Scene {
     this.inputLockUntil = this.time.now + 250;
     this.physics.world.setBounds(0, 0, ROOM_WIDTH, ROOM_HEIGHT);
 
-    // ---- Floor (deep blue data center) ----
+    // ---- Floor (Wave 7.K · 落地页米色) ----
     const g = this.add.graphics();
     g.setDepth(-5);
-    g.fillStyle(0x0a0e1a, 1);
+    g.fillStyle(0x8b4513, 1);
     g.fillRect(0, 0, ROOM_WIDTH, ROOM_HEIGHT);
-    g.fillStyle(0x141a26, 1);
+    g.fillStyle(0xfdf0cf, 1);
     g.fillRect(60, 70, ROOM_WIDTH - 120, ROOM_HEIGHT - 130);
-    g.lineStyle(3, 0x2a3146, 1);
+    g.lineStyle(3, 0x5d3a1a, 1);
     g.strokeRect(60, 70, ROOM_WIDTH - 120, ROOM_HEIGHT - 130);
-    // Glowing grid lines
-    g.lineStyle(1, 0x1f4068, 0.5);
-    for (let y = 70; y < ROOM_HEIGHT - 60; y += 40) {
-      g.lineBetween(60, y, ROOM_WIDTH - 60, y);
-    }
-    for (let x = 60; x < ROOM_WIDTH - 60; x += 40) {
-      g.lineBetween(x, 70, x, ROOM_HEIGHT - 60);
+    // 横向木板缝
+    g.lineStyle(1, 0xc9a55b, 0.3);
+    for (let y = 102; y < ROOM_HEIGHT - 60; y += 64) {
+      g.lineBetween(64, y, ROOM_WIDTH - 64, y);
     }
 
-    // ---- North wall ----
-    g.fillStyle(0x0a0e1a, 1);
+    // ---- 北墙顶梁 (Wave 7.K · 暖木) ----
+    g.fillStyle(0x5d3a1a, 1);
     g.fillRect(60, 60, ROOM_WIDTH - 120, 14);
 
-    // ---- BIG analytics board (north — full wall) ----
+    // ---- Wave 7.K 主道具：KPI 大屏 (北墙居中 · 占 bigBoardX/Y) ----
     this.bigBoardX = ROOM_WIDTH / 2;
-    this.bigBoardY = 130;
+    this.bigBoardY = 120;
     this.drawBigBoard(this.bigBoardX, this.bigBoardY);
 
-    // ---- SQL query terminal (west) ----
-    this.terminalX = 140;
-    this.terminalY = ROOM_HEIGHT / 2;
+    // ---- Wave 7.K 数据中心走廊：左右各 2 排服务器机架 (B 布局) ----
+    // 左侧 2 排 (内+外 · 形成走廊感)
+    this.drawServerFarm(110, ROOM_HEIGHT / 2 + 10);  // 左外
+    this.drawServerFarm(180, ROOM_HEIGHT / 2 + 10);  // 左内
+    // 右侧 2 排
+    this.drawServerFarm(ROOM_WIDTH - 180, ROOM_HEIGHT / 2 + 10);  // 右内
+    this.drawServerFarm(ROOM_WIDTH - 110, ROOM_HEIGHT / 2 + 10);  // 右外
+    // 互动点设在右外（serverFarmX/Y · 玩家走到东墙触发）
+    this.serverFarmX = ROOM_WIDTH - 110;
+    this.serverFarmY = ROOM_HEIGHT / 2 + 10;
+
+    // ---- Wave 7.K 中央桌：数据笔记 (走廊正中 · 占 terminalX/Y) ----
+    this.terminalX = ROOM_WIDTH / 2;
+    this.terminalY = ROOM_HEIGHT / 2 + 30;
     this.drawTerminal(this.terminalX, this.terminalY);
 
-    // ---- Server farm (east) ----
-    this.serverFarmX = ROOM_WIDTH - 130;
-    this.serverFarmY = ROOM_HEIGHT / 2;
-    this.drawServerFarm(this.serverFarmX, this.serverFarmY);
-
-    // ---- Workstations ----
-    this.drawAnalystDesk(ROOM_WIDTH / 2 - 90, ROOM_HEIGHT / 2 + 80);
-    this.drawAnalystDesk(ROOM_WIDTH / 2 + 90, ROOM_HEIGHT / 2 + 80);
+    // (drawAnalystDesk 留着但不调 · 旧函数保留兼容)
 
     // ---- Player ----
     this.createCharacterAnims('player');
@@ -146,215 +147,144 @@ export class SisuanSuoScene extends Phaser.Scene {
     doorG.fillCircle(this.exitX + 12, this.exitY, 3);
 
     // ---- Title ----
-    this.add.text(ROOM_WIDTH / 2, 30, '— 司算所 · 数据工作组 —', {
+    this.add.text(ROOM_WIDTH / 2, 80, '— 数据工坊 —', {
       fontFamily: 'serif', fontSize: '15px',
-      color: '#60a5fa', backgroundColor: '#0a0e1aaa',
+      color: '#3c3489', backgroundColor: '#fdf0cfee',
       padding: { left: 10, right: 10, top: 4, bottom: 4 },
     }).setOrigin(0.5).setDepth(10);
 
     this.exitHint = this.add.text(0, 0, '[E] 离开', {
       fontFamily: 'sans-serif', fontSize: '11px',
-      color: '#ffffff', backgroundColor: '#3a4a6add',
+      color: '#fdf0cf', backgroundColor: '#5d3a1add',
       padding: { left: 6, right: 6, top: 3, bottom: 3 },
     }).setOrigin(0.5).setVisible(false).setDepth(100);
 
     this.interactHint = this.add.text(0, 0, '[E]', {
       fontFamily: 'sans-serif', fontSize: '11px',
-      color: '#ffffff', backgroundColor: '#000000aa',
+      color: '#fdf0cf', backgroundColor: '#5d3a1add',
       padding: { left: 4, right: 4, top: 2, bottom: 2 },
     }).setOrigin(0.5).setVisible(false).setDepth(100);
   }
 
-  // ============ DRAWING ============
+  // ============ DRAWING (Wave 7.K · 数据中心走廊布局 · 保留方法名) ============
 
+  /** 主道具：KPI 大屏 (北墙居中 · 占 bigBoardX/Y · 紫主题) */
   private drawBigBoard(x: number, y: number) {
     const g = this.add.graphics();
     g.setDepth(2);
-    // Mounting bar
-    g.fillStyle(0x2a3146, 1);
-    g.fillRect(x - 240, y - 50, 480, 6);
-    // Single huge LED panel
-    g.fillStyle(0x000000, 1);
-    g.fillRect(x - 240, y - 44, 480, 80);
-    g.lineStyle(3, 0x4a5466, 1);
-    g.strokeRect(x - 240, y - 44, 480, 80);
-
-    // 4 quadrants of data
-    // Q1 (top-left): pie chart
-    const pcx = x - 180, pcy = y - 12;
-    g.fillStyle(0x60a5fa, 1);
-    g.slice(pcx, pcy, 18, 0, Math.PI * 1.2);
-    g.fillPath();
-    g.fillStyle(0xa78bfa, 1);
-    g.slice(pcx, pcy, 18, Math.PI * 1.2, Math.PI * 1.7);
-    g.fillPath();
-    g.fillStyle(0xfbbf24, 1);
-    g.slice(pcx, pcy, 18, Math.PI * 1.7, Math.PI * 2);
-    g.fillPath();
-    g.lineStyle(1, 0x000000, 1);
-    g.strokeCircle(pcx, pcy, 18);
-
-    // Q2 (top-right): geo heatmap (rough world map dots)
-    const dots: Array<[number, number, number]> = [
-      [-110, -25, 0xf87171],
-      [-90, -28, 0xfb923c],
-      [-70, -20, 0xfbbf24],
-      [-50, -15, 0xfb923c],
-      [-30, -10, 0x60a5fa],
-      [-100, -10, 0xa78bfa],
-      [-120, -8, 0x4ade80],
-      [-80, -5, 0xf87171],
-      [-50, 5, 0x60a5fa],
-      [-30, 8, 0xfbbf24],
-    ];
-    g.lineStyle(1, 0x4a5466, 0.5);
-    g.strokeRect(x - 130, y - 38, 110, 38);
-    dots.forEach(([dx, dy, color]) => {
-      g.fillStyle(color, 0.85);
-      g.fillCircle(x + dx, y + dy, 2);
-    });
-
-    // Q3 (bottom-left): line graph (multiline)
-    g.lineStyle(2, 0x4ade80, 1);
-    const line1 = [-220, -210, -195, -200, -185, -170, -160, -165, -150, -140];
-    const heights1 = [22, 18, 26, 22, 30, 28, 34, 32, 36, 34];
-    for (let i = 0; i < line1.length - 1; i++) {
-      g.lineBetween(x + line1[i], y + (heights1[i] - 35) / 2 + 16,
-        x + line1[i + 1], y + (heights1[i + 1] - 35) / 2 + 16);
+    // 暖木外框
+    g.fillStyle(0x5d3a1a, 1);
+    g.fillRect(x - 88, y - 28, 176, 56);
+    // 紫主题色边
+    g.fillStyle(0x7857c0, 1);
+    g.fillRect(x - 84, y - 24, 168, 48);
+    // 深背景屏 (黑底)
+    g.fillStyle(0x1a1024, 1);
+    g.fillRect(x - 80, y - 20, 160, 40);
+    // 顶部紫色标签条
+    g.fillStyle(0xafa9ec, 1);
+    g.fillRect(x - 80, y - 20, 160, 4);
+    // 大数字 "12K" 用色块仿
+    g.fillStyle(0xafa9ec, 1);
+    // 1
+    g.fillRect(x - 50, y - 12, 4, 22);
+    // 2
+    g.fillRect(x - 38, y - 12, 14, 4);
+    g.fillRect(x - 26, y - 8, 4, 8);
+    g.fillRect(x - 38, y - 2, 14, 4);
+    g.fillRect(x - 38, y, 4, 6);
+    g.fillRect(x - 38, y + 6, 14, 4);
+    // K
+    g.fillRect(x - 16, y - 12, 4, 22);
+    g.fillRect(x - 12, y - 4, 4, 4);
+    g.fillRect(x - 8, y - 8, 4, 4);
+    g.fillRect(x - 4, y - 12, 4, 4);
+    g.fillRect(x - 8, y, 4, 4);
+    g.fillRect(x - 4, y + 4, 4, 4);
+    // 趋势线 (右半)
+    g.lineStyle(2, 0x97c459, 1);
+    const pts: [number, number][] = [[x + 6, y + 8], [x + 18, y + 4], [x + 30, y - 2], [x + 42, y - 6], [x + 54, y - 10], [x + 66, y - 14]];
+    for (let i = 0; i < pts.length - 1; i++) {
+      g.lineBetween(pts[i][0], pts[i][1], pts[i + 1][0], pts[i + 1][1]);
     }
-    g.lineStyle(2, 0xf87171, 1);
-    const heights2 = [12, 16, 14, 20, 18, 24, 22, 28, 26, 30];
-    for (let i = 0; i < line1.length - 1; i++) {
-      g.lineBetween(x + line1[i], y + (heights2[i] - 35) / 2 + 16,
-        x + line1[i + 1], y + (heights2[i + 1] - 35) / 2 + 16);
-    }
-    g.lineStyle(1, 0x4a5466, 1);
-    g.lineBetween(x - 220, y - 4, x - 130, y - 4); // x axis
-    g.lineBetween(x - 220, y - 30, x - 220, y - 4); // y axis
-
-    // Q4 (bottom-right): KPI numbers (big colored blocks)
-    const kpis = [
-      { dx: -110, dy: 6, color: 0x4ade80 },   // green
-      { dx: -75, dy: 6, color: 0x60a5fa },    // blue
-      { dx: -110, dy: 22, color: 0xfbbf24 },  // amber
-      { dx: -75, dy: 22, color: 0xf87171 },   // red
-    ];
-    kpis.forEach((k) => {
-      g.fillStyle(k.color, 0.85);
-      g.fillRect(x + k.dx - 16, y + k.dy - 6, 32, 12);
-      g.lineStyle(1, k.color, 1);
-      g.strokeRect(x + k.dx - 16, y + k.dy - 6, 32, 12);
-    });
-
-    // Glow LED indicators along the bottom
-    for (let i = 0; i < 12; i++) {
-      g.fillStyle(i % 4 === 0 ? 0x00ff00 : 0x303030, 1);
-      g.fillCircle(x - 230 + i * 40, y + 30, 1.5);
+    // 趋势点
+    g.fillStyle(0x97c459, 1);
+    pts.forEach(p => g.fillCircle(p[0], p[1], 1.5));
+    // 底部状态条 4 个数字
+    for (let i = 0; i < 4; i++) {
+      const cx = x - 60 + i * 40;
+      g.fillStyle(0xafa9ec, 0.6);
+      g.fillRect(cx, y + 14, 28, 4);
     }
   }
 
+  /** 中央桌：数据笔记 (走廊正中 · 占 terminalX/Y) */
   private drawTerminal(x: number, y: number) {
     const g = this.add.graphics();
     g.setDepth(2);
-    // Terminal cabinet
-    g.fillStyle(0x18181a, 1);
-    g.fillRect(x - 50, y - 60, 100, 120);
-    g.lineStyle(2, 0x4a4d56, 1);
-    g.strokeRect(x - 50, y - 60, 100, 120);
-    // Terminal screen (CRT, green-on-black)
-    g.fillStyle(0x000000, 1);
-    g.fillRect(x - 44, y - 54, 88, 70);
-    // SQL query lines
-    g.fillStyle(0x4ade80, 0.9);
-    // First line: SELECT
-    g.fillRect(x - 40, y - 49, 30, 3);
-    // Second line: FROM
-    g.fillRect(x - 40, y - 43, 22, 3);
-    g.fillStyle(0xfbbf24, 0.9);
-    g.fillRect(x - 14, y - 43, 28, 3);
-    // Third line: WHERE
-    g.fillStyle(0x4ade80, 0.9);
-    g.fillRect(x - 40, y - 37, 26, 3);
-    g.fillStyle(0xa78bfa, 0.9);
-    g.fillRect(x - 12, y - 37, 18, 3);
-    // Result rows
-    g.fillStyle(0xc9d1d9, 0.7);
-    for (let i = 0; i < 6; i++) {
-      g.fillRect(x - 40, y - 28 + i * 4, 70 - i * 3, 1.5);
-    }
-    // Cursor (blinking)
-    const cursor = this.add.graphics();
-    cursor.setDepth(3);
-    cursor.fillStyle(0x4ade80, 1);
-    cursor.fillRect(x + 32, y - 49, 4, 3);
-    this.tweens.add({
-      targets: cursor, alpha: 0,
-      duration: 600, yoyo: true, repeat: -1,
-    });
-    // Keyboard underneath
-    g.fillStyle(0x4a4d56, 1);
-    g.fillRect(x - 40, y + 22, 80, 12);
-    g.lineStyle(1, 0x18181a, 1);
-    for (let i = 0; i < 4; i++) {
-      g.lineBetween(x - 36, y + 25 + i * 2, x + 36, y + 25 + i * 2);
-    }
-    // POWER LED
-    g.fillStyle(0x00ff00, 1);
-    g.fillCircle(x + 42, y - 56, 2);
+    // 桌面 (暖木)
+    g.fillStyle(0x8b4513, 1);
+    g.fillRect(x - 50, y - 18, 100, 36);
+    g.fillStyle(0xa0673b, 1);
+    g.fillRect(x - 48, y - 16, 96, 32);
+    // 笔记本电脑 (打开)
+    g.fillStyle(0x3a2a1a, 1);
+    g.fillRect(x - 24, y - 12, 48, 22);
+    g.fillStyle(0x1a1024, 1);
+    g.fillRect(x - 22, y - 10, 44, 18);
+    // 屏幕：数据图表
+    // 左：紫色柱 3 根
+    g.fillStyle(0x7857c0, 1);
+    g.fillRect(x - 18, y, 3, 6);
+    g.fillRect(x - 12, y - 4, 3, 10);
+    g.fillRect(x - 6, y - 6, 3, 12);
+    // 右：趋势线小图
+    g.lineStyle(1, 0x97c459, 1);
+    g.lineBetween(x + 2, y + 4, x + 8, y);
+    g.lineBetween(x + 8, y, x + 14, y - 4);
+    g.lineBetween(x + 14, y - 4, x + 20, y - 6);
+    // 桌面右侧：咖啡杯
+    g.fillStyle(0xfdf0cf, 1);
+    g.fillCircle(x + 36, y - 4, 4);
+    g.fillStyle(0x854f0b, 1);
+    g.fillCircle(x + 36, y - 4, 2.5);
+    // 桌脚
+    g.fillStyle(0x3a2a1a, 1);
+    g.fillRect(x - 48, y + 18, 4, 14);
+    g.fillRect(x + 44, y + 18, 4, 14);
   }
 
+  /** 服务器机架 (单个 · 走廊用 · 32×64px · 占 serverFarmX/Y 互动点指向最右那台) */
   private drawServerFarm(x: number, y: number) {
     const g = this.add.graphics();
     g.setDepth(2);
-    // 3 server racks side by side
-    for (let r = 0; r < 3; r++) {
-      const rx = x - 36 + r * 24;
-      g.fillStyle(0x1a1a1a, 1);
-      g.fillRect(rx - 10, y - 70, 20, 140);
-      g.lineStyle(1, 0x4a4d56, 1);
-      g.strokeRect(rx - 10, y - 70, 20, 140);
-      // Server units
-      for (let i = 0; i < 10; i++) {
-        const sy = y - 66 + i * 13;
-        g.fillStyle(0x2a2e36, 1);
-        g.fillRect(rx - 8, sy, 16, 11);
-        // LED dot (blink random)
-        const ledColor = (i + r) % 3 === 0 ? 0x00ff00 :
-                         (i + r) % 3 === 1 ? 0xffaa00 : 0x0080ff;
-        g.fillStyle(ledColor, 1);
-        g.fillCircle(rx - 5, sy + 5, 1);
+    // 机柜外壳 (暗灰)
+    g.fillStyle(0x2c2c2a, 1);
+    g.fillRect(x - 18, y - 36, 36, 72);
+    g.lineStyle(1, 0x5f5e5a, 1);
+    g.strokeRect(x - 18, y - 36, 36, 72);
+    // 8 层服务器单元
+    for (let i = 0; i < 8; i++) {
+      const sy = y - 32 + i * 8;
+      g.fillStyle(0x444441, 1);
+      g.fillRect(x - 16, sy, 32, 6);
+      // LED (紫/绿/橙 循环)
+      const ledColor = (i % 3 === 0) ? 0xafa9ec : (i % 3 === 1 ? 0x97c459 : 0xef9f27);
+      g.fillStyle(ledColor, 1);
+      g.fillCircle(x - 12, sy + 3, 1);
+      g.fillCircle(x - 8, sy + 3, 1);
+      // 通风口
+      g.lineStyle(1, 0x2c2c2a, 1);
+      for (let v = 0; v < 3; v++) {
+        g.lineBetween(x + v * 4, sy + 1, x + v * 4, sy + 5);
       }
     }
-    // Floor cable trough hint
-    g.lineStyle(2, 0x4a5466, 0.5);
-    g.lineBetween(x - 48, y + 76, x + 48, y + 76);
+    // 顶部品牌条 (紫)
+    g.fillStyle(0x7857c0, 1);
+    g.fillRect(x - 18, y - 36, 36, 4);
   }
 
-  private drawAnalystDesk(x: number, y: number) {
-    const g = this.add.graphics();
-    g.setDepth(2);
-    // Desk
-    g.fillStyle(0x2a2e36, 1);
-    g.fillRect(x - 32, y - 14, 64, 28);
-    g.lineStyle(1, 0x4a4d56, 1);
-    g.strokeRect(x - 32, y - 14, 64, 28);
-    // Dual monitor
-    g.fillStyle(0x000000, 1);
-    g.fillRect(x - 22, y - 10, 18, 18);
-    g.fillRect(x + 4, y - 10, 18, 18);
-    // Charts on screens
-    g.fillStyle(0x60a5fa, 0.7);
-    g.fillRect(x - 20, y - 4, 14, 8);
-    g.fillStyle(0x4ade80, 0.7);
-    g.fillRect(x + 6, y - 4, 14, 8);
-    // Keyboard
-    g.fillStyle(0x4a4d56, 1);
-    g.fillRect(x - 16, y + 16, 32, 4);
-    // Legs
-    g.fillStyle(0x18181a, 1);
-    g.fillRect(x - 30, y + 14, 4, 24);
-    g.fillRect(x + 26, y + 14, 4, 24);
-  }
+
 
   // ============ ANIMATION ============
 
@@ -389,35 +319,30 @@ export class SisuanSuoScene extends Phaser.Scene {
 
   private triggerBoard() {
     EventBus.emit('show-dialogue', {
-      name: '📈 大数据看板',
+      name: '📊 KPI 大屏',
       lines: [
-        '（4 象限实时数据滚动）',
+        '（紫框大屏 · 大数字 12K + 趋势线上扬）',
         '',
-        '左上：流量来源饼图（蓝/紫/黄）',
-        '右上：地理热点分布（10 个热点）',
-        '左下：双线趋势（绿增 / 红降）',
-        '右下：4 个关键 KPI',
+        '"12,000 ——这是 CUA 本月新增贡献条目数。"',
+        '"上月 9,847 · 增长率 +21.8%。"',
         '',
         '"数据不会撒谎——但要看人怎么读。"',
-        '"司算所每周一出周报，每月一出月报。"',
+        '（大屏右下角小字写着：每小时刷新一次）',
       ],
     });
   }
 
   private triggerTerminal() {
     EventBus.emit('show-dialogue', {
-      name: '💻 SQL 终端',
+      name: '📓 数据笔记',
       lines: [
-        '（绿光闪烁的 CRT 终端）',
+        '（桌上摊开的笔记本电脑显示着分析图）',
         '',
-        'SELECT user_id, sum(cv) AS total_cv',
-        'FROM cv_entries',
-        'WHERE earned_at > now() - interval \'30 days\'',
-        'GROUP BY user_id',
-        'ORDER BY total_cv DESC LIMIT 10;',
+        '"读数据 · 不要从结论开始，从分布开始。"',
+        '"找异常 · 比找规律更有价值。"',
+        '"做对比 · 永远要有 baseline。"',
         '',
-        '"——上面是查 30 日 CV 排行榜的真实查询。"',
-        '（光标静静闪着）',
+        '（咖啡杯旁还压着一份草稿）"周报 v3。"',
       ],
     });
   }
@@ -426,13 +351,13 @@ export class SisuanSuoScene extends Phaser.Scene {
     EventBus.emit('show-dialogue', {
       name: '🗄️ 服务器集群',
       lines: [
-        '（3 排服务器机柜，30 个 LED 同时闪烁）',
+        '（左右各 2 排机柜 · LED 紫绿橙交替闪烁）',
         '',
         '"这是 CUA 数据基础设施。"',
-        '"PostgreSQL 主从、Redis 缓存、ClickHouse 分析。"',
+        '"PostgreSQL 主从 / Redis 缓存 / ClickHouse 分析。"',
         '',
         '"——你玩游戏的每一次贡献，都在这里留下记录。"',
-        '（绿灯持续亮着，黄灯偶尔闪一下）',
+        '（紫灯持续亮 · 偶尔一下绿灯闪过）',
       ],
     });
   }
@@ -487,17 +412,17 @@ export class SisuanSuoScene extends Phaser.Scene {
       this.exitHint.setPosition(this.exitX, this.exitY - 36).setVisible(true);
       this.interactHint.setVisible(false);
       if (Phaser.Input.Keyboard.JustDown(this.eKey)) this.exit();
-    } else if (distBoard < INTERACT_DISTANCE * 1.8) {
+    } else if (distBoard < INTERACT_DISTANCE * 1.5) {
       this.exitHint.setVisible(false);
-      this.interactHint.setText('[E] 看大看板').setPosition(this.bigBoardX, this.bigBoardY - 60).setVisible(true);
+      this.interactHint.setText('[E] 看 KPI').setPosition(this.bigBoardX, this.bigBoardY + 36).setVisible(true);
       if (Phaser.Input.Keyboard.JustDown(this.eKey)) this.triggerBoard();
     } else if (distTerm < INTERACT_DISTANCE) {
       this.exitHint.setVisible(false);
-      this.interactHint.setText('[E] 用 SQL 终端').setPosition(this.terminalX, this.terminalY - 80).setVisible(true);
+      this.interactHint.setText('[E] 看数据笔记').setPosition(this.terminalX, this.terminalY - 36).setVisible(true);
       if (Phaser.Input.Keyboard.JustDown(this.eKey)) this.triggerTerminal();
     } else if (distFarm < INTERACT_DISTANCE) {
       this.exitHint.setVisible(false);
-      this.interactHint.setText('[E] 看服务器').setPosition(this.serverFarmX, this.serverFarmY - 90).setVisible(true);
+      this.interactHint.setText('[E] 看服务器').setPosition(this.serverFarmX, this.serverFarmY - 50).setVisible(true);
       if (Phaser.Input.Keyboard.JustDown(this.eKey)) this.triggerServerFarm();
     } else {
       this.exitHint.setVisible(false);

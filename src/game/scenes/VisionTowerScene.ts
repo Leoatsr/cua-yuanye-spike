@@ -7,6 +7,7 @@ const INTERACT_DISTANCE = 56;
 
 const ROOM_WIDTH = 800;
 const ROOM_HEIGHT = 600;
+// Wave 8.VisionTower · 中央大沙盘布局
 
 interface SceneInitData {
   returnX?: number;
@@ -34,10 +35,12 @@ export class VisionTowerScene extends Phaser.Scene {
   private exitHint!: Phaser.GameObjects.Text;
   private interactHint!: Phaser.GameObjects.Text;
 
-  private chartX = 0;
-  private chartY = 0;
+  private sandboxX = 0;
+  private sandboxY = 0;
   private telescopeX = 0;
   private telescopeY = 0;
+  private scrollX = 0;
+  private scrollY = 0;
 
   private returnX = 0;
   private returnY = 0;
@@ -56,46 +59,63 @@ export class VisionTowerScene extends Phaser.Scene {
     this.inputLockUntil = this.time.now + 250;
     this.physics.world.setBounds(0, 0, ROOM_WIDTH, ROOM_HEIGHT);
 
-    // Floor — circular marble (matches tower's circular base)
+    // === Wave 8 · 米色羊皮纸地板 (替代灰蓝大理石) ===
     const g = this.add.graphics();
     g.setDepth(-5);
-    g.fillStyle(0x1a1a22, 1);
+    // 暖木墙边
+    g.fillStyle(0x5d3a1a, 1);
     g.fillRect(0, 0, ROOM_WIDTH, ROOM_HEIGHT);
-    // Marble floor (octagonal feel)
-    g.fillStyle(0xefe9d9, 1);
-    g.fillRoundedRect(80, 60, ROOM_WIDTH - 160, ROOM_HEIGHT - 120, 80);
-    g.lineStyle(3, 0xb8a472, 1);
-    g.strokeRoundedRect(80, 60, ROOM_WIDTH - 160, ROOM_HEIGHT - 120, 80);
-    // Floor pattern (concentric arcs)
-    g.lineStyle(1, 0xc0b89d, 0.5);
-    for (let r = 80; r < 360; r += 40) {
+    // 米色羊皮纸地板
+    g.fillStyle(0xfdf0cf, 1);
+    g.fillRect(60, 60, ROOM_WIDTH - 120, ROOM_HEIGHT - 120);
+    g.lineStyle(3, 0x8b6f4a, 1);
+    g.strokeRect(60, 60, ROOM_WIDTH - 120, ROOM_HEIGHT - 120);
+    // 地板纹理 (浅暖光散点)
+    g.fillStyle(0xead4a0, 0.4);
+    for (let i = 0; i < 60; i++) {
+      const px = 80 + Math.random() * (ROOM_WIDTH - 160);
+      const py = 80 + Math.random() * (ROOM_HEIGHT - 160);
+      g.fillCircle(px, py, 1.5);
+    }
+    // 中央同心圆地纹 (沙盘底)
+    g.lineStyle(1, 0xc9a55b, 0.5);
+    for (let r = 60; r < 200; r += 24) {
       g.strokeCircle(ROOM_WIDTH / 2, ROOM_HEIGHT / 2, r);
     }
-    // Center medallion
-    g.fillStyle(0xb8a472, 1);
-    g.fillCircle(ROOM_WIDTH / 2, ROOM_HEIGHT / 2, 24);
-    g.fillStyle(0xefe9d9, 1);
-    g.fillCircle(ROOM_WIDTH / 2, ROOM_HEIGHT / 2, 18);
 
-    // Columns (4 corners)
-    this.drawColumn(140, 130);
-    this.drawColumn(ROOM_WIDTH - 140, 130);
-    this.drawColumn(140, ROOM_HEIGHT - 130);
-    this.drawColumn(ROOM_WIDTH - 140, ROOM_HEIGHT - 130);
+    // === 顶梁 (紫色 · 跟外景圆顶呼应) ===
+    g.fillStyle(0x4a3a6a, 1);
+    g.fillRect(0, 0, ROOM_WIDTH, 36);
+    g.fillStyle(0x6a5a8a, 1);
+    g.fillRect(0, 0, ROOM_WIDTH, 6);
 
-    // Telescope (north wall — looking out at the world)
-    this.telescopeX = ROOM_WIDTH / 2;
-    this.telescopeY = 110;
+    // === 4 角白柱 ===
+    this.drawColumn(120, 90);
+    this.drawColumn(ROOM_WIDTH - 120, 90);
+    this.drawColumn(120, ROOM_HEIGHT - 110);
+    this.drawColumn(ROOM_WIDTH - 120, ROOM_HEIGHT - 110);
+
+    // === 北墙小条横幅 "路线图 v3.0" ===
+    this.drawBanner(ROOM_WIDTH / 2, 70);
+
+    // === 装饰：左上星图 + 右上罗盘 ===
+    this.drawStarChart(140, 130);
+    this.drawCompass(ROOM_WIDTH - 140, 130);
+
+    // === 主道具 1：CUA 大沙盘 (中央立体) ===
+    this.sandboxX = ROOM_WIDTH / 2;
+    this.sandboxY = ROOM_HEIGHT / 2;
+    this.drawSandbox(this.sandboxX, this.sandboxY);
+
+    // === 主道具 2：望远镜 (左侧 · 落地式 · 朝南方) ===
+    this.telescopeX = 180;
+    this.telescopeY = ROOM_HEIGHT / 2 + 60;
     this.drawTelescope(this.telescopeX, this.telescopeY);
 
-    // Chart wall (west — roadmap display)
-    this.chartX = 140;
-    this.chartY = ROOM_HEIGHT / 2;
-    this.drawChartFrame(this.chartX, this.chartY);
-
-    // Decorative scroll piles
-    this.drawScrollPile(220, ROOM_HEIGHT - 180);
-    this.drawScrollPile(ROOM_WIDTH - 220, ROOM_HEIGHT - 180);
+    // === 主道具 3：里程碑卷轴架 (右侧) ===
+    this.scrollX = ROOM_WIDTH - 180;
+    this.scrollY = ROOM_HEIGHT / 2 + 60;
+    this.drawScrollRack(this.scrollX, this.scrollY);
 
     // ---- Player ----
     this.createCharacterAnims('player');
@@ -142,7 +162,7 @@ export class VisionTowerScene extends Phaser.Scene {
     doorG.setDepth(0);
 
     // Title label
-    this.add.text(ROOM_WIDTH / 2, 30, '远见塔 · 路线图与远眺', {
+    this.add.text(ROOM_WIDTH / 2, 30, '远见塔 · 鸟瞰长程', {
       fontFamily: 'serif', fontSize: '16px',
       color: '#f5f0e0', backgroundColor: '#1a141aaa',
       padding: { left: 10, right: 10, top: 4, bottom: 4 },
@@ -162,71 +182,210 @@ export class VisionTowerScene extends Phaser.Scene {
     }).setOrigin(0.5).setVisible(false).setDepth(100);
   }
 
-  // ============ DRAWING HELPERS ============
+  // ============ DRAWING HELPERS (Wave 8.VisionTower · 落地页米色风) ============
 
+  /** 米色细柱 (跟外景柱子统一) */
   private drawColumn(x: number, y: number) {
     const g = this.add.graphics();
     g.setDepth(2);
-    g.fillStyle(0xe6deca, 1);
-    g.fillRect(x - 14, y - 50, 28, 100);
-    g.fillStyle(0xc8c0a3, 1);
-    g.fillRect(x - 18, y - 50, 36, 6);
-    g.fillRect(x - 18, y + 44, 36, 6);
-    g.lineStyle(1, 0xc0b89d, 0.6);
-    g.lineBetween(x, y - 44, x, y + 44);
+    // 柱身 (米色)
+    g.fillStyle(0xfdf0cf, 1);
+    g.fillRect(x - 8, y - 50, 16, 100);
+    g.lineStyle(1, 0x8b6f4a, 0.8);
+    g.strokeRect(x - 8, y - 50, 16, 100);
+    // 柱头
+    g.fillStyle(0xc9a55b, 1);
+    g.fillRect(x - 12, y - 50, 24, 6);
+    g.fillRect(x - 12, y + 44, 24, 6);
+    // 柱身竖纹
+    g.lineStyle(1, 0xc9a55b, 0.5);
+    g.lineBetween(x - 3, y - 44, x - 3, y + 44);
+    g.lineBetween(x + 3, y - 44, x + 3, y + 44);
   }
 
+  /** 北墙小条横幅 "路线图 v3.0" */
+  private drawBanner(x: number, y: number) {
+    const g = this.add.graphics();
+    g.setDepth(3);
+    // 横幅底
+    g.fillStyle(0x4a3a6a, 1);
+    g.fillRect(x - 90, y - 12, 180, 24);
+    g.lineStyle(2, 0x2a1a4a, 1);
+    g.strokeRect(x - 90, y - 12, 180, 24);
+    // 高光
+    g.fillStyle(0x6a5a8a, 1);
+    g.fillRect(x - 90, y - 12, 180, 4);
+    // 文字
+    this.add.text(x, y, '路线图 v3.0', {
+      fontFamily: 'serif', fontSize: '12px',
+      color: '#fdf0cf', fontStyle: 'bold',
+    }).setOrigin(0.5).setDepth(4);
+  }
+
+  /** 左上装饰：星图 (8 颗星 · 不互动) */
+  private drawStarChart(x: number, y: number) {
+    const g = this.add.graphics();
+    g.setDepth(2);
+    // 圆框
+    g.fillStyle(0xfdf0cf, 1);
+    g.fillCircle(x, y, 28);
+    g.lineStyle(2, 0x4a3a6a, 1);
+    g.strokeCircle(x, y, 28);
+    g.lineStyle(1, 0x4a3a6a, 0.5);
+    g.strokeCircle(x, y, 18);
+    // 8 颗星 (随机角度)
+    g.fillStyle(0xdaa520, 1);
+    const angles = [0.3, 1.1, 1.9, 2.6, 3.4, 4.2, 5.0, 5.8];
+    angles.forEach((a) => {
+      const sx = x + Math.cos(a) * 14;
+      const sy = y + Math.sin(a) * 14;
+      g.fillCircle(sx, sy, 2);
+    });
+    // 中央北极星
+    g.fillStyle(0xfac775, 1);
+    g.fillCircle(x, y, 3);
+  }
+
+  /** 右上装饰：罗盘 (不互动) */
+  private drawCompass(x: number, y: number) {
+    const g = this.add.graphics();
+    g.setDepth(2);
+    // 圆框
+    g.fillStyle(0xfdf0cf, 1);
+    g.fillCircle(x, y, 26);
+    g.lineStyle(2, 0x4a3a6a, 1);
+    g.strokeCircle(x, y, 26);
+    g.lineStyle(1, 0x4a3a6a, 0.5);
+    g.strokeCircle(x, y, 18);
+    // 指针 (红北白南)
+    g.fillStyle(0xc0392b, 1);
+    g.fillTriangle(x, y - 18, x - 4, y + 2, x + 4, y + 2);
+    g.fillStyle(0xfdf0cf, 1);
+    g.fillTriangle(x, y + 18, x - 4, y - 2, x + 4, y - 2);
+    // 中心钉
+    g.fillStyle(0xdaa520, 1);
+    g.fillCircle(x, y, 3);
+    // 4 方位刻度
+    g.lineStyle(2, 0x4a3a6a, 1);
+    g.lineBetween(x, y - 24, x, y - 22);
+    g.lineBetween(x, y + 22, x, y + 24);
+    g.lineBetween(x - 24, y, x - 22, y);
+    g.lineBetween(x + 22, y, x + 24, y);
+  }
+
+  /** 主道具 1：CUA 大沙盘 (中央立体地图) */
+  private drawSandbox(x: number, y: number) {
+    const g = this.add.graphics();
+    g.setDepth(2);
+    // 沙盘底座 (棕色)
+    g.fillStyle(0x5d3a1a, 1);
+    g.fillEllipse(x, y + 30, 200, 30);
+    g.fillStyle(0x8b6f4a, 1);
+    g.fillEllipse(x, y + 22, 200, 24);
+    // 沙盘表面 (米色 · 椭圆)
+    g.fillStyle(0xead4a0, 1);
+    g.fillEllipse(x, y, 180, 100);
+    g.lineStyle(2, 0x8b6f4a, 1);
+    g.strokeEllipse(x, y, 180, 100);
+    // 沙盘上的"地形"纹理
+    g.fillStyle(0xfdf0cf, 0.6);
+    g.fillEllipse(x - 30, y - 20, 50, 24);
+    g.fillEllipse(x + 40, y + 10, 60, 30);
+
+    // === 9 工坊位置 (3x3 网格 · 跟共创之都对应) ===
+    const positions = [
+      // 共创之都 9 工坊 (上半 · 米色小方块)
+      { dx: -50, dy: -20, color: 0x4a8ad5, label: '开' },   // 开源
+      { dx:   0, dy: -20, color: 0x6b9b3a, label: '生' },   // 生态
+      { dx:  50, dy: -20, color: 0xdaa520, label: '测' },   // 测评
+      { dx: -50, dy:  -5, color: 0xc0392b, label: '播' },   // 播客
+      { dx:   0, dy:  -5, color: 0x8e44ad, label: '数' },   // 数据
+      { dx:  50, dy:  -5, color: 0xe67e22, label: '内' },   // 内参
+      { dx: -50, dy:  10, color: 0x2c3e50, label: '招' },   // 招聘
+      { dx:   0, dy:  10, color: 0x16a085, label: '会' },   // 会议
+      { dx:  50, dy:  10, color: 0xc0a060, label: '百' },   // 百科
+    ];
+    positions.forEach((p) => {
+      g.fillStyle(p.color, 1);
+      g.fillRect(x + p.dx - 6, y + p.dy - 5, 12, 10);
+      g.lineStyle(1, 0x3a2a1a, 1);
+      g.strokeRect(x + p.dx - 6, y + p.dy - 5, 12, 10);
+    });
+
+    // === 3 议政高地 (下半 · 紫红青小方块) ===
+    const govs = [
+      { dx: -30, dy: 28, color: 0x4a3a6a, label: '远' },
+      { dx:   0, dy: 28, color: 0x6b3434, label: '理' },
+      { dx:  30, dy: 28, color: 0x2a4a4a, label: '镜' },
+    ];
+    govs.forEach((p) => {
+      g.fillStyle(p.color, 1);
+      g.fillRect(x + p.dx - 5, y + p.dy - 4, 10, 8);
+    });
+
+    // 沙盘中央"CUA"标签
+    this.add.text(x, y - 38, 'CUA · 沙盘', {
+      fontFamily: 'serif', fontSize: '11px',
+      color: '#5d3a1a', backgroundColor: '#fdf0cfee',
+      padding: { left: 5, right: 5, top: 1, bottom: 1 },
+    }).setOrigin(0.5).setDepth(3);
+  }
+
+  /** 望远镜 (左侧落地式) */
   private drawTelescope(x: number, y: number) {
     const g = this.add.graphics();
     g.setDepth(2);
-    // Tripod
-    g.lineStyle(3, 0x4a3e26, 1);
-    g.lineBetween(x - 20, y + 30, x, y);
-    g.lineBetween(x + 20, y + 30, x, y);
-    g.lineBetween(x, y + 30, x, y);
-    // Telescope body
-    g.fillStyle(0xb8a472, 1);
-    g.fillRect(x - 30, y - 14, 60, 14);
-    g.lineStyle(2, 0x4a3e26, 1);
-    g.strokeRect(x - 30, y - 14, 60, 14);
-    // Eyepiece
-    g.fillStyle(0x4a3e26, 1);
-    g.fillCircle(x + 32, y - 7, 4);
+    // 三脚架
+    g.lineStyle(3, 0x5d3a1a, 1);
+    g.lineBetween(x - 18, y + 40, x, y);
+    g.lineBetween(x + 18, y + 40, x, y);
+    g.lineBetween(x, y + 40, x, y - 5);
+    // 望远镜身 (45° 倾斜往上)
+    g.fillStyle(0xc9a55b, 1);
+    g.fillRect(x - 6, y - 30, 28, 14);
+    g.lineStyle(2, 0x5d3a1a, 1);
+    g.strokeRect(x - 6, y - 30, 28, 14);
+    // 镜头 (前端大圆)
+    g.fillStyle(0x4a3a6a, 1);
+    g.fillCircle(x + 24, y - 23, 6);
+    g.lineStyle(2, 0x5d3a1a, 1);
+    g.strokeCircle(x + 24, y - 23, 6);
+    // 接目镜 (后端小圆)
+    g.fillStyle(0x3a2a1a, 1);
+    g.fillCircle(x - 7, y - 23, 3);
+    // 装饰螺丝
+    g.fillStyle(0xdaa520, 1);
+    g.fillCircle(x + 8, y - 16, 1.5);
   }
 
-  private drawChartFrame(x: number, y: number) {
+  /** 里程碑卷轴架 (右侧) */
+  private drawScrollRack(x: number, y: number) {
     const g = this.add.graphics();
     g.setDepth(2);
-    // Frame
-    g.fillStyle(0x4a3e26, 1);
-    g.fillRect(x - 32, y - 60, 12, 120);
-    g.fillRect(x - 32, y - 60, 64, 12);
-    g.fillRect(x - 32, y + 48, 64, 12);
-    g.fillRect(x + 20, y - 60, 12, 120);
-    // Scroll content (parchment)
-    g.fillStyle(0xede5cf, 1);
-    g.fillRect(x - 20, y - 48, 40, 96);
-    // Chart lines (mock roadmap)
-    g.lineStyle(1, 0x6b5a3e, 0.8);
-    g.lineBetween(x - 14, y - 40, x + 14, y - 40);
-    g.lineBetween(x - 14, y - 24, x + 8, y - 24);
-    g.lineBetween(x - 14, y - 8, x + 14, y - 8);
-    g.lineBetween(x - 14, y + 8, x + 6, y + 8);
-    g.lineBetween(x - 14, y + 24, x + 14, y + 24);
-    g.lineBetween(x - 14, y + 40, x + 10, y + 40);
-  }
-
-  private drawScrollPile(x: number, y: number) {
-    const g = this.add.graphics();
-    g.setDepth(2);
-    g.fillStyle(0xede5cf, 1);
-    g.fillCircle(x, y, 8);
-    g.fillCircle(x + 12, y - 4, 8);
-    g.fillCircle(x - 8, y - 6, 8);
-    g.lineStyle(1, 0x9a8d6c, 1);
-    g.strokeCircle(x, y, 8);
-    g.strokeCircle(x + 12, y - 4, 8);
-    g.strokeCircle(x - 8, y - 6, 8);
+    // 木架
+    g.fillStyle(0x5d3a1a, 1);
+    g.fillRect(x - 40, y + 30, 80, 8);
+    g.fillRect(x - 36, y - 50, 6, 80);
+    g.fillRect(x + 30, y - 50, 6, 80);
+    g.fillRect(x - 40, y - 50, 80, 6);
+    // 4 卷轴 (从上到下)
+    const scrollY = [-32, -12, 8, 28];
+    scrollY.forEach((dy, i) => {
+      // 卷轴底
+      g.fillStyle(0xfdf0cf, 1);
+      g.fillRect(x - 28, y + dy - 4, 56, 10);
+      g.lineStyle(1, 0x8b6f4a, 1);
+      g.strokeRect(x - 28, y + dy - 4, 56, 10);
+      // 卷轴金边
+      const colors = [0xdaa520, 0xc9a55b, 0x8b6f4a, 0xc0a060];
+      g.fillStyle(colors[i], 1);
+      g.fillRect(x - 28, y + dy - 4, 4, 10);
+      g.fillRect(x + 24, y + dy - 4, 4, 10);
+      // 卷轴文字痕迹
+      g.lineStyle(1, 0x6b5a3e, 0.7);
+      g.lineBetween(x - 22, y + dy - 1, x + 22, y + dy - 1);
+      g.lineBetween(x - 22, y + dy + 2, x + 18, y + dy + 2);
+    });
   }
 
   private createCharacterAnims(textureKey: string) {
@@ -256,18 +415,38 @@ export class VisionTowerScene extends Phaser.Scene {
     });
   }
 
-  private triggerChartDialogue() {
+  private triggerSandboxDialogue() {
     EventBus.emit('show-dialogue', {
-      name: '📜 路线图',
+      name: '🗺️ CUA 沙盘',
       lines: [
-        '（一卷长长的羊皮纸挂在墙上）',
-        '"CUA 基地 · 阶段路线"',
-        '─ 萌芽镇：完成 ✓',
-        '─ 共创之都 · 百晓居：开放 ✓',
-        '─ 共创之都 · 其余 8 工坊：筹建中',
-        '─ 议政高地 · 治理上线：进行中',
-        '─ 大集会广场 · 年度大会：未启',
-        '"路还很长——但每一步都在走。"',
+        '（一座立体的微缩 CUA · 9 工坊与 3 议政高地静静陈列）',
+        '"鸟瞰当前世界——所有的位置都在这里。"',
+        '',
+        '共创之都 9 工坊：',
+        '─ 开源 / 生态 / 测评 / 播客 / 数据',
+        '─ 内参 / 招聘 / 会议 / 百晓居',
+        '议政高地 3 厅：',
+        '─ 远见塔（你正在这里）/ 理事会 / 明镜阁',
+        '',
+        '"这是已建成的部分——下一阶段是大集会广场。"',
+      ],
+    });
+  }
+
+  private triggerScrollDialogue() {
+    EventBus.emit('show-dialogue', {
+      name: '📜 里程碑卷轴',
+      lines: [
+        '（架上 4 卷里程碑卷轴 · 由近及远）',
+        '',
+        '【最近】Wave 8 · 议政高地落地页化',
+        '【次近】Wave 7 · UI 像素风重做',
+        '【已远】Wave 6 · 共创之都 9 工坊布局',
+        '【最远】Wave 5 · 萌芽镇基础玩法',
+        '',
+        '"每一卷都是一段路——走过的路，不必再走。"',
+        '──',
+        '后续将与 GitHub Releases 联动 · 自动同步里程碑。',
       ],
     });
   }
@@ -329,24 +508,30 @@ export class VisionTowerScene extends Phaser.Scene {
     if (Phaser.Input.Keyboard.JustDown(this.kKey)) EventBus.emit('open-mailbox');
 
     const distExit = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.exitX, this.exitY);
-    const distChart = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.chartX, this.chartY);
+    const distSandbox = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.sandboxX, this.sandboxY);
     const distTel = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.telescopeX, this.telescopeY);
+    const distScroll = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.scrollX, this.scrollY);
     const nearExit = distExit < 56;
-    const nearChart = distChart < INTERACT_DISTANCE;
+    const nearSandbox = distSandbox < INTERACT_DISTANCE;
     const nearTel = distTel < INTERACT_DISTANCE;
+    const nearScroll = distScroll < INTERACT_DISTANCE;
 
     if (nearExit) {
       this.exitHint.setPosition(this.exitX, this.exitY - 36).setVisible(true);
       this.interactHint.setVisible(false);
       if (Phaser.Input.Keyboard.JustDown(this.eKey)) this.exit();
-    } else if (nearChart) {
+    } else if (nearSandbox) {
       this.exitHint.setVisible(false);
-      this.interactHint.setText('[E] 查看路线图').setPosition(this.chartX, this.chartY - 80).setVisible(true);
-      if (Phaser.Input.Keyboard.JustDown(this.eKey)) this.triggerChartDialogue();
+      this.interactHint.setText('[E] 看沙盘').setPosition(this.sandboxX, this.sandboxY - 60).setVisible(true);
+      if (Phaser.Input.Keyboard.JustDown(this.eKey)) this.triggerSandboxDialogue();
     } else if (nearTel) {
       this.exitHint.setVisible(false);
       this.interactHint.setText('[E] 望远眺').setPosition(this.telescopeX, this.telescopeY - 32).setVisible(true);
       if (Phaser.Input.Keyboard.JustDown(this.eKey)) this.triggerTelescopeDialogue();
+    } else if (nearScroll) {
+      this.exitHint.setVisible(false);
+      this.interactHint.setText('[E] 看里程碑').setPosition(this.scrollX, this.scrollY - 60).setVisible(true);
+      if (Phaser.Input.Keyboard.JustDown(this.eKey)) this.triggerScrollDialogue();
     } else {
       this.exitHint.setVisible(false);
       this.interactHint.setVisible(false);

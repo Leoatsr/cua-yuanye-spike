@@ -2,41 +2,23 @@ import { useEffect, useState, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { PhaserGame } from './game/PhaserGame';
 import { DialogueBox } from './components/DialogueBox';
-import { HUD } from './components/HUD';
 import { TitleScreen } from './components/TitleScreen';
-import { QuestPanel } from './components/QuestPanel';
-import { TitleList } from './components/TitleList';
 import { WorldMap } from './components/WorldMap';
-import { QuestLog } from './components/QuestLog';
-import { MailBox } from './components/MailBox';
-import { MailBadge } from './components/MailBadge';
-import { CVDisplay } from './components/CVDisplay';
 import { ReviewProcessor } from './components/ReviewProcessor';
 import { ReviewPanel } from './components/ReviewPanel';
-import { ReviewBadge } from './components/ReviewBadge';
 import { ReviewSeeder } from './components/ReviewSeeder';
 import { AppealProcessor } from './components/AppealProcessor';
-import { AuthBadge } from './components/AuthBadge';
-import { RoadmapPanel } from './components/RoadmapPanel';
-import { AppealDeskPanel } from './components/AppealDeskPanel';
-import { CreateProposalPanel } from './components/CreateProposalPanel';
-import { ProposalListPanel } from './components/ProposalListPanel';
-import { HomeWallPanel } from './components/HomeWallPanel';
-import { MeritBoardPanel } from './components/MeritBoardPanel';
-import { LevelBadge } from './components/LevelBadge';
+import { PixelAccountMenu } from './components/PixelAccountMenu';
 import { LevelUpAnimation } from './components/LevelUpAnimation';
 import { FaceCustomizer } from './components/FaceCustomizer';
 import { ProfilePanel } from './components/ProfilePanel';
 import { ProfilePanelKeyListener } from './components/ProfilePanelKeyListener';
-import { ProfileLink } from './components/ProfileLink';
 // PERF-1: lazy load /u/[username] route - first-time players don't need it
 const PublicProfilePage = lazy(() =>
   import('./components/PublicProfilePage').then((m) => ({
     default: m.PublicProfilePage,
   }))
 );
-import { OnlineRoster } from './components/OnlineRoster';
-import { ChatPanel } from './components/ChatPanel';
 import { ChatPanelKeyListener } from './components/ChatPanelKeyListener';
 import { PlayerInteractPrompt } from './components/PlayerInteractPrompt';
 import { PlayerInteractMenu } from './components/PlayerInteractMenu';
@@ -46,20 +28,13 @@ import { QuestHistoryKeyListener } from './components/QuestHistoryKeyListener';
 import { NotificationToast } from './components/NotificationToast';
 import { NotificationPanel } from './components/NotificationPanel';
 import { NotificationKeyListener } from './components/NotificationKeyListener';
-import { NotificationBadge } from './components/NotificationBadge';
-import { FriendsPanel } from './components/FriendsPanel';
 import { FriendsKeyListener } from './components/FriendsKeyListener';
 import { EmotePanel } from './components/EmotePanel';
 import { EmoteOverlay } from './components/EmoteOverlay';
 import { DashboardPanel } from './components/DashboardPanel';
 import { DashboardKeyListener } from './components/DashboardKeyListener';
-import { AnnouncementButton } from './components/AnnouncementButton';
-import { HelpButton } from './components/HelpButton';
 import { TutorialOverlay } from './components/TutorialOverlay';
 import { tutorialManager } from './lib/tutorialStore';
-import { TimeOverlay } from './components/TimeOverlay';
-import { TimeHUD } from './components/TimeHUD';
-import { TimeSettingsButton } from './components/TimeSettingsButton';
 import { timeSettings } from './lib/timeStore';
 import { NpcGreetingToast } from './components/NpcGreetingToast';
 import { SolarTermBanner } from './components/SolarTermBanner';
@@ -70,13 +45,29 @@ import { sessionTracker } from './lib/sessionTracker';
 import { friendsPresence } from './lib/friendsPresence';
 import { emoteManager } from './lib/emoteManager';
 import { chatManager } from './lib/chatStore';
-import { bots } from './lib/fakeBot';
+// Wave 5.A.fix-delete-bot: removed import { bots } from './lib/fakeBot'; — fake bot system disabled
 import { fetchMyProfile } from './lib/profileStore';
 import { fetchUserFace, getFaceLocal } from './lib/faceStore';
 import { ensureProfile } from './lib/profileStore';
 import { EventBus } from './game/EventBus';
 import { SentryErrorBoundary } from './lib/sentry';
 import { startUserTracker } from './lib/userTracker';
+import { LandingPage } from './pages/Landing';
+import { ManualPage } from './pages/ManualPage';
+import { CodexPage } from './pages/CodexPage';
+import { MapsPage } from './pages/MapsPage';
+import { NewGameAppHUD } from './pages/NewGameAppHUD';
+import { NewChatPanel } from './components/NewChatPanel';
+import { NewMailBox } from './components/NewMailBox';
+import { NewFriendsPanel } from './components/NewFriendsPanel';
+import { NewAnnouncementPanel } from './components/NewAnnouncementPanel';
+import { NewQuestLog } from './components/NewQuestLog';
+import { NewCreateProposalPanel } from './components/NewCreateProposalPanel';
+import { NewProposalListPanel } from './components/NewProposalListPanel';
+import { NewAppealDeskPanel } from './components/NewAppealDeskPanel';
+import { NewHomeWallPanel } from './components/NewHomeWallPanel';
+import { NewMeritBoardPanel } from './components/NewMeritBoardPanel';
+import { NewRoadmapPanel } from './components/NewRoadmapPanel';
 
 /** Fallback shown if the React UI subtree crashes. Phaser keeps running. */
 function CrashFallback({ error, resetError }: { error: unknown; resetError: () => void }) {
@@ -170,11 +161,8 @@ function MainGameApp() {
       timeSettings.load();
       // Pack S2-A: start solar term notifier
       startSolarTermNotifier();
-      // Spawn 5 fake bots (auto, only in Main scene for G1.0)
-      // Skip if already spawned (idempotent for StrictMode double-mount)
-      if (bots.bots.size === 0) {
-        bots.spawn(5, 'Main');
-      }
+      // Wave 5.A.fix-delete-bot: removed bots.spawn(5, 'Main') — fake bot system disabled
+      // Players now only see real remote players (Supabase Realtime presence) + NPCs
     };
     void initMultiplayer();
 
@@ -193,6 +181,7 @@ function MainGameApp() {
   return (
     <>
       <PhaserGame />
+      <NewGameAppHUD visible={gameStarted} />
 
       <SentryErrorBoundary
         fallback={({ error, resetError }) => (
@@ -201,32 +190,31 @@ function MainGameApp() {
       >
         {gameStarted && (
           <>
-            <HUD />
-            <CVDisplay />
-            <AuthBadge />
-            <QuestPanel />
-            <TitleList />
+            {/* <AuthBadge /> · 7.E 由 PixelAccountMenu 接管 */}
+            <PixelAccountMenu />
+            {/* <QuestPanel /> · 7.E NewQuestLog 接管 */}
+            {/* <TitleList /> · 7.E 删除 */}
             <DialogueBox />
             <WorldMap />
-            <QuestLog />
-            <MailBox />
-            <MailBadge />
-            <ReviewBadge />
+            <NewQuestLog />
+            <NewMailBox />
+            {/* <MailBadge /> · 7.C 跟 hotbar 重复 */}
+            {/* <ReviewBadge /> · 7.C 跟 hotbar 重复 */}
             <ReviewPanel />
-            <RoadmapPanel />
-            <AppealDeskPanel />
-            <CreateProposalPanel />
-            <ProposalListPanel />
-            <HomeWallPanel />
-            <MeritBoardPanel />
-            <LevelBadge />
+            <NewRoadmapPanel />
+            <NewAppealDeskPanel />
+            <NewCreateProposalPanel />
+            <NewProposalListPanel />
+            <NewHomeWallPanel />
+            <NewMeritBoardPanel />
             <LevelUpAnimation />
             <FaceCustomizer />
             <ProfilePanel />
             <ProfilePanelKeyListener />
-            <ProfileLink />
-            <OnlineRoster />
-            <ChatPanel />
+            {/* <ProfileLink /> · 7.E 已合并到菜单 */}
+            {/* <OnlineRoster /> · 7.E 顶部 chip 接管 */}
+            <NewChatPanel />
+          <NewAnnouncementPanel />
             <ChatPanelKeyListener />
             <PlayerInteractPrompt />
             <PlayerInteractMenu />
@@ -236,19 +224,17 @@ function MainGameApp() {
             <NotificationToast />
             <NotificationPanel />
             <NotificationKeyListener />
-            <NotificationBadge />
-            <FriendsPanel />
+            {/* <NotificationBadge /> · 7.E.1 */}
+            <NewFriendsPanel />
             <FriendsKeyListener />
             <EmotePanel />
             <EmoteOverlay />
             <DashboardPanel />
             <DashboardKeyListener />
-            <AnnouncementButton />
-            <HelpButton />
+            {/* <HelpButton /> · 7.C 用户要求删 */}
             <TutorialOverlay />
-            <TimeOverlay />
-            <TimeHUD />
-            <TimeSettingsButton />
+            {/* <TimeOverlay /> · 7.E.1 */}
+            {/* <TimeSettingsButton /> · 7.E.1 */}
             <NpcGreetingToast />
             <SolarTermBanner />
             {/* Headless components */}
@@ -308,7 +294,11 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<MainGameApp />} />
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/play" element={<MainGameApp />} />
+        <Route path="/manual" element={<ManualPage />} />
+        <Route path="/codex" element={<CodexPage />} />
+        <Route path="/maps" element={<MapsPage />} />
         <Route
           path="/u/:username"
           element={
@@ -317,6 +307,7 @@ export default function App() {
             </Suspense>
           }
         />
+        <Route path="*" element={<LandingPage />} />
       </Routes>
     </BrowserRouter>
   );

@@ -60,36 +60,50 @@ export class ShengwenTaiScene extends Phaser.Scene {
     this.inputLockUntil = this.time.now + 250;
     this.physics.world.setBounds(0, 0, ROOM_WIDTH, ROOM_HEIGHT);
 
-    // ---- Floor (warm dark studio carpet) ----
+    // ---- Floor (Wave 7.K · 落地页米色) ----
     const g = this.add.graphics();
     g.setDepth(-5);
-    g.fillStyle(0x18120e, 1);
+    g.fillStyle(0x8b4513, 1);
     g.fillRect(0, 0, ROOM_WIDTH, ROOM_HEIGHT);
-    g.fillStyle(0x4a3826, 1);
+    g.fillStyle(0xfdf0cf, 1);
     g.fillRect(60, 70, ROOM_WIDTH - 120, ROOM_HEIGHT - 130);
-    g.lineStyle(3, 0x2a1e10, 1);
+    g.lineStyle(3, 0x5d3a1a, 1);
     g.strokeRect(60, 70, ROOM_WIDTH - 120, ROOM_HEIGHT - 130);
+    // 横向木板缝
+    g.lineStyle(1, 0xc9a55b, 0.3);
+    for (let y = 102; y < ROOM_HEIGHT - 60; y += 64) {
+      g.lineBetween(64, y, ROOM_WIDTH - 64, y);
+    }
+    // B 布局：左主播间地毯 (浅红) + 右嘉宾间地毯 (浅青)
+    g.fillStyle(0xa32d2d, 0.06);
+    g.fillRect(80, ROOM_HEIGHT / 2 - 30, ROOM_WIDTH / 2 - 100, 130);
+    g.fillStyle(0x1a8b8b, 0.06);
+    g.fillRect(ROOM_WIDTH / 2 + 20, ROOM_HEIGHT / 2 - 30, ROOM_WIDTH / 2 - 100, 130);
 
-    // ---- Acoustic foam walls (zigzag pattern, north + east + west) ----
+    // ---- 北墙顶梁 (Wave 7.K · 暖木) ----
+    g.fillStyle(0x5d3a1a, 1);
+    g.fillRect(60, 60, ROOM_WIDTH - 120, 14);
+
+    // ---- B 布局：中央玻璃隔板 (垂直 · 不互动 · drawAcousticFoam 改写) ----
     this.drawAcousticFoam();
 
-    // ---- Mixer console (north center, big) ----
+    // ---- Wave 7.K 主道具：ON AIR 灯条墙 (北墙居中拉宽 240 · 占 mixerX/Y) ----
     this.mixerX = ROOM_WIDTH / 2;
-    this.mixerY = 130;
+    this.mixerY = 120;
     this.drawMixer(this.mixerX, this.mixerY);
 
-    // ---- Round mic table (center) ----
-    this.tableX = ROOM_WIDTH / 2;
+    // ---- Wave 7.K 主播间：左半中央桌 (主麦 + 调音推子 · 占 tableX/Y) ----
+    this.tableX = ROOM_WIDTH / 4 + 20;
     this.tableY = ROOM_HEIGHT / 2 + 30;
     this.drawMicTable(this.tableX, this.tableY);
 
-    // ---- Guest roster wall (east) ----
-    this.rosterX = ROOM_WIDTH - 130;
-    this.rosterY = ROOM_HEIGHT / 2;
+    // ---- Wave 7.K 嘉宾间：右半沙发 (沙发 + 嘉宾麦 · 占 rosterX/Y) ----
+    this.rosterX = ROOM_WIDTH * 3 / 4 - 20;
+    this.rosterY = ROOM_HEIGHT / 2 + 30;
     this.drawGuestRoster(this.rosterX, this.rosterY);
 
-    // ---- Antenna tower / broadcast (west) ----
-    this.drawAntenna(140, ROOM_HEIGHT / 2);
+    // ---- Wave 7.K 副件 L (装饰)：节目封面墙 (drawAntenna 改写) ----
+    this.drawAntenna(110, 130);
 
     // ---- Player ----
     this.createCharacterAnims('player');
@@ -136,189 +150,264 @@ export class ShengwenTaiScene extends Phaser.Scene {
     doorG.fillCircle(this.exitX + 12, this.exitY, 3);
 
     // ---- Title ----
-    this.add.text(ROOM_WIDTH / 2, 30, '— 声闻台 · 播客工作组 —', {
+    this.add.text(ROOM_WIDTH / 2, 80, '— 播客工坊 —', {
       fontFamily: 'serif', fontSize: '15px',
-      color: '#e0a060', backgroundColor: '#18120eaa',
+      color: '#a32d2d', backgroundColor: '#fdf0cfee',
       padding: { left: 10, right: 10, top: 4, bottom: 4 },
     }).setOrigin(0.5).setDepth(10);
 
     this.exitHint = this.add.text(0, 0, '[E] 离开', {
       fontFamily: 'sans-serif', fontSize: '11px',
-      color: '#ffffff', backgroundColor: '#3a4a6add',
+      color: '#fdf0cf', backgroundColor: '#5d3a1add',
       padding: { left: 6, right: 6, top: 3, bottom: 3 },
     }).setOrigin(0.5).setVisible(false).setDepth(100);
 
     this.interactHint = this.add.text(0, 0, '[E]', {
       fontFamily: 'sans-serif', fontSize: '11px',
-      color: '#ffffff', backgroundColor: '#000000aa',
+      color: '#fdf0cf', backgroundColor: '#5d3a1add',
       padding: { left: 4, right: 4, top: 2, bottom: 2 },
     }).setOrigin(0.5).setVisible(false).setDepth(100);
   }
 
-  // ============ DRAWING ============
+  // ============ DRAWING (Wave 7.K · B 录音棚双间布局 · 保留方法名) ============
 
+  /** 中央玻璃隔板 (垂直 · 不互动 · drawAcousticFoam 改写 · 顶部到中下 · 给底部门留通道) */
   private drawAcousticFoam() {
     const g = this.add.graphics();
     g.setDepth(1);
-    // Zigzag foam pattern on north wall
-    g.fillStyle(0x6b3a18, 1);
-    g.fillRect(60, 60, ROOM_WIDTH - 120, 14);
-    g.fillStyle(0x8a4a1e, 1);
-    for (let x = 70; x < ROOM_WIDTH - 60; x += 12) {
-      g.fillTriangle(x, 60, x + 12, 60, x + 6, 74);
+    const cx = ROOM_WIDTH / 2;
+    const top = 150;  // 玻璃从北墙下方开始
+    const bot = ROOM_HEIGHT - 130;  // 玻璃在门上方就停
+    // 玻璃外框 (上下 + 左右暖木边)
+    g.fillStyle(0x5d3a1a, 1);
+    g.fillRect(cx - 12, top, 24, 6);   // 上框
+    g.fillRect(cx - 12, bot - 6, 24, 6);  // 下框
+    g.fillRect(cx - 12, top, 4, bot - top);  // 左框
+    g.fillRect(cx + 8, top, 4, bot - top);   // 右框
+    // 玻璃 (浅蓝半透 · 模拟反光)
+    g.fillStyle(0xb0d4f0, 0.3);
+    g.fillRect(cx - 8, top + 6, 16, bot - top - 12);
+    // 玻璃斜光线纹 (3 道)
+    g.lineStyle(1, 0xfdf0cf, 0.4);
+    for (let i = 0; i < 3; i++) {
+      const ly = top + 30 + i * 60;
+      g.lineBetween(cx - 6, ly, cx + 6, ly + 12);
     }
+    // 中央"ON AIR"提示框 (玻璃中央)
+    g.fillStyle(0x791f1f, 1);
+    g.fillRect(cx - 8, ROOM_HEIGHT / 2 - 8, 16, 16);
+    g.fillStyle(0xfdf0cf, 1);
+    g.fillRect(cx - 6, ROOM_HEIGHT / 2 - 6, 12, 4);
+    g.fillStyle(0xa32d2d, 0.6);
+    g.fillRect(cx - 6, ROOM_HEIGHT / 2, 12, 4);
   }
 
+  /** 主道具：ON AIR 灯条墙 (北墙居中拉宽 240 · 占 mixerX/Y · 红主题) */
   private drawMixer(x: number, y: number) {
     const g = this.add.graphics();
     g.setDepth(2);
-    // Console body (slanted rectangle)
-    g.fillStyle(0x2a2e36, 1);
-    g.fillRect(x - 100, y - 30, 200, 50);
-    g.lineStyle(2, 0x18121a, 1);
-    g.strokeRect(x - 100, y - 30, 200, 50);
-    // Front lip (lighter)
-    g.fillStyle(0x3a3e46, 1);
-    g.fillRect(x - 100, y + 14, 200, 6);
-    // 8 channel sliders
-    for (let i = 0; i < 8; i++) {
-      const sx = x - 90 + i * 23;
-      // Slider track
-      g.fillStyle(0x18121a, 1);
-      g.fillRect(sx - 2, y - 22, 4, 28);
-      // Slider knob (random position to look mid-mix)
-      const sliderY = y - 18 + (i * 7) % 22;
-      g.fillStyle(0xc0c0c0, 1);
-      g.fillRect(sx - 6, sliderY - 2, 12, 4);
-      g.lineStyle(1, 0x404040, 1);
-      g.strokeRect(sx - 6, sliderY - 2, 12, 4);
-      // Channel LED
-      const lit = (i % 3) !== 0;
-      g.fillStyle(lit ? 0x00ff60 : 0x303030, 1);
-      g.fillCircle(sx, y + 11, 1.5);
+    // 暖木外框
+    g.fillStyle(0x5d3a1a, 1);
+    g.fillRect(x - 120, y - 28, 240, 56);
+    // 红主题色边
+    g.fillStyle(0xa32d2d, 1);
+    g.fillRect(x - 116, y - 24, 232, 48);
+    // 黑屏底
+    g.fillStyle(0x1a0808, 1);
+    g.fillRect(x - 112, y - 20, 224, 40);
+    // 顶部红色 LED 条 (亮)
+    g.fillStyle(0xef5050, 1);
+    g.fillRect(x - 112, y - 20, 224, 4);
+    g.fillStyle(0xffffff, 0.4);
+    g.fillRect(x - 112, y - 20, 224, 1);
+    // 中央 ON AIR 灯牌 (大)
+    g.fillStyle(0xa32d2d, 1);
+    g.fillRect(x - 60, y - 12, 120, 24);
+    g.fillStyle(0xfdf0cf, 1);
+    g.fillRect(x - 56, y - 8, 112, 16);
+    // ON AIR 字色块 (用矩形拼字)
+    // O
+    g.fillStyle(0xa32d2d, 1);
+    g.fillRect(x - 50, y - 6, 8, 2);
+    g.fillRect(x - 50, y + 4, 8, 2);
+    g.fillRect(x - 50, y - 4, 2, 8);
+    g.fillRect(x - 44, y - 4, 2, 8);
+    // N
+    g.fillRect(x - 38, y - 6, 2, 12);
+    g.fillRect(x - 30, y - 6, 2, 12);
+    g.fillRect(x - 36, y - 4, 2, 4);
+    g.fillRect(x - 34, y - 2, 2, 4);
+    g.fillRect(x - 32, y, 2, 4);
+    // (空格)
+    // A
+    g.fillRect(x - 18, y - 6, 8, 2);
+    g.fillRect(x - 18, y - 4, 2, 10);
+    g.fillRect(x - 12, y - 4, 2, 10);
+    g.fillRect(x - 18, y, 8, 2);
+    // I
+    g.fillRect(x - 4, y - 6, 6, 2);
+    g.fillRect(x - 2, y - 4, 2, 8);
+    g.fillRect(x - 4, y + 4, 6, 2);
+    // R
+    g.fillRect(x + 6, y - 6, 2, 12);
+    g.fillRect(x + 6, y - 6, 8, 2);
+    g.fillRect(x + 12, y - 4, 2, 4);
+    g.fillRect(x + 6, y, 6, 2);
+    g.fillRect(x + 10, y + 2, 2, 4);
+    // 底部状态条 (录音波形)
+    g.lineStyle(2, 0xef5050, 0.7);
+    for (let i = 0; i < 12; i++) {
+      const wx = x - 50 + i * 9;
+      const wh = (i % 3) * 3 + 2;
+      g.lineBetween(wx, y + 14 - wh, wx, y + 14 + wh);
     }
-    // Master volume knob (right side)
-    g.fillStyle(0x18121a, 1);
-    g.fillCircle(x + 116, y - 6, 8);
-    g.fillStyle(0xc0c0c0, 1);
-    g.fillCircle(x + 116, y - 6, 6);
-    g.lineStyle(2, 0xff8080, 1);
-    g.lineBetween(x + 116, y - 6, x + 120, y - 10);
-    // VU meter (visual)
-    g.fillStyle(0x18121a, 1);
-    g.fillRect(x + 100, y + 6, 36, 10);
-    g.fillStyle(0x00ff00, 1);
-    g.fillRect(x + 102, y + 8, 12, 6);
-    g.fillStyle(0xffaa00, 1);
-    g.fillRect(x + 116, y + 8, 10, 6);
-    g.fillStyle(0xff3030, 1);
-    g.fillRect(x + 128, y + 8, 6, 6);
   }
 
+  /** 主播间：左半中央桌 + 主麦 + 调音推子 (占 tableX/Y) */
   private drawMicTable(x: number, y: number) {
     const g = this.add.graphics();
-    g.setDepth(0);  // floor level (mic stands on top)
-    // Round table
-    g.fillStyle(0x6b5230, 1);
-    g.fillCircle(x, y, 70);
-    g.lineStyle(2, 0x3a2818, 1);
-    g.strokeCircle(x, y, 70);
-    // Inner darker ring
-    g.fillStyle(0x4a3826, 1);
-    g.fillCircle(x, y, 56);
-    g.lineStyle(1, 0x3a2818, 1);
-    g.strokeCircle(x, y, 56);
-
-    // 4 microphones around the table (cardinal directions)
-    const mics = [
-      [x, y - 50],   // top
-      [x + 50, y],   // right
-      [x, y + 50],   // bottom
-      [x - 50, y],   // left
-    ];
-    const g2 = this.add.graphics();
-    g2.setDepth(2);
-    mics.forEach(([mx, my]) => {
-      // Mic stand
-      g2.lineStyle(2, 0x2a2e36, 1);
-      g2.lineBetween(mx, my, mx, my - 20);
-      // Mic head (egg shape)
-      g2.fillStyle(0x18121a, 1);
-      g2.fillCircle(mx, my - 24, 5);
-      g2.lineStyle(1, 0x4a4d56, 1);
-      g2.strokeCircle(mx, my - 24, 5);
-      // Mic mesh dots
-      g2.fillStyle(0x6a6d76, 1);
-      g2.fillCircle(mx - 1, my - 25, 0.5);
-      g2.fillCircle(mx + 1, my - 23, 0.5);
-      // Power LED (red, on)
-      g2.fillStyle(0xff0000, 1);
-      g2.fillCircle(mx + 3, my - 20, 1);
-    });
-    // "ON AIR" sign hanging above center
-    g2.fillStyle(0x8a0000, 1);
-    g2.fillRect(x - 24, y - 6, 48, 14);
-    g2.lineStyle(2, 0x4a0000, 1);
-    g2.strokeRect(x - 24, y - 6, 48, 14);
-    this.add.text(x, y + 1, 'ON AIR', {
-      fontFamily: 'monospace', fontSize: '8px',
-      color: '#ffe0a0', fontStyle: 'bold',
-    }).setOrigin(0.5).setDepth(3);
+    g.setDepth(2);
+    // 桌 (暖木长桌)
+    g.fillStyle(0x8b4513, 1);
+    g.fillRect(x - 50, y - 18, 100, 36);
+    g.fillStyle(0xa0673b, 1);
+    g.fillRect(x - 48, y - 16, 96, 32);
+    // 桌脚
+    g.fillStyle(0x3a2a1a, 1);
+    g.fillRect(x - 48, y + 18, 4, 14);
+    g.fillRect(x + 44, y + 18, 4, 14);
+    // 调音台 (左半)
+    g.fillStyle(0x2c2c2a, 1);
+    g.fillRect(x - 42, y - 10, 36, 16);
+    // 4 推子 (横向 · 红色滑块)
+    for (let i = 0; i < 4; i++) {
+      const sx = x - 38 + i * 9;
+      g.fillStyle(0x5f5e5a, 1);
+      g.fillRect(sx, y - 8, 2, 12);
+      // 滑块位置变化
+      const sy = y - 4 + (i % 2) * 4;
+      g.fillStyle(0xa32d2d, 1);
+      g.fillRect(sx - 2, sy, 6, 3);
+    }
+    // 主麦克风 (落地式 · 桌右半)
+    const mx = x + 16;
+    const my = y - 20;
+    // 麦支架
+    g.fillStyle(0x5d3a1a, 1);
+    g.fillRect(mx - 1, my, 2, 22);
+    g.fillRect(mx - 8, my + 22, 16, 3);
+    // 麦头 (深灰金属网)
+    g.fillStyle(0x444441, 1);
+    g.fillCircle(mx, my - 4, 6);
+    g.fillStyle(0x888780, 1);
+    g.fillCircle(mx, my - 4, 4);
+    // 麦头光
+    g.fillStyle(0xa32d2d, 1);
+    g.fillCircle(mx, my - 4, 1);
+    // 主播椅 (北 · 红色)
+    g.fillStyle(0x5d3a1a, 1);
+    g.fillRect(x - 14, y - 38, 28, 16);
+    g.fillStyle(0xa32d2d, 1);
+    g.fillRect(x - 12, y - 36, 24, 14);
+    g.fillStyle(0xc94545, 1);
+    g.fillRect(x - 10, y - 34, 20, 4);
+    // 桌前耳机 (黑色)
+    g.fillStyle(0x2c2c2a, 1);
+    g.fillRect(x - 38, y + 4, 14, 4);
+    g.fillCircle(x - 35, y + 4, 2);
+    g.fillCircle(x - 27, y + 4, 2);
   }
 
+  /** 嘉宾间：右半沙发 + 嘉宾麦 (占 rosterX/Y) */
   private drawGuestRoster(x: number, y: number) {
     const g = this.add.graphics();
     g.setDepth(2);
-    // Frame
-    g.fillStyle(0x4a3826, 1);
-    g.fillRect(x - 40, y - 80, 80, 160);
-    g.lineStyle(2, 0x2a1e10, 1);
-    g.strokeRect(x - 40, y - 80, 80, 160);
-    // Parchment
-    g.fillStyle(0xede5cf, 1);
-    g.fillRect(x - 34, y - 74, 68, 148);
-    // Title bar
-    g.fillStyle(0x8a4a1e, 1);
-    g.fillRect(x - 34, y - 74, 68, 14);
-    // Mock entries (dots + lines for each guest)
-    g.lineStyle(1, 0x6b5230, 1);
-    for (let i = 0; i < 8; i++) {
-      const ey = y - 56 + i * 16;
-      g.fillStyle(0xb8a472, 1);
-      g.fillCircle(x - 24, ey, 3);  // avatar dot
-      g.fillStyle(0x6b5230, 0.7);
-      g.fillRect(x - 18, ey - 3, 40, 2);  // name line
-      g.fillRect(x - 18, ey + 1, 32, 1.5);  // role line
-    }
+    // 嘉宾沙发 (青色 · 圆角矩形 · 北朝向)
+    const sy = y - 5;
+    // 沙发底座
+    g.fillStyle(0x5d3a1a, 1);
+    g.fillRect(x - 38, sy - 8, 76, 22);
+    // 沙发坐垫 (青色)
+    g.fillStyle(0x1a8b8b, 1);
+    g.fillRect(x - 36, sy - 6, 72, 18);
+    // 沙发靠背
+    g.fillStyle(0x267878, 1);
+    g.fillRect(x - 38, sy - 22, 76, 16);
+    // 靠背高光
+    g.fillStyle(0x3a9b9b, 1);
+    g.fillRect(x - 36, sy - 20, 72, 4);
+    // 沙发扶手
+    g.fillStyle(0x5d3a1a, 1);
+    g.fillRect(x - 42, sy - 16, 4, 22);
+    g.fillRect(x + 38, sy - 16, 4, 22);
+    // 沙发脚
+    g.fillStyle(0x3a2a1a, 1);
+    g.fillRect(x - 38, sy + 14, 4, 4);
+    g.fillRect(x + 34, sy + 14, 4, 4);
+    // 沙发上 2 个抱枕 (米色 + 青色)
+    g.fillStyle(0xfdf0cf, 1);
+    g.fillRect(x - 28, sy - 4, 12, 12);
+    g.fillStyle(0x267878, 1);
+    g.fillRect(x + 16, sy - 4, 12, 12);
+    // 嘉宾麦 (悬挂式 · 桌前)
+    const my = y + 26;
+    // 桌 (小茶几)
+    g.fillStyle(0x8b4513, 1);
+    g.fillRect(x - 16, my, 32, 14);
+    g.fillStyle(0xa0673b, 1);
+    g.fillRect(x - 14, my + 2, 28, 10);
+    // 茶几脚
+    g.fillStyle(0x3a2a1a, 1);
+    g.fillRect(x - 14, my + 14, 4, 8);
+    g.fillRect(x + 10, my + 14, 4, 8);
+    // 桌上嘉宾麦 (紧凑式)
+    g.fillStyle(0x444441, 1);
+    g.fillRect(x - 4, my - 4, 8, 8);
+    g.fillStyle(0x888780, 1);
+    g.fillCircle(x, my, 3);
+    g.fillStyle(0x1a8b8b, 1);
+    g.fillCircle(x, my, 1);
+    // 桌上水杯
+    g.fillStyle(0xfdf0cf, 1);
+    g.fillRect(x + 8, my + 4, 4, 6);
+    g.lineStyle(1, 0x5d3a1a, 0.5);
+    g.strokeRect(x + 8, my + 4, 4, 6);
   }
 
+  /** 副件 L (装饰)：节目封面墙 (drawAntenna 改写) */
   private drawAntenna(x: number, y: number) {
     const g = this.add.graphics();
     g.setDepth(2);
-    // Tall antenna mast
-    g.lineStyle(3, 0x4a4d56, 1);
-    g.lineBetween(x, y - 100, x, y + 60);
-    // Cross beams
-    [-80, -50, -20, 10].forEach((dy) => {
-      const w = (dy === -80) ? 14 : (dy === -50 ? 22 : (dy === -20 ? 30 : 38));
-      g.lineBetween(x - w, y + dy, x + w, y + dy);
-    });
-    // Top beacon (animated red blink)
-    const beacon = this.add.graphics();
-    beacon.setDepth(3);
-    beacon.fillStyle(0xff3030, 1);
-    beacon.fillCircle(x, y - 105, 4);
-    this.tweens.add({
-      targets: beacon, alpha: 0.3,
-      duration: 800, yoyo: true, repeat: -1,
-    });
-    // Wave rings emanating
-    const wave = this.add.graphics();
-    wave.setDepth(0);
-    wave.lineStyle(1, 0xe0a060, 0.5);
-    wave.strokeCircle(x, y - 60, 30);
-    wave.strokeCircle(x, y - 60, 50);
-    wave.strokeCircle(x, y - 60, 70);
+    // 暖木外框
+    g.fillStyle(0x5d3a1a, 1);
+    g.fillRect(x - 30, y - 28, 60, 56);
+    // 红主题色边
+    g.fillStyle(0xa32d2d, 1);
+    g.fillRect(x - 28, y - 26, 56, 52);
+    // 米色挂板
+    g.fillStyle(0xfdf0cf, 1);
+    g.fillRect(x - 26, y - 24, 52, 48);
+    // 顶部"封面"标签条
+    g.fillStyle(0x791f1f, 1);
+    g.fillRect(x - 26, y - 24, 52, 5);
+    // 4 个节目封面 (2×2 阵列 · 不同色)
+    const covers = [0xa32d2d, 0x854f0b, 0x3b6d11, 0x1a8b8b];
+    for (let row = 0; row < 2; row++) {
+      for (let col = 0; col < 2; col++) {
+        const cx = x - 14 + col * 22;
+        const cy = y - 12 + row * 18;
+        g.fillStyle(covers[row * 2 + col], 1);
+        g.fillRect(cx, cy, 18, 14);
+        // 封面光
+        g.fillStyle(0xfdf0cf, 0.8);
+        g.fillRect(cx + 1, cy + 1, 16, 3);
+        // 麦克风小图标
+        g.fillStyle(0xfdf0cf, 1);
+        g.fillCircle(cx + 9, cy + 8, 2);
+        g.fillStyle(covers[row * 2 + col], 1);
+        g.fillCircle(cx + 9, cy + 8, 1);
+      }
+    }
   }
 
   // ============ ANIMATION ============
@@ -354,46 +443,46 @@ export class ShengwenTaiScene extends Phaser.Scene {
 
   private triggerMixer() {
     EventBus.emit('show-dialogue', {
-      name: '🎚️ 调音台',
+      name: '🔴 ON AIR 灯条',
       lines: [
-        '（8 个推子整齐排列，VU 表跳动）',
+        '（红色 ON AIR 灯条 · 下方录音波形跳动）',
         '',
-        '"声音是 CUA 的一种生命方式。"',
-        '"每周一档播客——访谈、辩论、分享。"',
+        '"红灯亮着——意思是「正在录音 · 请安静」。"',
+        '"绿灯亮着——意思是「Take 完了 · 可以聊天」。"',
         '',
-        '当前正在剪辑：',
-        '─ "AI 浪潮第 N 集 · 嘉宾访谈"',
-        '─ "CUA 周报第 X 期 · 本周精选"',
+        '当前状态：● 红灯 · 录音中',
+        '"——别走过去 · 你的脚步声会被收进去。"',
       ],
     });
   }
 
   private triggerTable() {
     EventBus.emit('show-dialogue', {
-      name: '🎙️ 录音圆桌',
+      name: '🎙️ 主播间',
       lines: [
-        '（4 支麦克风围圈而立，红灯常亮）',
-        '"ON AIR" 灯亮着——好像随时会有人来录。',
+        '（红椅 + 调音推子 + 主麦 + 监听耳机）',
         '',
-        '"这里坐过很多嘉宾——"',
-        '"作者、研究员、产品经理、甚至有学生。"',
-        '"每个人的声音，都被认真听过。"',
+        '"主播是节目的脊梁——'
+        + '负责开场 · 提问 · 收尾。"',
+        '',
+        '"调音台 4 推子：主播 / 嘉宾 / 背景音 / 主控。"',
+        '"——音量平衡 · 永远是录音的第一难关。"',
       ],
     });
   }
 
   private triggerRoster() {
     EventBus.emit('show-dialogue', {
-      name: '📋 嘉宾名册',
+      name: '🎤 嘉宾间',
       lines: [
-        '（一卷长长的羊皮纸，记录所有上过节目的嘉宾）',
+        '（青色沙发 + 抱枕 + 嘉宾麦 + 水杯）',
         '',
-        '"已邀请：" 73 位',
-        '"已录制：" 58 位',
-        '"待发布：" 6 期',
+        '"嘉宾是节目的灵魂——'
+        + '从坐下到开口 · 留 5 秒缓冲。"',
         '',
-        '名册底部写着：',
-        '"想登台分享？给 podcast@cua.dev 发邮件吧。"',
+        '已邀请：73 位 · 已录制：58 位 · 待发布：6 期',
+        '',
+        '"想登台分享？给 podcast@cua.dev 发邮件。"',
       ],
     });
   }
@@ -448,17 +537,17 @@ export class ShengwenTaiScene extends Phaser.Scene {
       this.exitHint.setPosition(this.exitX, this.exitY - 36).setVisible(true);
       this.interactHint.setVisible(false);
       if (Phaser.Input.Keyboard.JustDown(this.eKey)) this.exit();
-    } else if (distMix < INTERACT_DISTANCE) {
+    } else if (distMix < INTERACT_DISTANCE * 1.5) {
       this.exitHint.setVisible(false);
-      this.interactHint.setText('[E] 看调音台').setPosition(this.mixerX, this.mixerY - 50).setVisible(true);
+      this.interactHint.setText('[E] 看 ON AIR').setPosition(this.mixerX, this.mixerY + 36).setVisible(true);
       if (Phaser.Input.Keyboard.JustDown(this.eKey)) this.triggerMixer();
     } else if (distTable < INTERACT_DISTANCE * 1.5) {
       this.exitHint.setVisible(false);
-      this.interactHint.setText('[E] 看录音桌').setPosition(this.tableX, this.tableY - 80).setVisible(true);
+      this.interactHint.setText('[E] 进主播间').setPosition(this.tableX, this.tableY - 50).setVisible(true);
       if (Phaser.Input.Keyboard.JustDown(this.eKey)) this.triggerTable();
-    } else if (distRoster < INTERACT_DISTANCE) {
+    } else if (distRoster < INTERACT_DISTANCE * 1.5) {
       this.exitHint.setVisible(false);
-      this.interactHint.setText('[E] 看嘉宾册').setPosition(this.rosterX, this.rosterY - 90).setVisible(true);
+      this.interactHint.setText('[E] 进嘉宾间').setPosition(this.rosterX, this.rosterY - 50).setVisible(true);
       if (Phaser.Input.Keyboard.JustDown(this.eKey)) this.triggerRoster();
     } else {
       this.exitHint.setVisible(false);

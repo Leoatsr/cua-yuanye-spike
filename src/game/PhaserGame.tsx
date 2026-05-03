@@ -10,6 +10,9 @@ import { CouncilHallScene } from './scenes/CouncilHallScene';
 import { MirrorPavilionScene } from './scenes/MirrorPavilionScene';
 import { GrandPlazaScene } from './scenes/GrandPlazaScene';
 import { HomeScene } from './scenes/HomeScene';
+import { VillageHeadScene } from './scenes/VillageHeadScene';
+import { LibraryScene } from './scenes/LibraryScene';
+import { BlacksmithScene } from './scenes/BlacksmithScene';
 import { KaiyuanLouScene } from './scenes/KaiyuanLouScene';
 import { ShengwenTaiScene } from './scenes/ShengwenTaiScene';
 import { DuliangGeScene } from './scenes/DuliangGeScene';
@@ -29,16 +32,16 @@ export function PhaserGame() {
     gameRef.current = new Phaser.Game({
       type: Phaser.AUTO,
       parent: containerRef.current,
-      width: 1280,
-      height: 720,
+      width: window.innerWidth,
+      height: window.innerHeight,
       pixelArt: true,
-      backgroundColor: '#1a1a1a',
+      backgroundColor: '#fdf0cf',
       physics: {
         default: 'arcade',
         arcade: { gravity: { x: 0, y: 0 }, debug: false },
       },
       scale: {
-        mode: Phaser.Scale.FIT,
+        mode: Phaser.Scale.RESIZE,
         autoCenter: Phaser.Scale.CENTER_BOTH,
       },
       scene: [
@@ -52,6 +55,9 @@ export function PhaserGame() {
         MirrorPavilionScene,
         GrandPlazaScene,
         HomeScene,
+        VillageHeadScene,
+        LibraryScene,
+        BlacksmithScene,
         KaiyuanLouScene,
         ShengwenTaiScene,
         DuliangGeScene,

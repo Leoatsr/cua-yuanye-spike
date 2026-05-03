@@ -1,0 +1,20 @@
+/**
+ * Wave 7.E.2 overrides
+ * 加载顺序：晚于 wave7e1-overrides.css
+ *
+ * - 节气 banner 已重写（无需 CSS）
+ * - 公开页主体已重写（无需 CSS）
+ * - 仅修补：少数 logic-driven 按钮残留 dark color 让它们在米色背景下不刺眼
+ */
+
+/* PublicProfilePage 内剩余 dark style buttons (好友/关注/截图/私聊)
+   logic-driven 颜色保留 · 但 borderRadius 改 0 + 字体改 monospace */
+[href*="/u/"], button[title*="复制"], button[title*="私聊"], button[title*="即将"] {
+  border-radius: 0 !important;
+}
+
+/* 任务史 inline cards 白字改深字（背景已经是米色） */
+.profile-history-row,
+[class*="quest-history"] {
+  color: var(--ink, #3a2a1a) !important;
+}

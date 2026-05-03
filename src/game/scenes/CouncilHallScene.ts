@@ -7,6 +7,7 @@ const INTERACT_DISTANCE = 56;
 
 const ROOM_WIDTH = 1000;
 const ROOM_HEIGHT = 700;
+// Wave 8.CouncilHall · 法庭式 (主席台 + 旁听席)
 
 interface SceneInitData {
   returnX?: number;
@@ -14,7 +15,7 @@ interface SceneInitData {
 }
 
 /**
- * 执政厅室内 (Council Hall) — proposal voting and decisions.
+ * 理事会室内 (Council Hall) · 法庭式 — proposal voting and decisions.
  * Phase 4 (C6.3) will add real proposal mechanics. C6.0 = room only.
  */
 export class CouncilHallScene extends Phaser.Scene {
@@ -34,10 +35,12 @@ export class CouncilHallScene extends Phaser.Scene {
   private exitHint!: Phaser.GameObjects.Text;
   private interactHint!: Phaser.GameObjects.Text;
 
+  private charterX = 0;
+  private charterY = 0;
   private podiumX = 0;
   private podiumY = 0;
-  private boardX = 0;
-  private boardY = 0;
+  private audienceX = 0;
+  private audienceY = 0;
 
   private returnX = 0;
   private returnY = 0;
@@ -56,58 +59,61 @@ export class CouncilHallScene extends Phaser.Scene {
     this.inputLockUntil = this.time.now + 250;
     this.physics.world.setBounds(0, 0, ROOM_WIDTH, ROOM_HEIGHT);
 
-    // ---- Floor ----
+    // === Wave 8 · 米色羊皮纸地板 (替代灰蓝大理石) ===
     const g = this.add.graphics();
     g.setDepth(-5);
-    g.fillStyle(0x1a1a22, 1);
+    // 暖木墙边
+    g.fillStyle(0x5d3a1a, 1);
     g.fillRect(0, 0, ROOM_WIDTH, ROOM_HEIGHT);
-    // Marble floor
-    g.fillStyle(0xefe9d9, 1);
+    // 米色羊皮纸地板
+    g.fillStyle(0xfdf0cf, 1);
     g.fillRect(60, 60, ROOM_WIDTH - 120, ROOM_HEIGHT - 120);
-    g.lineStyle(3, 0xb8a472, 1);
+    g.lineStyle(3, 0x8b6f4a, 1);
     g.strokeRect(60, 60, ROOM_WIDTH - 120, ROOM_HEIGHT - 120);
-    // Tile pattern (checkerboard cream)
-    g.fillStyle(0xe6deca, 0.5);
-    const tile = 60;
-    for (let y = 60; y < ROOM_HEIGHT - 60; y += tile) {
-      for (let x = 60; x < ROOM_WIDTH - 60; x += tile) {
-        if (((x / tile) + (y / tile)) % 2 === 0) {
-          g.fillRect(x, y, tile, tile);
-        }
-      }
+    // 地板纹理
+    g.fillStyle(0xead4a0, 0.4);
+    for (let i = 0; i < 80; i++) {
+      const px = 80 + Math.random() * (ROOM_WIDTH - 160);
+      const py = 80 + Math.random() * (ROOM_HEIGHT - 160);
+      g.fillCircle(px, py, 1.5);
     }
+    // 中央走道纵线 (法庭仪式感)
+    g.fillStyle(0xead4a0, 0.6);
+    g.fillRect(ROOM_WIDTH / 2 - 60, 180, 120, ROOM_HEIGHT - 280);
+    g.lineStyle(1, 0xc9a55b, 0.8);
+    g.lineBetween(ROOM_WIDTH / 2 - 60, 180, ROOM_WIDTH / 2 - 60, ROOM_HEIGHT - 100);
+    g.lineBetween(ROOM_WIDTH / 2 + 60, 180, ROOM_WIDTH / 2 + 60, ROOM_HEIGHT - 100);
 
-    // ---- Inner colonnade (around perimeter) ----
-    const colSpacing = 130;
-    for (let x = 130; x < ROOM_WIDTH - 80; x += colSpacing) {
-      this.drawColumn(x, 130);
-      this.drawColumn(x, ROOM_HEIGHT - 130);
-    }
-    for (let y = 200; y < ROOM_HEIGHT - 130; y += colSpacing) {
-      this.drawColumn(130, y);
-      this.drawColumn(ROOM_WIDTH - 130, y);
-    }
+    // === 顶梁 (红色 · 跟外景平顶呼应) ===
+    g.fillStyle(0x6b3434, 1);
+    g.fillRect(0, 0, ROOM_WIDTH, 36);
+    g.fillStyle(0x854444, 1);
+    g.fillRect(0, 0, ROOM_WIDTH, 6);
 
-    // ---- Central podium (north) ----
+    // === 左右白柱 (3 对) ===
+    this.drawColumn(120, 110);
+    this.drawColumn(ROOM_WIDTH - 120, 110);
+    this.drawColumn(120, ROOM_HEIGHT - 130);
+    this.drawColumn(ROOM_WIDTH - 120, ROOM_HEIGHT - 130);
+
+    // === 主互动 1：CUA 章程 (北墙) ===
+    this.charterX = ROOM_WIDTH / 2;
+    this.charterY = 110;
+    this.drawCharter(this.charterX, this.charterY);
+
+    // === 主互动 2：主席台 (中央 · 北侧) ===
     this.podiumX = ROOM_WIDTH / 2;
-    this.podiumY = 200;
-    this.drawPodium(this.podiumX, this.podiumY);
+    this.podiumY = 220;
+    this.drawPresidiumStage(this.podiumX, this.podiumY);
 
-    // ---- Proposal board (east wall) ----
-    this.boardX = ROOM_WIDTH - 180;
-    this.boardY = ROOM_HEIGHT / 2;
-    this.drawBoard(this.boardX, this.boardY);
+    // === 主互动 3：旁听席 (4 排长椅 · 中下部) ===
+    this.audienceX = ROOM_WIDTH / 2;
+    this.audienceY = ROOM_HEIGHT / 2 + 80;
+    this.drawAudienceRows(this.audienceX, this.audienceY);
 
-    // ---- Audience benches (rows) ----
-    for (let row = 0; row < 3; row++) {
-      const by = 350 + row * 70;
-      this.drawBench(ROOM_WIDTH / 2 - 140, by);
-      this.drawBench(ROOM_WIDTH / 2 + 140, by);
-    }
-
-    // ---- Brazier (decorative) ----
-    this.drawBrazier(220, ROOM_HEIGHT - 200);
-    this.drawBrazier(ROOM_WIDTH - 220, ROOM_HEIGHT - 200);
+    // === 装饰：双火盆 (角落 · 法庭仪式感) ===
+    this.drawBrazier(220, ROOM_HEIGHT - 180);
+    this.drawBrazier(ROOM_WIDTH - 220, ROOM_HEIGHT - 180);
 
     // ---- Player ----
     this.createCharacterAnims('player');
@@ -152,14 +158,14 @@ export class CouncilHallScene extends Phaser.Scene {
     doorG.strokeRect(this.exitX - 30, this.exitY - 40, 60, 70);
 
     // Title
-    this.add.text(ROOM_WIDTH / 2, 30, '执政厅 · 提案与决议', {
+    this.add.text(ROOM_WIDTH / 2, 30, '理事会 · 提案与决议', {
       fontFamily: 'serif', fontSize: '16px',
       color: '#f5f0e0', backgroundColor: '#1a141aaa',
       padding: { left: 10, right: 10, top: 4, bottom: 4 },
     }).setOrigin(0.5).setDepth(10);
 
     // Hints
-    this.exitHint = this.add.text(0, 0, '[E] 离开执政厅', {
+    this.exitHint = this.add.text(0, 0, '[E] 离开理事会', {
       fontFamily: 'sans-serif', fontSize: '11px',
       color: '#ffffff', backgroundColor: '#3a4a6add',
       padding: { left: 6, right: 6, top: 3, bottom: 3 },
@@ -175,85 +181,136 @@ export class CouncilHallScene extends Phaser.Scene {
   private drawColumn(x: number, y: number) {
     const g = this.add.graphics();
     g.setDepth(2);
-    g.fillStyle(0xe6deca, 1);
-    g.fillRect(x - 12, y - 40, 24, 80);
-    g.fillStyle(0xc8c0a3, 1);
-    g.fillRect(x - 16, y - 40, 32, 5);
-    g.fillRect(x - 16, y + 35, 32, 5);
-    g.lineStyle(1, 0xc0b89d, 0.6);
-    g.lineBetween(x, y - 36, x, y + 36);
+    // 米色柱身
+    g.fillStyle(0xfdf0cf, 1);
+    g.fillRect(x - 8, y - 50, 16, 100);
+    g.lineStyle(1, 0x8b6f4a, 0.8);
+    g.strokeRect(x - 8, y - 50, 16, 100);
+    // 柱头
+    g.fillStyle(0xc9a55b, 1);
+    g.fillRect(x - 12, y - 50, 24, 6);
+    g.fillRect(x - 12, y + 44, 24, 6);
+    g.lineStyle(1, 0xc9a55b, 0.5);
+    g.lineBetween(x - 3, y - 44, x - 3, y + 44);
+    g.lineBetween(x + 3, y - 44, x + 3, y + 44);
   }
 
-  private drawPodium(x: number, y: number) {
+  /** CUA 章程 (北墙) · 主互动 1 */
+  private drawCharter(x: number, y: number) {
     const g = this.add.graphics();
     g.setDepth(2);
-    // Stepped base
-    g.fillStyle(0xc8c0a3, 1);
-    g.fillRect(x - 70, y + 30, 140, 16);
-    g.fillStyle(0xdcd4b9, 1);
-    g.fillRect(x - 56, y + 14, 112, 16);
-    // Podium body
-    g.fillStyle(0xede5cf, 1);
-    g.fillRect(x - 36, y - 40, 72, 54);
-    g.lineStyle(2, 0x9a8d6c, 1);
-    g.strokeRect(x - 36, y - 40, 72, 54);
-    // Front emblem
-    g.fillStyle(0xb8a472, 1);
-    g.fillCircle(x, y - 10, 12);
-    g.lineStyle(2, 0x9a8d6c, 1);
-    g.strokeCircle(x, y - 10, 12);
-  }
-
-  private drawBoard(x: number, y: number) {
-    const g = this.add.graphics();
-    g.setDepth(2);
-    // Frame
-    g.fillStyle(0x4a3e26, 1);
-    g.fillRect(x - 38, y - 80, 76, 12);
-    g.fillRect(x - 38, y + 68, 76, 12);
-    g.fillRect(x - 38, y - 80, 12, 160);
-    g.fillRect(x + 26, y - 80, 12, 160);
-    // Parchment
-    g.fillStyle(0xede5cf, 1);
-    g.fillRect(x - 26, y - 68, 52, 136);
-    // Lines (mock proposals)
-    g.lineStyle(1, 0x6b5a3e, 0.7);
-    for (let i = 0; i < 6; i++) {
-      g.lineBetween(x - 18, y - 50 + i * 22, x + 18, y - 50 + i * 22);
+    // 框
+    g.fillStyle(0x5d3a1a, 1);
+    g.fillRect(x - 110, y - 35, 220, 70);
+    // 内框金边
+    g.fillStyle(0xdaa520, 1);
+    g.fillRect(x - 105, y - 30, 210, 60);
+    // 米色羊皮纸面
+    g.fillStyle(0xfdf0cf, 1);
+    g.fillRect(x - 100, y - 25, 200, 50);
+    // 章程文字行 (用细线模拟)
+    g.lineStyle(1, 0x6b3434, 0.7);
+    for (let i = 0; i < 5; i++) {
+      g.lineBetween(x - 90, y - 18 + i * 10, x + 90, y - 18 + i * 10);
     }
-    // Title bar
-    g.fillStyle(0xb8a472, 1);
-    g.fillRect(x - 26, y - 68, 52, 14);
+    // 标题"CUA 章程"
+    this.add.text(x, y - 50, 'CUA 章程', {
+      fontFamily: 'serif', fontSize: '13px',
+      color: '#fdf0cf', backgroundColor: '#6b3434ee',
+      padding: { left: 8, right: 8, top: 2, bottom: 2 },
+      fontStyle: 'bold',
+    }).setOrigin(0.5).setDepth(3);
+  }
+
+  /** 主席台 · 主互动 2 (3 椅 + 议事台) */
+  private drawPresidiumStage(x: number, y: number) {
+    const g = this.add.graphics();
+    g.setDepth(2);
+    // 主席台基座 (米色阶梯)
+    g.fillStyle(0xead4a0, 1);
+    g.fillRect(x - 130, y + 20, 260, 16);
+    g.fillStyle(0xfdf0cf, 1);
+    g.fillRect(x - 120, y + 10, 240, 12);
+    g.lineStyle(2, 0x8b6f4a, 1);
+    g.strokeRect(x - 120, y + 10, 240, 12);
+    // 议事台 (中央 · 木质大桌)
+    g.fillStyle(0x5d3a1a, 1);
+    g.fillRect(x - 80, y - 10, 160, 24);
+    g.lineStyle(2, 0x3a2a1a, 1);
+    g.strokeRect(x - 80, y - 10, 160, 24);
+    // 议事台金徽 (中央 CUA 标志)
+    g.fillStyle(0xdaa520, 1);
+    g.fillCircle(x, y + 2, 8);
+    g.fillStyle(0x6b3434, 1);
+    g.fillCircle(x, y + 2, 5);
+    g.fillStyle(0xfac775, 1);
+    g.fillCircle(x, y + 2, 2);
+    // 3 主席椅 (台后)
+    [-50, 0, 50].forEach((dx) => {
+      // 椅背
+      g.fillStyle(0x6b3434, 1);
+      g.fillRect(x + dx - 14, y - 40, 28, 32);
+      g.lineStyle(1, 0x4a1a1a, 1);
+      g.strokeRect(x + dx - 14, y - 40, 28, 32);
+      // 椅面
+      g.fillStyle(0x8b3434, 1);
+      g.fillRect(x + dx - 16, y - 12, 32, 6);
+    });
+    // 中央椅 高背 (主席座 · 略高)
+    g.fillStyle(0xc0392b, 1);
+    g.fillRect(x - 14, y - 50, 28, 12);
+    g.lineStyle(1, 0x4a1a1a, 1);
+    g.strokeRect(x - 14, y - 50, 28, 12);
+  }
+
+  /** 旁听席 · 主互动 3 (4 排长椅) */
+  private drawAudienceRows(x: number, y: number) {
+    const g = this.add.graphics();
+    g.setDepth(2);
+    // 4 排长椅 · 每排左右各一
+    for (let row = 0; row < 4; row++) {
+      const by = y - 60 + row * 38;
+      this.drawBench(x - 130, by);
+      this.drawBench(x + 130, by);
+    }
   }
 
   private drawBench(x: number, y: number) {
     const g = this.add.graphics();
     g.setDepth(2);
-    g.fillStyle(0x4a3e26, 1);
-    g.fillRect(x - 50, y, 100, 14);
-    g.fillRect(x - 46, y + 14, 6, 12);
-    g.fillRect(x + 40, y + 14, 6, 12);
-    g.lineStyle(1, 0x2a1e16, 1);
-    g.strokeRect(x - 50, y, 100, 14);
+    // 椅面
+    g.fillStyle(0x5d3a1a, 1);
+    g.fillRect(x - 60, y, 120, 14);
+    g.lineStyle(1, 0x3a2a1a, 1);
+    g.strokeRect(x - 60, y, 120, 14);
+    // 椅腿
+    g.fillStyle(0x3a2a1a, 1);
+    g.fillRect(x - 56, y + 14, 6, 12);
+    g.fillRect(x + 50, y + 14, 6, 12);
+    // 椅面高光
+    g.fillStyle(0x8b6f4a, 0.5);
+    g.fillRect(x - 60, y, 120, 3);
   }
 
   private drawBrazier(x: number, y: number) {
     const g = this.add.graphics();
     g.setDepth(2);
-    // Stand
-    g.fillStyle(0x4a3e26, 1);
+    // 立柱
+    g.fillStyle(0x5d3a1a, 1);
     g.fillRect(x - 4, y, 8, 30);
     g.fillRect(x - 14, y + 30, 28, 6);
-    // Bowl
-    g.fillStyle(0x8a6f4a, 1);
+    // 火盆
+    g.fillStyle(0xc9a55b, 1);
     g.fillCircle(x, y, 14);
-    g.lineStyle(2, 0x4a3e26, 1);
+    g.lineStyle(2, 0x5d3a1a, 1);
     g.strokeCircle(x, y, 14);
-    // Flame
-    g.fillStyle(0xe07060, 1);
-    g.fillTriangle(x - 8, y - 6, x + 8, y - 6, x, y - 18);
-    g.fillStyle(0xe0b060, 1);
-    g.fillTriangle(x - 4, y - 8, x + 4, y - 8, x, y - 14);
+    // 火焰
+    g.fillStyle(0xc0392b, 1);
+    g.fillTriangle(x - 8, y - 4, x + 8, y - 4, x, y - 18);
+    g.fillStyle(0xdaa520, 1);
+    g.fillTriangle(x - 4, y - 6, x + 4, y - 6, x, y - 14);
+    g.fillStyle(0xfac775, 1);
+    g.fillCircle(x, y - 10, 2);
   }
 
   private createCharacterAnims(textureKey: string) {
@@ -283,32 +340,60 @@ export class CouncilHallScene extends Phaser.Scene {
     });
   }
 
+  private triggerCharterDialogue() {
+    EventBus.emit('show-dialogue', {
+      name: '📜 CUA 章程',
+      lines: [
+        '（金边羊皮纸上写满了细密的小字）',
+        '',
+        '"理事会议事原则：',
+        ' 一·提案需 L2 mentor 联署 3 人。',
+        ' 二·公示 24 小时，方可投票。',
+        ' 三·投票需 L1 活跃贡献者，多数过半。',
+        ' 四·决议归档，每条皆有据。"',
+        '',
+        '"五·凡治理之事，均向高地公开。"',
+        '──',
+        '"治理不是终点。被看见，才是。"',
+      ],
+    });
+  }
+
   private triggerPodiumDialogue() {
     EventBus.emit('show-dialogue', {
-      name: '🪶 议事讲台',
+      name: '🪶 主席台',
       lines: [
-        '（讲台上空无一人，但站上去有股庄严感）',
+        '（议事台中央嵌着 CUA 金徽 · 后方三把主席椅）',
         '"提案、辩论、决议——都从这里开始。"',
-        '"按章程，需 L5 议事权方可登台陈词。"',
+        '',
+        '当前会议：',
+        '─ 议程：暂无（无现役议题）',
+        '─ 主持：待选',
+        '─ 联席主席（L4）：缺位',
+        '',
+        '"按章程，需 L2 mentor 方可登台陈词。"',
         '提案系统正在筹建中——',
-        '当真的有 5+ L5 玩家入驻时，这里会真的活起来。',
+        '当真的有 5+ L2 玩家入驻时，这里会真的活起来。',
         '（你后退一步，留给真正的议事者）',
       ],
     });
   }
 
-  private triggerBoardDialogue() {
+  private triggerAudienceDialogue() {
     EventBus.emit('show-dialogue', {
-      name: '📋 提案公示板',
+      name: '🪑 旁听席',
       lines: [
-        '（一块巨大的羊皮纸，本应贴满提案）',
-        '当前公示：暂无',
+        '（4 排木长椅 · 此刻空无一人）',
         '',
-        '"提案 → 公示（24h）→ 投票（72h）→ 决议归档"',
-        '"每一步都被看见，每一票都有据。"',
-        '──',
-        '「提案系统」预计将与 GitHub Discussions 联动——',
-        '届时，社区在 GitHub 上的讨论会同步显示在这里。',
+        '"凡 CUA 成员，皆可旁听议事。"',
+        '"L0 新人也能坐——只是没有发言权。"',
+        '',
+        '本席规则：',
+        '─ 静默旁听 (任何人)',
+        '─ 提问发言 (L1+ 活跃贡献者)',
+        '─ 现场投票 (L1+ · 须实名)',
+        '',
+        '"看见，是参与的第一步。"',
       ],
     });
   }
@@ -355,24 +440,30 @@ export class CouncilHallScene extends Phaser.Scene {
     if (Phaser.Input.Keyboard.JustDown(this.kKey)) EventBus.emit('open-mailbox');
 
     const distExit = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.exitX, this.exitY);
+    const distCharter = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.charterX, this.charterY);
     const distPodium = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.podiumX, this.podiumY);
-    const distBoard = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.boardX, this.boardY);
+    const distAudience = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.audienceX, this.audienceY);
     const nearExit = distExit < 56;
-    const nearPodium = distPodium < INTERACT_DISTANCE;
-    const nearBoard = distBoard < INTERACT_DISTANCE;
+    const nearCharter = distCharter < INTERACT_DISTANCE * 1.4;
+    const nearPodium = distPodium < INTERACT_DISTANCE * 1.5;
+    const nearAudience = distAudience < INTERACT_DISTANCE * 2;
 
     if (nearExit) {
       this.exitHint.setPosition(this.exitX, this.exitY - 50).setVisible(true);
       this.interactHint.setVisible(false);
       if (Phaser.Input.Keyboard.JustDown(this.eKey)) this.exit();
+    } else if (nearCharter) {
+      this.exitHint.setVisible(false);
+      this.interactHint.setText('[E] 看章程').setPosition(this.charterX, this.charterY - 70).setVisible(true);
+      if (Phaser.Input.Keyboard.JustDown(this.eKey)) this.triggerCharterDialogue();
     } else if (nearPodium) {
       this.exitHint.setVisible(false);
-      this.interactHint.setText('[E] 登台').setPosition(this.podiumX, this.podiumY - 60).setVisible(true);
+      this.interactHint.setText('[E] 登台').setPosition(this.podiumX, this.podiumY - 70).setVisible(true);
       if (Phaser.Input.Keyboard.JustDown(this.eKey)) this.triggerPodiumDialogue();
-    } else if (nearBoard) {
+    } else if (nearAudience) {
       this.exitHint.setVisible(false);
-      this.interactHint.setText('[E] 看公示').setPosition(this.boardX, this.boardY - 90).setVisible(true);
-      if (Phaser.Input.Keyboard.JustDown(this.eKey)) this.triggerBoardDialogue();
+      this.interactHint.setText('[E] 看旁听席').setPosition(this.audienceX, this.audienceY - 90).setVisible(true);
+      if (Phaser.Input.Keyboard.JustDown(this.eKey)) this.triggerAudienceDialogue();
     } else {
       this.exitHint.setVisible(false);
       this.interactHint.setVisible(false);
