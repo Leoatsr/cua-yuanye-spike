@@ -4,7 +4,7 @@
 
 不是产品，不是工具，也不是 demo。这里有镇子、有阁楼、有论坛、有工坊，社区成员可以在这里走动、对话、留言、看公告、查论文、记录贡献。
 
-**在线访问**：[cua-yuanye-spike.vercel.app](https://cua-yuanye-spike.vercel.app)
+**在线访问**：[cua-base.vercel.app](https://cua-base.vercel.app/))
 
 ---
 
@@ -22,7 +22,7 @@ CUA Base 是一个像素风格的 2D 多人在线小镇，承载 WebAgentLab 社
 
 ### 在线（推荐）
 
-直接打开：**[cua-yuanye-spike.vercel.app](https://cua-yuanye-spike.vercel.app)**
+直接打开：**[cua-base.vercel.app](https://cua-base.vercel.app/))**
 
 支持 GitHub 登录后保存进度、自定义角色面部、获得 CV（贡献价值）积分。
 
