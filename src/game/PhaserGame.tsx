@@ -10,6 +10,9 @@ import { CouncilHallScene } from './scenes/CouncilHallScene';
 import { MirrorPavilionScene } from './scenes/MirrorPavilionScene';
 import { GrandPlazaScene } from './scenes/GrandPlazaScene';
 import { HomeScene } from './scenes/HomeScene';
+import { VillageHeadScene } from './scenes/VillageHeadScene';
+import { LibraryScene } from './scenes/LibraryScene';
+import { BlacksmithScene } from './scenes/BlacksmithScene';
 import { KaiyuanLouScene } from './scenes/KaiyuanLouScene';
 import { ShengwenTaiScene } from './scenes/ShengwenTaiScene';
 import { DuliangGeScene } from './scenes/DuliangGeScene';
@@ -52,6 +55,9 @@ export function PhaserGame() {
         MirrorPavilionScene,
         GrandPlazaScene,
         HomeScene,
+        VillageHeadScene,
+        LibraryScene,
+        BlacksmithScene,
         KaiyuanLouScene,
         ShengwenTaiScene,
         DuliangGeScene,

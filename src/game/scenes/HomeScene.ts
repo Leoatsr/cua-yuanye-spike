@@ -1,17 +1,12 @@
-import { attachMinimap } from '../minimap-bridge';
 import * as Phaser from 'phaser';
 import { EventBus } from '../EventBus';
-import { getFaceLocal, type FaceData } from '../../lib/faceStore';
-import { applyFaceToSprite } from '../faceRenderer';
+import { setupMultiplayer, facingFromVelocity, type MultiplayerHandle } from './multiplayerHelper';
 
 const PLAYER_SPEED = 130;
 const INTERACT_DISTANCE = 56;
 
-const TILE = 32;
-const ROOM_TILE_W = 20;
-const ROOM_TILE_H = 15;
-const ROOM_WIDTH = ROOM_TILE_W * TILE;   // 640
-const ROOM_HEIGHT = ROOM_TILE_H * TILE;  // 480
+const ROOM_WIDTH = 720;
+const ROOM_HEIGHT = 520;
 
 interface SceneInitData {
   returnX?: number;
@@ -19,26 +14,33 @@ interface SceneInitData {
 }
 
 /**
- * Wave 7.G · 自家小屋 (Player's Home)
+ * Wave 10 · 自家小屋 (Home)
  *
- * 视觉重做：从 graphics-drawn 改成 tilemap (跟 sproutown / blacksmith-forge 等同架构)
- * Tile assets:
- *   - public/assets/maps/home.json
- *   - public/assets/tilesets/home-tiles.png
+ * 方向 2 · 纪念墙为重 · 顶梁暖橙 (家炉感)
  *
- * 互动点坐标改为 hardcode tile pos （不再用 graphics 画完算坐标）
+ * 布局:
+ *   - 北墙居中: 5 框纪念墙 (TODO: 后续对接个人中心历史任务前 5 条)
+ *   - 西墙: 床 (竖放 · 红被 + 米枕)
+ *   - 中央: 书桌 + 椅
+ *   - 东南角: 壁炉 (橙黄火光闪烁)
+ *   - 南墙中央: 门
  *
- * Logic 保留：
- *   - 4 个互动点 (memorial wall / desk / bed / fireplace)
- *   - 出口 + return 坐标
- *   - face customizer
- *   - 玩家走动 / 朝向动画
+ * 互动 4:
+ *   - 纪念墙 (意境化 · 暂留空)
+ *   - 床 (歇会儿)
+ *   - 书桌 (写日志)
+ *   - 壁炉 (烤火 · 火光强弱切换)
  *
- * Bug 修复：player.setDepth(5) 让玩家始终在家具之上
+ * 出口: [E] 回 'Main' (萌芽镇)
+ *
+ * 重写说明:
+ *   - 旧版走 home.json tilemap 路线 (Wave 7.G)
+ *   - v2 改 graphics customScene · 跟阿降+典籍阁+铁匠铺一脉
  */
 export class HomeScene extends Phaser.Scene {
   private player!: Phaser.Physics.Arcade.Sprite;
-  private playerFace: ReturnType<typeof applyFaceToSprite> | null = null;
+  private mp: MultiplayerHandle | null = null;
+  private currentFacing: 'up' | 'down' | 'left' | 'right' = 'down';
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private wasd!: { W: Phaser.Input.Keyboard.Key; A: Phaser.Input.Keyboard.Key; S: Phaser.Input.Keyboard.Key; D: Phaser.Input.Keyboard.Key };
   private eKey!: Phaser.Input.Keyboard.Key;
@@ -47,18 +49,25 @@ export class HomeScene extends Phaser.Scene {
   private kKey!: Phaser.Input.Keyboard.Key;
   private lastDirection: 'down' | 'left' | 'right' | 'up' = 'down';
 
-  // ---- Hardcoded tile-based interaction coords ----
-  // 跟 home.json layout 对应
-  private exitX = (10 * TILE) + TILE / 2;       // col 10 row 14 - 门
-  private exitY = (14 * TILE) + TILE / 2;
-  private wallX = (9.5 * TILE) + TILE / 2;      // col 9-10 row 1 - 纪念墙
-  private wallY = (1 * TILE) + TILE / 2;
-  private deskX = (15.5 * TILE) + TILE / 2;     // col 15-16 row 6 - 桌
-  private deskY = (6 * TILE) + TILE / 2;
-  private bedX = (4 * TILE) + TILE / 2;         // col 4 row 5-6 - 床
-  private bedY = (5.5 * TILE) + TILE / 2;
-  private fireplaceX = (16 * TILE) + TILE / 2;  // col 16 row 3 - 壁炉
-  private fireplaceY = (3 * TILE) + TILE / 2;
+  // 互动点
+  private memorialX = 360;
+  private memorialY = 145;
+  private bedX = 110;
+  private bedY = 290;
+  private deskX = 360;
+  private deskY = 305;
+  private fireplaceX = 600;
+  private fireplaceY = 380;
+
+  private exitX = 0;
+  private exitY = 0;
+
+  // 壁炉火光
+  private fireplaceFlame: Phaser.GameObjects.Arc | null = null;
+  private fireplaceCore: Phaser.GameObjects.Arc | null = null;
+  private fireplaceGlow: Phaser.GameObjects.Graphics | null = null;
+  private fireplaceBright = true;
+  private flameTimer = 0;
 
   private exitHint!: Phaser.GameObjects.Text;
   private interactHint!: Phaser.GameObjects.Text;
@@ -66,110 +75,81 @@ export class HomeScene extends Phaser.Scene {
   private returnX = 0;
   private returnY = 0;
   private inputLockUntil = 0;
-  private flameTween: Phaser.Tweens.Tween | null = null;
 
   constructor() {
     super('Home');
   }
 
   init(data: SceneInitData) {
-    this.returnX = data.returnX ?? 17 * 32 + 16;
-    this.returnY = data.returnY ?? 6 * 32 + 16;
-  }
-
-  preload() {
-    // 安全：保险加载（即使 BootScene 漏了 · 这里也会装上）
-    if (!this.cache.tilemap.has('home')) {
-      this.load.tilemapTiledJSON('home', 'assets/maps/home.json');
-    }
-    if (!this.textures.exists('home-tiles')) {
-      this.load.image('home-tiles', 'assets/tilesets/home-tiles.png');
-    }
+    this.returnX = data.returnX ?? 0;
+    this.returnY = data.returnY ?? 0;
+    this.fireplaceBright = true;
+    this.flameTimer = 0;
+    this.fireplaceFlame = null;
+    this.fireplaceCore = null;
+    this.fireplaceGlow = null;
   }
 
   create() {
-    attachMinimap(this, 'HomeScene');
     this.inputLockUntil = this.time.now + 250;
     this.physics.world.setBounds(0, 0, ROOM_WIDTH, ROOM_HEIGHT);
 
-    // ---- Tilemap 加载 ----
-    const map = this.make.tilemap({ key: 'home' });
-    const tileset = map.addTilesetImage('home-tiles', 'home-tiles');
-    if (!tileset) {
-      console.error('[HomeScene] tileset home-tiles missing — fallback to dark floor');
-      const g = this.add.graphics();
-      g.fillStyle(0x2a1e16, 1);
-      g.fillRect(0, 0, ROOM_WIDTH, ROOM_HEIGHT);
-    } else {
-      // 3 layers: Floor / Walls / Furniture
-      const floor = map.createLayer('Floor', tileset, 0, 0);
-      if (floor) floor.setDepth(-5);
-      const walls = map.createLayer('Walls', tileset, 0, 0);
-      if (walls) walls.setDepth(2);
-      const furniture = map.createLayer('Furniture', tileset, 0, 0);
-      if (furniture) furniture.setDepth(2);
+    // ---- Floor (跟 GongdeTang 一脉) ----
+    const g = this.add.graphics();
+    g.setDepth(-5);
+    g.fillStyle(0x8b4513, 1);
+    g.fillRect(0, 0, ROOM_WIDTH, ROOM_HEIGHT);
+    g.fillStyle(0xfdf0cf, 1);
+    g.fillRect(60, 70, ROOM_WIDTH - 120, ROOM_HEIGHT - 130);
+    g.lineStyle(3, 0x5d3a1a, 1);
+    g.strokeRect(60, 70, ROOM_WIDTH - 120, ROOM_HEIGHT - 130);
+    g.lineStyle(1, 0xc9a55b, 0.3);
+    for (let y = 102; y < ROOM_HEIGHT - 60; y += 64) {
+      g.lineBetween(64, y, ROOM_WIDTH - 64, y);
     }
 
-    // ---- Fireplace flame overlay (动态闪烁 · 像素三角) ----
-    const flameG = this.add.graphics();
-    flameG.setDepth(3);
-    flameG.fillStyle(0xe07060, 1);
-    flameG.fillTriangle(
-      this.fireplaceX - 6, this.fireplaceY + 8,
-      this.fireplaceX + 6, this.fireplaceY + 8,
-      this.fireplaceX, this.fireplaceY - 4
-    );
-    flameG.fillStyle(0xe0b060, 1);
-    flameG.fillTriangle(
-      this.fireplaceX - 3, this.fireplaceY + 6,
-      this.fireplaceX + 3, this.fireplaceY + 6,
-      this.fireplaceX, this.fireplaceY
-    );
-    this.flameTween = this.tweens.add({
-      targets: flameG,
-      scaleY: 0.85,
-      duration: 600,
-      yoyo: true,
-      repeat: -1,
-      ease: 'Sine.easeInOut',
-    });
+    // ---- 北墙顶梁 (暖橙) ----
+    g.fillStyle(0xc97a3a, 1);
+    g.fillRect(60, 60, ROOM_WIDTH - 120, 14);
 
-    // ---- Title (room name banner top center) ----
-    this.add.text(ROOM_WIDTH / 2, 16, '— 自家小屋 —', {
-      fontFamily: 'serif',
-      fontSize: '14px',
-      color: '#fdf0cf',
-      fontStyle: 'bold',
-    }).setOrigin(0.5).setDepth(10);
+    // ---- 道具 ----
+    this.drawMemorialWall(this.memorialX, this.memorialY);
+    this.drawBed(this.bedX, this.bedY);
+    this.drawDesk(this.deskX, this.deskY);
+    this.drawFireplace(this.fireplaceX, this.fireplaceY);
 
     // ---- Player ----
     this.createCharacterAnims('player');
-    // 出生在门口 · 朝上
-    this.player = this.physics.add.sprite(this.exitX, this.exitY - 32, 'player', 0);
+    this.player = this.physics.add.sprite(ROOM_WIDTH / 2, ROOM_HEIGHT - 110, 'player', 0);
     this.player.setCollideWorldBounds(true);
-    // Wave 7.F bugfix · player 显示在所有家具之上
-    this.player.setDepth(5);
     const pBody = this.player.body as Phaser.Physics.Arcade.Body;
     pBody.setSize(12, 6).setOffset(10, 17);
     this.player.anims.play('player-idle-up');
 
-    // F6.0: apply face customization
-    this.playerFace = applyFaceToSprite(this, this.player, getFaceLocal());
-    const onFaceUpdate = (newFace: FaceData) => {
-      if (this.playerFace) this.playerFace.reapply(newFace);
-    };
-    EventBus.on('face-updated', onFaceUpdate);
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-      EventBus.off('face-updated', onFaceUpdate);
-      if (this.playerFace) {
-        this.playerFace.destroy();
-        this.playerFace = null;
-      }
-      if (this.flameTween) {
-        this.flameTween.stop();
-        this.flameTween = null;
-      }
-    });
+    // ---- Walls ----
+    const walls = this.physics.add.staticGroup();
+    walls.add(this.add.rectangle(ROOM_WIDTH / 2, 50, ROOM_WIDTH, 20, 0, 0));
+    walls.add(this.add.rectangle(ROOM_WIDTH / 2, ROOM_HEIGHT - 60, ROOM_WIDTH, 20, 0, 0));
+    walls.add(this.add.rectangle(50, ROOM_HEIGHT / 2, 20, ROOM_HEIGHT, 0, 0));
+    walls.add(this.add.rectangle(ROOM_WIDTH - 50, ROOM_HEIGHT / 2, 20, ROOM_HEIGHT, 0, 0));
+    // 纪念墙 (北墙挂件)
+    walls.add(this.add.rectangle(this.memorialX, this.memorialY, 380, 70, 0, 0));
+    // 床
+    walls.add(this.add.rectangle(this.bedX, this.bedY, 50, 130, 0, 0));
+    // 书桌
+    walls.add(this.add.rectangle(this.deskX, this.deskY - 4, 140, 50, 0, 0));
+    // 椅
+    walls.add(this.add.rectangle(this.deskX, this.deskY + 40, 30, 30, 0, 0));
+    // 壁炉
+    walls.add(this.add.rectangle(this.fireplaceX, this.fireplaceY, 50, 70, 0, 0));
+    this.physics.add.collider(this.player, walls);
+
+    // ---- Camera ----
+    this.cameras.main.setBounds(0, 0, ROOM_WIDTH, ROOM_HEIGHT);
+    this.mp = setupMultiplayer(this, 'Home', () => this.player, () => this.currentFacing);
+    this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
+    this.cameras.main.setZoom(2);
+    this.cameras.main.fadeIn(300, 0, 0, 0);
 
     // ---- Input ----
     this.cursors = this.input.keyboard!.createCursorKeys();
@@ -179,58 +159,272 @@ export class HomeScene extends Phaser.Scene {
     this.jKey = this.input.keyboard!.addKey('J');
     this.kKey = this.input.keyboard!.addKey('K');
 
-    // ---- Hint texts (created here once · positioned in update) ----
-    this.exitHint = this.add.text(0, 0, '', {
-      fontFamily: 'monospace',
-      fontSize: '14px',
-      color: '#fdf0cf',
-      backgroundColor: '#3a2a1a',
-      padding: { x: 8, y: 4 },
+    // ---- Exit (南门) ----
+    this.exitX = ROOM_WIDTH / 2;
+    this.exitY = ROOM_HEIGHT - 70;
+    const doorG = this.add.graphics();
+    doorG.fillStyle(0x4a3826, 1);
+    doorG.fillRect(this.exitX - 22, this.exitY - 30, 44, 56);
+    doorG.lineStyle(2, 0x2a1e10, 1);
+    doorG.strokeRect(this.exitX - 22, this.exitY - 30, 44, 56);
+    doorG.fillStyle(0xb8a472, 1);
+    doorG.fillCircle(this.exitX + 12, this.exitY, 3);
+
+    // ---- Title ----
+    this.add.text(ROOM_WIDTH / 2, 80, '— 自家小屋 —', {
+      fontFamily: 'serif', fontSize: '15px',
+      color: '#a05a35', backgroundColor: '#fdf0cfee',
+      padding: { left: 10, right: 10, top: 4, bottom: 4 },
+    }).setOrigin(0.5).setDepth(10);
+
+    this.exitHint = this.add.text(0, 0, '[E] 离开', {
+      fontFamily: 'sans-serif', fontSize: '11px',
+      color: '#fdf0cf', backgroundColor: '#5d3a1add',
+      padding: { left: 6, right: 6, top: 3, bottom: 3 },
     }).setOrigin(0.5).setVisible(false).setDepth(100);
 
-    this.interactHint = this.add.text(0, 0, '', {
-      fontFamily: 'monospace',
-      fontSize: '14px',
-      color: '#fdf0cf',
-      backgroundColor: '#3a2a1a',
-      padding: { x: 8, y: 4 },
+    this.interactHint = this.add.text(0, 0, '[E]', {
+      fontFamily: 'sans-serif', fontSize: '11px',
+      color: '#ffffff', backgroundColor: '#000000aa',
+      padding: { left: 4, right: 4, top: 2, bottom: 2 },
     }).setOrigin(0.5).setVisible(false).setDepth(100);
-
-    // ---- Camera ----
-    this.cameras.main.setBounds(0, 0, ROOM_WIDTH, ROOM_HEIGHT);
-    this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
-    this.cameras.main.setZoom(2);
   }
 
-  /** 创建 player 动画（如果还没创建过） */
-  private createCharacterAnims(key: string) {
-    if (this.anims.exists(`${key}-walk-down`)) return;
-    this.anims.create({ key: `${key}-walk-down`, frames: this.anims.generateFrameNumbers(key, { start: 0, end: 3 }), frameRate: 8, repeat: -1 });
-    this.anims.create({ key: `${key}-walk-right`, frames: this.anims.generateFrameNumbers(key, { start: 4, end: 7 }), frameRate: 8, repeat: -1 });
-    this.anims.create({ key: `${key}-walk-up`, frames: this.anims.generateFrameNumbers(key, { start: 8, end: 11 }), frameRate: 8, repeat: -1 });
-    this.anims.create({ key: `${key}-idle-down`, frames: [{ key, frame: 0 }], frameRate: 1 });
-    this.anims.create({ key: `${key}-idle-right`, frames: [{ key, frame: 4 }], frameRate: 1 });
-    this.anims.create({ key: `${key}-idle-up`, frames: [{ key, frame: 8 }], frameRate: 1 });
-    this.anims.create({ key: `${key}-idle-left`, frames: [{ key, frame: 4 }], frameRate: 1 });
+  // ============ DRAWING ============
+
+  /**
+   * 北墙居中 · 5 框纪念墙
+   * TODO: 对接个人中心历史任务前 5 条 · 现暂空
+   */
+  private drawMemorialWall(x: number, y: number) {
+    const g = this.add.graphics();
+    g.setDepth(2);
+    // 米色板 (380×70)
+    g.fillStyle(0xfdf0cf, 1);
+    g.fillRect(x - 190, y - 35, 380, 70);
+    g.lineStyle(2, 0x5d3a1a, 1);
+    g.strokeRect(x - 190, y - 35, 380, 70);
+    // 内边深木线
+    g.lineStyle(1, 0x8b5a2b, 0.5);
+    g.strokeRect(x - 184, y - 29, 368, 58);
+
+    // 5 个红框 (居中均匀分布)
+    const frameW = 50;
+    const frameH = 44;
+    const gap = 16;
+    const totalW = frameW * 5 + gap * 4;
+    const startX = x - totalW / 2;
+    for (let i = 0; i < 5; i++) {
+      const fx = startX + i * (frameW + gap);
+      const fy = y - frameH / 2;
+      // 框背景 (浅米)
+      g.fillStyle(0xfaecc4, 1);
+      g.fillRect(fx, fy, frameW, frameH);
+      // 红外框
+      g.lineStyle(2, 0xa32d2d, 1);
+      g.strokeRect(fx, fy, frameW, frameH);
+      // 内框金线
+      g.lineStyle(0.8, 0xdaa520, 0.7);
+      g.strokeRect(fx + 4, fy + 4, frameW - 8, frameH - 8);
+      // 顶部小金牌挂坠
+      g.fillStyle(0xdaa520, 1);
+      g.fillRect(fx + frameW / 2 - 4, fy - 3, 8, 4);
+      // 框中心问号 (待往事铭刻)
+      g.lineStyle(1, 0xc89a4a, 0.6);
+      const cx = fx + frameW / 2;
+      const cy = fy + frameH / 2;
+      g.strokeCircle(cx - 1, cy - 4, 4);
+      g.lineBetween(cx - 1, cy + 1, cx - 1, cy + 4);
+      g.fillStyle(0xc89a4a, 0.6);
+      g.fillCircle(cx - 1, cy + 7, 0.8);
+    }
+
+    // 标牌
+    this.add.text(x, y - 50, '纪念墙', {
+      fontFamily: 'serif', fontSize: '10px',
+      color: '#a05a35', backgroundColor: '#fdf0cfee',
+      padding: { left: 6, right: 6, top: 1, bottom: 1 },
+    }).setOrigin(0.5).setDepth(3);
   }
 
-  // ============ INTERACTIONS ============
+  /** 西墙竖放床 (红被 + 米枕) */
+  private drawBed(x: number, y: number) {
+    const g = this.add.graphics();
+    g.setDepth(2);
+    // 床架 (暖木)
+    g.fillStyle(0x8b5a2b, 1);
+    g.fillRect(x - 22, y - 65, 44, 130);
+    g.lineStyle(2, 0x5d3a1a, 1);
+    g.strokeRect(x - 22, y - 65, 44, 130);
+    // 床头 (北端 · 高一点)
+    g.fillStyle(0x5d3a1a, 1);
+    g.fillRect(x - 22, y - 75, 44, 12);
+    // 红被 (中间大部分)
+    g.fillStyle(0xa32d2d, 1);
+    g.fillRect(x - 18, y - 50, 36, 100);
+    // 红被花纹 (暗红条)
+    g.fillStyle(0x7a2020, 1);
+    g.fillRect(x - 18, y - 30, 36, 3);
+    g.fillRect(x - 18, y, 36, 3);
+    g.fillRect(x - 18, y + 30, 36, 3);
+    // 米色枕 (北端)
+    g.fillStyle(0xfdf0cf, 1);
+    g.fillRect(x - 16, y - 60, 32, 12);
+    g.lineStyle(1, 0x5d3a1a, 1);
+    g.strokeRect(x - 16, y - 60, 32, 12);
+  }
+
+  /** 中央书桌 + 椅 */
+  private drawDesk(x: number, y: number) {
+    const g = this.add.graphics();
+    g.setDepth(2);
+    // 桌面 (米色 · 暖木边)
+    g.fillStyle(0xe8c98a, 1);
+    g.fillRect(x - 70, y - 25, 140, 50);
+    g.lineStyle(2, 0x5d3a1a, 1);
+    g.strokeRect(x - 70, y - 25, 140, 50);
+    // 抽屉横线
+    g.lineStyle(1, 0x5d3a1a, 0.5);
+    g.lineBetween(x - 70, y, x + 70, y);
+    g.lineBetween(x, y, x, y + 25);
+    // 桌脚
+    g.fillStyle(0x3a2a1a, 1);
+    g.fillRect(x - 68, y + 23, 4, 10);
+    g.fillRect(x + 64, y + 23, 4, 10);
+    // 砚台 (左)
+    g.fillStyle(0x2a2a2a, 1);
+    g.fillEllipse(x - 50, y - 8, 18, 10);
+    // 笔
+    g.lineStyle(2, 0x5d3a1a, 1);
+    g.lineBetween(x - 38, y - 10, x - 24, y - 22);
+    // 一摞书 (右)
+    const bookColors = [0x3b6d11, 0x4a3a6a, 0xa32d2d];
+    for (let i = 0; i < 3; i++) {
+      g.fillStyle(bookColors[i], 1);
+      g.fillRect(x + 30, y - 22 + i * 6, 30, 6);
+      g.lineStyle(1, 0x5d3a1a, 1);
+      g.strokeRect(x + 30, y - 22 + i * 6, 30, 6);
+    }
+    // 中央 一卷未写完的日志 (米色)
+    g.fillStyle(0xfaecc4, 1);
+    g.fillRect(x - 15, y - 18, 24, 14);
+    g.lineStyle(1, 0x5d3a1a, 1);
+    g.strokeRect(x - 15, y - 18, 24, 14);
+    g.lineStyle(0.5, 0x5d3a1a, 0.4);
+    g.lineBetween(x - 13, y - 14, x + 7, y - 14);
+    g.lineBetween(x - 13, y - 10, x + 7, y - 10);
+    g.lineBetween(x - 13, y - 7, x + 4, y - 7);
+
+    // 椅 (桌南侧)
+    g.fillStyle(0x8b5a2b, 1);
+    g.fillRect(x - 14, y + 33, 28, 20);
+    g.lineStyle(2, 0x5d3a1a, 1);
+    g.strokeRect(x - 14, y + 33, 28, 20);
+    // 椅背 (低)
+    g.fillStyle(0x5d3a1a, 1);
+    g.fillRect(x - 14, y + 33, 28, 4);
+  }
+
+  /** 东南角壁炉 (橙黄火光 · 闪烁) */
+  private drawFireplace(x: number, y: number) {
+    const g = this.add.graphics();
+    g.setDepth(2);
+    // 砖外壳 (暗红砖)
+    g.fillStyle(0x6b3434, 1);
+    g.fillRect(x - 25, y - 35, 50, 70);
+    g.lineStyle(2, 0x3a1a1a, 1);
+    g.strokeRect(x - 25, y - 35, 50, 70);
+    // 砖纹
+    g.lineStyle(0.8, 0x3a1a1a, 0.6);
+    g.lineBetween(x - 25, y - 20, x + 25, y - 20);
+    g.lineBetween(x - 25, y - 5, x + 25, y - 5);
+    g.lineBetween(x - 25, y + 10, x + 25, y + 10);
+    g.lineBetween(x - 25, y + 25, x + 25, y + 25);
+    // 错位砖
+    g.lineBetween(x, y - 35, x, y - 20);
+    g.lineBetween(x - 12, y - 20, x - 12, y - 5);
+    g.lineBetween(x + 12, y - 20, x + 12, y - 5);
+    g.lineBetween(x, y - 5, x, y + 10);
+
+    // 炉口 (黑深洞)
+    g.fillStyle(0x1a0a0a, 1);
+    g.fillRect(x - 18, y - 5, 36, 28);
+    // 炉口顶弧
+    g.fillStyle(0x6b3434, 1);
+    g.fillTriangle(x - 18, y - 5, x + 18, y - 5, x, y - 12);
+    g.fillStyle(0x1a0a0a, 1);
+    g.fillTriangle(x - 14, y - 5, x + 14, y - 5, x, y - 8);
+
+    // 木柴 (3 条 · 交叉)
+    g.fillStyle(0x5d3a1a, 1);
+    g.fillRect(x - 14, y + 18, 28, 3);
+    g.fillRect(x - 12, y + 14, 24, 3);
+    g.fillRect(x - 10, y + 10, 20, 3);
+
+    // 火光 (大橙圆)
+    this.fireplaceFlame = this.add.circle(x, y + 8, 12, 0xff7733);
+    this.fireplaceFlame.setDepth(3);
+    // 内核 (亮黄)
+    this.fireplaceCore = this.add.circle(x, y + 8, 6, 0xfff200);
+    this.fireplaceCore.setDepth(4);
+
+    // 暖光晕
+    this.fireplaceGlow = this.add.graphics();
+    this.fireplaceGlow.setDepth(1);
+    this.updateFireplaceGlow();
+  }
+
+  private updateFireplaceGlow() {
+    if (!this.fireplaceGlow) return;
+    this.fireplaceGlow.clear();
+    if (this.fireplaceBright) {
+      this.fireplaceGlow.fillStyle(0xffe080, 0.18);
+      this.fireplaceGlow.fillCircle(this.fireplaceX, this.fireplaceY + 8, 50);
+      this.fireplaceGlow.fillStyle(0xffe080, 0.1);
+      this.fireplaceGlow.fillCircle(this.fireplaceX, this.fireplaceY + 8, 80);
+    }
+  }
+
+  // ============ ANIMATION ============
+
+  private createCharacterAnims(textureKey: string) {
+    const animations = [
+      { name: 'idle-down', start: 0, end: 5, rate: 6 },
+      { name: 'idle-right', start: 6, end: 11, rate: 6 },
+      { name: 'idle-up', start: 12, end: 17, rate: 6 },
+      { name: 'walk-down', start: 18, end: 23, rate: 10 },
+      { name: 'walk-right', start: 24, end: 29, rate: 10 },
+      { name: 'walk-up', start: 30, end: 35, rate: 10 },
+    ];
+    animations.forEach((a) => {
+      const key = `${textureKey}-${a.name}`;
+      if (this.anims.exists(key)) return;
+      this.anims.create({
+        key,
+        frames: this.anims.generateFrameNumbers(textureKey, { start: a.start, end: a.end }),
+        frameRate: a.rate, repeat: -1,
+      });
+    });
+  }
+
+  // ============ INTERACTION ============
 
   private exit() {
-    this.scene.start('Main', { returnX: this.returnX, returnY: this.returnY });
+    this.cameras.main.fadeOut(300, 0, 0, 0);
+    this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
+      this.scene.start('Main', { returnX: this.returnX, returnY: this.returnY });
+    });
   }
 
-  private triggerWall() {
-    EventBus.emit('open-home-wall');
-  }
-
-  private triggerDesk() {
+  private triggerMemorial() {
+    // TODO: 对接个人中心历史任务前 5 条
     EventBus.emit('show-dialogue', {
-      name: '📔 笔记',
+      name: '🖼 纪念墙',
       lines: [
-        '（你翻开桌上的笔记本）',
-        '"今天又往前走了一步——"',
-        '"再小的一步也算——"',
+        '（5 个红框整齐挂着 · 边角已经有点发黄）',
+        '',
+        '...还没有任何东西被刻上去。',
+        '也许将来 · 9 工坊里某个夜晚 · 会有一桩值得纪念的事。',
       ],
     });
   }
@@ -239,45 +433,78 @@ export class HomeScene extends Phaser.Scene {
     EventBus.emit('show-dialogue', {
       name: '🛏 床',
       lines: [
-        '（柔软的红被子）',
-        '"等任务都做完了再来歇一会吧。"',
+        '（米枕红被 · 绣边的线头掉了一截）',
+        '',
+        '躺一会儿罢...',
+        '（短暂的小憩 · 屋外的风声似乎也变远了）',
+      ],
+    });
+  }
+
+  private triggerDesk() {
+    EventBus.emit('show-dialogue', {
+      name: '📜 书桌',
+      lines: [
+        '（一卷未写完的日志 · 砚台还有半池墨）',
+        '',
+        '坐下来 · 把今天发生的写下来。',
+        '一天的事 · 落在纸上 · 才算真过完。',
       ],
     });
   }
 
   private triggerFireplace() {
+    this.fireplaceBright = !this.fireplaceBright;
+    this.updateFireplaceGlow();
+    if (this.fireplaceFlame && this.fireplaceCore) {
+      if (this.fireplaceBright) {
+        this.fireplaceFlame.setFillStyle(0xff7733);
+        this.fireplaceCore.setFillStyle(0xfff200);
+        this.fireplaceFlame.setScale(1);
+        this.fireplaceCore.setScale(1);
+      } else {
+        this.fireplaceFlame.setFillStyle(0x5d2020);
+        this.fireplaceCore.setFillStyle(0xa05a35);
+        this.fireplaceFlame.setScale(0.5);
+        this.fireplaceCore.setScale(0.5);
+      }
+    }
     EventBus.emit('show-dialogue', {
-      name: '🔥 壁炉',
-      lines: [
-        '（炉火跳动，木柴噼啪作响）',
-        '"屋里暖和——比外面好。"',
-        '（你伸手烤了烤手）',
-      ],
+      name: this.fireplaceBright ? '🔥 壁炉' : '🌫 余烬',
+      lines: this.fireplaceBright
+        ? ['（添了根柴 · 柴火噼啪作响 · 屋里暖了起来）', '', '"家里有炉火 · 才像个家。"']
+        : ['（炉火只剩点点余烬 · 屋里渐渐凉了）'],
     });
   }
 
-  // ============ UPDATE LOOP ============
+  // ============ UPDATE ============
 
-  update() {
+  update(_time: number, delta: number) {
     if (!this.player || !this.cursors) return;
+
+    // 火光闪烁 (装饰)
+    this.flameTimer += delta;
+    if (this.flameTimer > 200 && this.fireplaceFlame && this.fireplaceCore && this.fireplaceBright) {
+      this.flameTimer = 0;
+      const scale = 0.85 + Math.random() * 0.3;
+      this.fireplaceFlame.setScale(scale);
+      this.fireplaceCore.setFillStyle(Math.random() > 0.5 ? 0xfff200 : 0xffd700);
+    }
 
     let vx = 0, vy = 0;
     const left = this.cursors.left.isDown || this.wasd.A.isDown;
     const right = this.cursors.right.isDown || this.wasd.D.isDown;
     const up = this.cursors.up.isDown || this.wasd.W.isDown;
     const down = this.cursors.down.isDown || this.wasd.S.isDown;
-
     if (left) vx = -PLAYER_SPEED;
     if (right) vx = PLAYER_SPEED;
     if (up) vy = -PLAYER_SPEED;
     if (down) vy = PLAYER_SPEED;
     if (vx !== 0 && vy !== 0) { vx *= 0.707; vy *= 0.707; }
-
     this.player.setVelocity(vx, vy);
 
-    if (this.playerFace) {
-      this.playerFace.syncToSprite(this.player);
-    }
+    this.currentFacing = facingFromVelocity(vx, vy, this.currentFacing);
+    if (this.mp) this.mp.tick();
 
     if (vx < 0) { this.lastDirection = 'left'; this.player.setFlipX(true); this.player.anims.play('player-walk-right', true); }
     else if (vx > 0) { this.lastDirection = 'right'; this.player.setFlipX(false); this.player.anims.play('player-walk-right', true); }
@@ -300,36 +527,30 @@ export class HomeScene extends Phaser.Scene {
     if (Phaser.Input.Keyboard.JustDown(this.kKey)) EventBus.emit('open-mailbox');
 
     const distExit = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.exitX, this.exitY);
-    const distWall = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.wallX, this.wallY);
-    const distDesk = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.deskX, this.deskY);
+    const distMemorial = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.memorialX, this.memorialY);
     const distBed = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.bedX, this.bedY);
-    const distFire = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.fireplaceX, this.fireplaceY);
+    const distDesk = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.deskX, this.deskY);
+    const distFireplace = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.fireplaceX, this.fireplaceY);
 
-    const nearExit = distExit < 56;
-    const nearWall = distWall < INTERACT_DISTANCE;
-    const nearDesk = distDesk < INTERACT_DISTANCE;
-    const nearBed = distBed < INTERACT_DISTANCE;
-    const nearFire = distFire < INTERACT_DISTANCE;
-
-    if (nearExit) {
-      this.exitHint.setText('[E] 出门').setPosition(this.exitX, this.exitY - 36).setVisible(true);
+    if (distExit < 56) {
+      this.exitHint.setPosition(this.exitX, this.exitY - 36).setVisible(true);
       this.interactHint.setVisible(false);
       if (Phaser.Input.Keyboard.JustDown(this.eKey)) this.exit();
-    } else if (nearWall) {
+    } else if (distMemorial < INTERACT_DISTANCE + 20) {
       this.exitHint.setVisible(false);
-      this.interactHint.setText('[E] 看纪念墙').setPosition(this.wallX, this.wallY - 50).setVisible(true);
-      if (Phaser.Input.Keyboard.JustDown(this.eKey)) this.triggerWall();
-    } else if (nearDesk) {
+      this.interactHint.setText('[E] 看纪念墙').setPosition(this.memorialX, this.memorialY - 50).setVisible(true);
+      if (Phaser.Input.Keyboard.JustDown(this.eKey)) this.triggerMemorial();
+    } else if (distBed < INTERACT_DISTANCE) {
       this.exitHint.setVisible(false);
-      this.interactHint.setText('[E] 翻笔记').setPosition(this.deskX, this.deskY - 30).setVisible(true);
-      if (Phaser.Input.Keyboard.JustDown(this.eKey)) this.triggerDesk();
-    } else if (nearBed) {
-      this.exitHint.setVisible(false);
-      this.interactHint.setText('[E] 看床').setPosition(this.bedX, this.bedY - 60).setVisible(true);
+      this.interactHint.setText('[E] 歇会儿').setPosition(this.bedX, this.bedY - 80).setVisible(true);
       if (Phaser.Input.Keyboard.JustDown(this.eKey)) this.triggerBed();
-    } else if (nearFire) {
+    } else if (distDesk < INTERACT_DISTANCE) {
       this.exitHint.setVisible(false);
-      this.interactHint.setText('[E] 烤火').setPosition(this.fireplaceX, this.fireplaceY - 50).setVisible(true);
+      this.interactHint.setText('[E] 写日志').setPosition(this.deskX, this.deskY - 40).setVisible(true);
+      if (Phaser.Input.Keyboard.JustDown(this.eKey)) this.triggerDesk();
+    } else if (distFireplace < INTERACT_DISTANCE) {
+      this.exitHint.setVisible(false);
+      this.interactHint.setText(this.fireplaceBright ? '[E] 让火小一些' : '[E] 添柴').setPosition(this.fireplaceX, this.fireplaceY - 50).setVisible(true);
       if (Phaser.Input.Keyboard.JustDown(this.eKey)) this.triggerFireplace();
     } else {
       this.exitHint.setVisible(false);
