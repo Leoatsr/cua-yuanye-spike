@@ -1,4 +1,5 @@
 import * as Phaser from 'phaser';
+import { bgmManager } from '../bgmManager';
 import { EventBus } from '../EventBus';
 import { setupMultiplayer, facingFromVelocity, type MultiplayerHandle } from './multiplayerHelper';
 
@@ -92,6 +93,7 @@ export class HomeScene extends Phaser.Scene {
 
   create() {
     this.inputLockUntil = this.time.now + 250;
+    bgmManager.stop(this); // 内景静默
     this.physics.world.setBounds(0, 0, ROOM_WIDTH, ROOM_HEIGHT);
 
     // ---- Floor (跟 GongdeTang 一脉) ----

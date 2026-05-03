@@ -1,5 +1,6 @@
 import { attachMinimap } from '../minimap-bridge';
 import * as Phaser from 'phaser';
+import { bgmManager } from '../bgmManager';
 import { NPC } from '../entities/NPC';
 import { EventBus } from '../EventBus';
 import type { InteriorConfig } from './InteriorScene';
@@ -139,7 +140,7 @@ export class SproutCityScene extends Phaser.Scene {
   private eastPortY = 0;
 
   // BGM
-  private bgm?: Phaser.Sound.BaseSound;
+  // private bgm 已迁移到 bgmManager (Wave 10.bgm-fix)
 
   // SFX
   private sfxHandlerBound = false;
@@ -294,9 +295,10 @@ export class SproutCityScene extends Phaser.Scene {
 
     // ---- BGM (same village BGM for now — could swap for city-specific later) ----
     if (this.cache.audio.exists('bgm-village')) {
-      this.bgm = this.sound.add('bgm-village', { loop: true, volume: BGM_VOLUME });
+      // Wave 10.bgm-fix: 走全局单例 · 不再每个 scene 自己 add
+      bgmManager.play(this, 'bgm-village', BGM_VOLUME);
       // Start immediately if entering from Sproutown (audio already unlocked)
-      this.bgm.play();
+      // this.bgm.play(); // moved into bgmManager
     }
 
     if (!this.sfxHandlerBound && this.cache.audio.exists('sfx-dialogue')) {

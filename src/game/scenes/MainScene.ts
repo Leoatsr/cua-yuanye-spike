@@ -1,5 +1,6 @@
 import { attachMinimap } from '../minimap-bridge';
 import * as Phaser from 'phaser';
+import { bgmManager } from '../bgmManager';
 import { NPC } from '../entities/NPC';
 import { SignPost } from '../entities/SignPost';
 import { EventBus } from '../EventBus';
@@ -549,7 +550,8 @@ export class MainScene extends Phaser.Scene {
 
     // ---- BGM ----
     if (this.cache.audio.exists('bgm-village')) {
-      this.bgm = this.sound.add('bgm-village', { loop: true, volume: BGM_VOLUME });
+      // Wave 10.bgm-fix: 走全局单例 · 不再每个 scene 自己 add
+      bgmManager.play(this, 'bgm-village', BGM_VOLUME);
       const onStartBgm = () => this.tryStartBgm();
       EventBus.on('start-bgm', onStartBgm);
       this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
