@@ -250,7 +250,6 @@ export function PublicProfilePage() {
   if (!profile) return null;
 
   const lv = stats?.level ?? 0;
-  const lvColor = LEVEL_COLORS[lv] ?? '#9ca3af';
 
   return (
     <div style={containerStyle}>

@@ -350,7 +350,6 @@ export class ShengwenTaiScene extends Phaser.Scene {
     g.fillStyle(0x267878, 1);
     g.fillRect(x + 16, sy - 4, 12, 12);
     // 嘉宾麦 (悬挂式 · 桌前)
-    const mx = x;
     const my = y + 26;
     // 桌 (小茶几)
     g.fillStyle(0x8b4513, 1);

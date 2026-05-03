@@ -5,7 +5,6 @@ import {
   CVBar,
   TopRightChips,
   Minimap,
-  QuestCard,
   IconBar,
   Hotbar,
 } from '../ui/hud';
@@ -55,7 +54,6 @@ export function NewGameAppHUD({ visible = true }: NewGameAppHUDProps) {
   const profile = useProfile();
   const cv = useCV();
   const levelInfo = useLevel();
-  const gameTime = useGameTime();
   const online = useOnlineCount();
   const realClock = useRealClock();
 

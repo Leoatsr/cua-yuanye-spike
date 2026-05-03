@@ -284,10 +284,7 @@ export class SisuanSuoScene extends Phaser.Scene {
     g.fillRect(x - 18, y - 36, 36, 4);
   }
 
-  /** drawAnalystDesk 保留兼容 · 不画任何东西 (走廊布局不需要) */
-  private drawAnalystDesk(_x: number, _y: number) {
-    // no-op · 走廊布局已用 4 个服务器机架填满左右
-  }
+
 
   // ============ ANIMATION ============
 

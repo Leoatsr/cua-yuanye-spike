@@ -6,26 +6,21 @@ import { TitleScreen } from './components/TitleScreen';
 import { QuestPanel } from './components/QuestPanel';
 import { TitleList } from './components/TitleList';
 import { WorldMap } from './components/WorldMap';
-import { MailBadge } from './components/MailBadge';
 import { ReviewProcessor } from './components/ReviewProcessor';
 import { ReviewPanel } from './components/ReviewPanel';
-import { ReviewBadge } from './components/ReviewBadge';
 import { ReviewSeeder } from './components/ReviewSeeder';
 import { AppealProcessor } from './components/AppealProcessor';
-import { AuthBadge } from './components/AuthBadge';
 import { PixelAccountMenu } from './components/PixelAccountMenu';
 import { LevelUpAnimation } from './components/LevelUpAnimation';
 import { FaceCustomizer } from './components/FaceCustomizer';
 import { ProfilePanel } from './components/ProfilePanel';
 import { ProfilePanelKeyListener } from './components/ProfilePanelKeyListener';
-import { ProfileLink } from './components/ProfileLink';
 // PERF-1: lazy load /u/[username] route - first-time players don't need it
 const PublicProfilePage = lazy(() =>
   import('./components/PublicProfilePage').then((m) => ({
     default: m.PublicProfilePage,
   }))
 );
-import { OnlineRoster } from './components/OnlineRoster';
 import { ChatPanelKeyListener } from './components/ChatPanelKeyListener';
 import { PlayerInteractPrompt } from './components/PlayerInteractPrompt';
 import { PlayerInteractMenu } from './components/PlayerInteractMenu';
@@ -35,17 +30,13 @@ import { QuestHistoryKeyListener } from './components/QuestHistoryKeyListener';
 import { NotificationToast } from './components/NotificationToast';
 import { NotificationPanel } from './components/NotificationPanel';
 import { NotificationKeyListener } from './components/NotificationKeyListener';
-import { NotificationBadge } from './components/NotificationBadge';
 import { FriendsKeyListener } from './components/FriendsKeyListener';
 import { EmotePanel } from './components/EmotePanel';
 import { EmoteOverlay } from './components/EmoteOverlay';
 import { DashboardPanel } from './components/DashboardPanel';
 import { DashboardKeyListener } from './components/DashboardKeyListener';
-import { HelpButton } from './components/HelpButton';
 import { TutorialOverlay } from './components/TutorialOverlay';
 import { tutorialManager } from './lib/tutorialStore';
-import { TimeOverlay } from './components/TimeOverlay';
-import { TimeSettingsButton } from './components/TimeSettingsButton';
 import { timeSettings } from './lib/timeStore';
 import { NpcGreetingToast } from './components/NpcGreetingToast';
 import { SolarTermBanner } from './components/SolarTermBanner';

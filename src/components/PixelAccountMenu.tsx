@@ -87,7 +87,7 @@ export function PixelAccountMenu() {
   useEffect(() => {
     const onToggle = () => setOpen((o) => !o);
     EventBus.on('toggle-account-menu', onToggle);
-    return () => EventBus.off('toggle-account-menu', onToggle);
+    return () => { EventBus.off('toggle-account-menu', onToggle); };
   }, []);
 
   if (!user || !open) return null;
