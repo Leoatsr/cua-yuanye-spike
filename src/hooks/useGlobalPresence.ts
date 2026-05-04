@@ -11,17 +11,9 @@ interface GlobalPresencePayload {
  *
  * 订阅 realtimePresence emit 的 'global-presence-updated' 事件
  * 暴露当前所有跨场景在线的 user_id 集合
- *
- * 用法:
- *   const online = useGlobalPresence();
- *   online.has(userId); // boolean
- *
- * 数据流:
- *   realtimePresence.ts (G5-B) → EventBus 'global-presence-updated' → 此 hook
  */
 export function useGlobalPresence(): Set<string> {
   const [onlineSet, setOnlineSet] = useState<Set<string>>(() => {
-    // 初始值: 直接从 presence 拿当前快照 (避免首次渲染前空白)
     return new Set(presence.getGlobalUserIds());
   });
 
