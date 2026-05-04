@@ -35,13 +35,13 @@ export const NPC_GREETINGS_BY_PHASE: Record<DayPhase, string[]> = {
 };
 
 /**
- * 萌芽镇 NPC 名字（含 5 个 bot + 阿降）
+ * 萌芽镇 NPC 名字（含 5 个 bot + 高粱）
  *
  * 跟 G1 fakeBots 里的名字对齐 —— 用于 show-dialogue 事件 speaker 字段匹配
  */
 export const SPROUT_TOWN_NPCS = [
-  '老村长 · 阿降',
-  '阿降',
+  '老村长 · 高粱',
+  '高粱',
   '春雨',
   '茶童',
   '文谦',

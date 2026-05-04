@@ -15,7 +15,7 @@ interface SceneInitData {
 }
 
 /**
- * Wave 10 · 阿降村长小屋 (VillageHead)
+ * Wave 10 · 高粱村长小屋 (VillageHead)
  *
  * 严格按 GongdeTang 模板风格:
  *   - 720×520 房间 + camera zoom 2
@@ -26,12 +26,12 @@ interface SceneInitData {
  *
  * 布局 (方向 4 半开放堂屋):
  *   - 北墙: 社区拓扑图 + 9 工坊名册 (并排)
- *   - 中央: 阿降案台 (砚 + 卷宗 + 印章)
- *   - 阿降 NPC 在案台北侧 (graphics 手画 · 红长袍 + 灰发 + 拐杖)
+ *   - 中央: 高粱案台 (砚 + 卷宗 + 印章)
+ *   - 高粱 NPC 在案台北侧 (graphics 手画 · 红长袍 + 灰发 + 拐杖)
  *   - 双侧书架 (4 层彩书)
  *   - 南墙: 2 访客椅 + 中央门
  *
- * 互动 4: 北地图 / 北名册 / 阿降对话 / 案台 (坐下)
+ * 互动 4: 北地图 / 北名册 / 高粱对话 / 案台 (坐下)
  */
 export class VillageHeadScene extends Phaser.Scene {
   private player!: Phaser.Physics.Arcade.Sprite;
@@ -52,14 +52,14 @@ export class VillageHeadScene extends Phaser.Scene {
   private rosterY = 145;
   private deskX = 360;    // 中央案台
   private deskY = 290;
-  private axiangX = 360;  // 阿降 NPC (案台北侧)
+  private axiangX = 360;  // 高粱 NPC (案台北侧)
   private axiangY = 235;
 
   // 出口
   private exitX = 0;
   private exitY = 0;
 
-  // 阿降对话索引
+  // 高粱对话索引
   private axiangDialogueIndex = 0;
 
   private exitHint!: Phaser.GameObjects.Text;
@@ -162,7 +162,7 @@ export class VillageHeadScene extends Phaser.Scene {
     doorG.fillCircle(this.exitX + 12, this.exitY, 3);
 
     // ---- Title ----
-    this.add.text(ROOM_WIDTH / 2, 80, '— 阿降村长小屋 —', {
+    this.add.text(ROOM_WIDTH / 2, 80, '— 高粱村长小屋 —', {
       fontFamily: 'serif', fontSize: '15px',
       color: '#3b6d11', backgroundColor: '#fdf0cfee',
       padding: { left: 10, right: 10, top: 4, bottom: 4 },
@@ -300,7 +300,7 @@ export class VillageHeadScene extends Phaser.Scene {
     g.strokeRect(x + 30, y - 18, 18, 18);
   }
 
-  /** 阿降 NPC (graphics 手画 · 红长袍 + 灰发 + 拐杖) */
+  /** 高粱 NPC (graphics 手画 · 红长袍 + 灰发 + 拐杖) */
   private drawAxiangNPC(x: number, y: number) {
     const g = this.add.graphics();
     g.setDepth(3);
@@ -330,7 +330,7 @@ export class VillageHeadScene extends Phaser.Scene {
     g.fillStyle(0xdaa520, 1);
     g.fillCircle(x + 14, y - 4, 3);
     // 名牌
-    this.add.text(x, y - 32, '阿降', {
+    this.add.text(x, y - 32, '高粱', {
       fontFamily: 'serif', fontSize: '10px',
       color: '#a32d2d', backgroundColor: '#fdf0cfee',
       padding: { left: 4, right: 4, top: 1, bottom: 1 },
@@ -414,7 +414,7 @@ export class VillageHeadScene extends Phaser.Scene {
 
   private triggerDesk() {
     EventBus.emit('show-dialogue', {
-      name: '📜 阿降的案台',
+      name: '📜 高粱的案台',
       lines: [
         '（砚台干净 · 卷宗整齐 · 印章红艳）',
         '',
@@ -432,7 +432,7 @@ export class VillageHeadScene extends Phaser.Scene {
       '累了？椅子坐坐。',
     ];
     EventBus.emit('show-dialogue', {
-      name: '🧓 阿降村长',
+      name: '🧓 高粱村长',
       lines: [lines[this.axiangDialogueIndex]],
     });
     this.axiangDialogueIndex = (this.axiangDialogueIndex + 1) % lines.length;
@@ -490,7 +490,7 @@ export class VillageHeadScene extends Phaser.Scene {
       if (Phaser.Input.Keyboard.JustDown(this.eKey)) this.exit();
     } else if (distAxiang < INTERACT_DISTANCE) {
       this.exitHint.setVisible(false);
-      this.interactHint.setText('[E] 与阿降对话').setPosition(this.axiangX, this.axiangY - 50).setVisible(true);
+      this.interactHint.setText('[E] 与高粱对话').setPosition(this.axiangX, this.axiangY - 50).setVisible(true);
       if (Phaser.Input.Keyboard.JustDown(this.eKey)) this.triggerAxiang();
     } else if (distMap < INTERACT_DISTANCE) {
       this.exitHint.setVisible(false);

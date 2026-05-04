@@ -46,7 +46,7 @@ export const REGIONS: Region[] = [
     name: '萌芽镇',
     level: 'L0 · 新人起点',
     tone: 'spring',
-    summary: '新手村。跟村长阿降学基础玩法，完成 5 个新手任务，建立你的初始 CV。',
+    summary: '新手村。跟村长高粱学基础玩法，完成 5 个新手任务，建立你的初始 CV。',
     tile: '🌱',
   },
   {
@@ -81,7 +81,7 @@ export const WORKSHOPS: Workshop[] = [
 ];
 
 export const NPCS: NPC[] = [
-  { name: '村长阿降', role: '新手引路人', region: '萌芽镇', line: '初来乍到？先把这五件小事做了，CV 自然来。', tone: 'spring' },
+  { name: '村长高粱', role: '新手引路人', region: '萌芽镇', line: '初来乍到？先把这五件小事做了，CV 自然来。', tone: 'spring' },
   { name: '周明', role: 'AI 审核员', region: '贡献者中心', line: '审稿如读经，慢即是快。', tone: 'gold' },
   { name: '严之', role: 'AI 审核员', region: '贡献者中心', line: '差一字也不行。', tone: 'gold' },
   { name: '白徽', role: 'AI 审核员', region: '贡献者中心', line: '好作品自己会说话。', tone: 'gold' },

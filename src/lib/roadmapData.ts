@@ -25,8 +25,8 @@ export const STAGES: RoadmapStage[] = [
     progress: 100,
     highlights: [
       '9 大角色变量',
-      '阿降 NPC + 引导教程',
-      '典籍阁 / 铁匠铺 / 阿降小屋',
+      '高粱 NPC + 引导教程',
+      '典籍阁 / 铁匠铺 / 高粱小屋',
       '萌芽印记成长系统',
     ],
   },

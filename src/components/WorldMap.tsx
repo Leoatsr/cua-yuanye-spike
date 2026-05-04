@@ -30,7 +30,7 @@ const LOCATIONS: MapLocation[] = [
   {
     id: 'sproutown',
     name: '萌芽镇',
-    description: '新人入村的第一站。老村长阿降的家。',
+    description: '新人入村的第一站。老村长高粱的家。',
     xPct: 28,
     yPct: 60,
     available: true,
