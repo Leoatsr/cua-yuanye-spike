@@ -174,6 +174,8 @@ export class GovHillScene extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, MAP_WIDTH, MAP_HEIGHT);
     // G1.1 路 Multiplayer (via helper)
     this.mp = setupMultiplayer(this, 'GovHill', () => this.player, () => this.currentFacing);
+
+    EventBus.on('worldmap-travel', this.onWorldMapTravel, this);
     attachMinimap(this, 'GovHill');
 
     this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
@@ -925,5 +927,10 @@ export class GovHillScene extends Phaser.Scene {
       this.eastPortHint.setVisible(false);
     }
   }
+
+  private onWorldMapTravel = (data: { sceneKey: string }) => {
+    if (data.sceneKey === 'GovHill') return;
+    this.scene.start(data.sceneKey);
+  };
 }
 

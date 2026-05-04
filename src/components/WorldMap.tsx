@@ -6,488 +6,250 @@ interface WorldMapEvent {
 }
 
 type LocationId = 'sproutown' | 'sproutcity' | 'zhengzheng' | 'dasaiji';
+type SceneKey = 'Main' | 'SproutCity' | 'GovHill' | 'GrandPlaza';
 
 interface MapLocation {
   id: LocationId;
   name: string;
-  description: string;
-  /** Position on the world map UI (percentage of container) */
   xPct: number;
   yPct: number;
-  /** Whether this location is reachable */
-  available: boolean;
-  /** The Phaser scene key to switch to (if available) */
-  sceneKey?: string;
-  /** Sprite texture file (under /assets/sprites/) */
-  sprite: string;
-  /** Region polygon points (percentage coords, comma-separated "x,y x,y ...") */
-  region: string;
-  /** Type label for legend */
-  type: string;
+  sceneKey: SceneKey;
 }
 
 const LOCATIONS: MapLocation[] = [
-  {
-    id: 'sproutown',
-    name: '萌芽镇',
-    description: '新人入村的第一站。老村长高粱的家。',
-    xPct: 28,
-    yPct: 60,
-    available: true,
-    sceneKey: 'Main',
-    sprite: 'npc-axiang.png',
-    region: '11,52 26,38 38,55 30,72',
-    type: '村庄',
-  },
-  {
-    id: 'sproutcity',
-    name: '共创之都',
-    description: '九大工坊环绕中央喷泉广场。CUA 工作组的物理化身。',
-    xPct: 53,
-    yPct: 36,
-    available: true,
-    sceneKey: 'SproutCity',
-    sprite: 'npc-merchant.png',
-    region: '38,28 60,18 70,38 51,50',
-    type: '城镇',
-  },
-  {
-    id: 'zhengzheng',
-    name: '议政高地',
-    description: '远见塔 · 执政厅 · 明镜阁 —— 治理中心。',
-    xPct: 80,
-    yPct: 20,
-    available: true,
-    sceneKey: 'GovHill',
-    sprite: 'npc-librarian.png',
-    region: '69,5 92,4 95,30 75,32',
-    type: '政厅',
-  },
-  {
-    id: 'dasaiji',
-    name: '大集会广场',
-    description: '年度大会的舞台。平时空旷 · 活动时万人云集。',
-    xPct: 50,
-    yPct: 78,
-    available: true,
-    sceneKey: 'GrandPlaza',
-    sprite: 'cat.png',
-    region: '38,68 62,66 64,92 40,94',
-    type: '广场',
-  },
+  { id: 'sproutown',  name: '萌芽镇',     xPct: 28, yPct: 60, sceneKey: 'Main' },
+  { id: 'sproutcity', name: '共创之都',   xPct: 58, yPct: 35, sceneKey: 'SproutCity' },
+  { id: 'zhengzheng', name: '议政高地',   xPct: 80, yPct: 20, sceneKey: 'GovHill' },
+  { id: 'dasaiji',    name: '大集会广场', xPct: 50, yPct: 78, sceneKey: 'GrandPlaza' },
 ];
-
-const ID_TO_SCENE: Record<LocationId, string> = {
-  sproutown: 'Main',
-  sproutcity: 'SproutCity',
-  zhengzheng: 'GovHill',
-  dasaiji: 'GrandPlaza',
-};
 
 export function WorldMap() {
   const [open, setOpen] = useState(false);
-  const [currentScene, setCurrentScene] = useState<'Main' | 'SproutCity' | 'GovHill' | 'GrandPlaza'>('Main');
-  const [hoveredId, setHoveredId] = useState<LocationId | null>(null);
+  const [currentScene, setCurrentScene] = useState<SceneKey>('Main');
+  const [hovered, setHovered] = useState<string | null>(null);
 
   useEffect(() => {
     const onOpen = (data: WorldMapEvent) => {
       setCurrentScene(data.currentScene);
-      setOpen((prev) => !prev);
+      setOpen(true);
     };
     EventBus.on('open-world-map', onOpen);
+    return () => {
+      EventBus.off('open-world-map', onOpen);
+    };
+  }, []);
 
+  useEffect(() => {
+    if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && open) {
+      if (e.key === 'Escape' || e.key === 'm' || e.key === 'M') {
         setOpen(false);
       }
     };
     window.addEventListener('keydown', onKey);
-
-    return () => {
-      EventBus.off('open-world-map', onOpen);
-      window.removeEventListener('keydown', onKey);
-    };
+    return () => window.removeEventListener('keydown', onKey);
   }, [open]);
 
   if (!open) return null;
 
-  const handleTravel = (loc: MapLocation) => {
-    if (!loc.available || !loc.sceneKey) return;
+  const handleClick = (loc: MapLocation) => {
     if (loc.sceneKey === currentScene) {
-      // Already here
       setOpen(false);
       return;
     }
-    EventBus.emit('world-map-travel', { sceneKey: loc.sceneKey });
+    EventBus.emit('worldmap-travel', { sceneKey: loc.sceneKey });
     setOpen(false);
   };
 
   return (
     <div
-      onClick={() => setOpen(false)}
       style={{
         position: 'fixed',
         inset: 0,
-        zIndex: 500,
-        background: 'rgba(40, 28, 16, 0.65)',
+        zIndex: 10000,
+        background: 'rgba(20, 14, 8, 0.45)',
         display: 'flex',
-        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        backdropFilter: 'blur(2px)',
-        animation: 'wmFadeIn 0.25s ease-out',
-        fontFamily:
-          '-apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
+        padding: 32,
+        pointerEvents: 'auto',
+      }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) setOpen(false);
       }}
     >
-      {/* Map panel */}
       <div
-        onClick={(e) => e.stopPropagation()}
         style={{
           position: 'relative',
-          width: 'min(720px, 88vw)',
-          height: 'min(480px, 64vh)',
-          background: '#e8d8a8',
-          border: '4px solid #5d3a1a',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
+          aspectRatio: '16 / 10',
+          width: '100%',
+          maxWidth: 1100,
+          maxHeight: '88vh',
+          opacity: 0.92,
         }}
       >
-        {/* 4 corner studs */}
-        <div style={cornerStudStyle('tl')} />
-        <div style={cornerStudStyle('tr')} />
-        <div style={cornerStudStyle('bl')} />
-        <div style={cornerStudStyle('br')} />
-
-        {/* Inner dashed border */}
-        <div
-          style={{
-            position: 'absolute',
-            inset: 12,
-            border: '1px dashed #8b5a2b',
-            pointerEvents: 'none',
-          }}
-        />
-
-        {/* Title */}
-        <div
-          style={{
-            position: 'absolute',
-            top: 14,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            background: '#fdf0cfee',
-            padding: '4px 18px',
-            border: '2px solid #5d3a1a',
-            color: '#5d3a1a',
-            fontSize: 14,
-            letterSpacing: '0.18em',
-            fontWeight: 500,
-            fontFamily: 'serif',
-            zIndex: 5,
-          }}
-        >
-          — CUA Base 地图 —
-        </div>
-
-        {/* Compass rose (top-left) */}
         <svg
-          style={{
-            position: 'absolute',
-            top: 50,
-            left: 30,
-            width: 64,
-            height: 64,
-            pointerEvents: 'none',
-          }}
-          viewBox="-32 -32 64 64"
+          viewBox="0 0 1600 1000"
+          xmlns="http://www.w3.org/2000/svg"
+          style={{ width: '100%', height: '100%', display: 'block' }}
         >
-          <circle r="28" fill="#fdf0cf" stroke="#5d3a1a" strokeWidth="1.5" />
-          <circle r="22" fill="none" stroke="#8b5a2b" strokeWidth="0.5" strokeDasharray="2 2" />
-          <polygon points="0,-22 4,0 0,22 -4,0" fill="#a32d2d" stroke="#5d3a1a" strokeWidth="0.5" />
-          <polygon points="-22,0 0,4 22,0 0,-4" fill="#fdf0cf" stroke="#5d3a1a" strokeWidth="0.5" />
-          <circle r="3" fill="#5d3a1a" />
-          <text x="0" y="-25" textAnchor="middle" fontSize="10" fill="#a32d2d" fontFamily="serif" fontWeight="500">N</text>
-          <text x="25" y="3" textAnchor="middle" fontSize="8" fill="#5d3a1a" fontFamily="serif">E</text>
-          <text x="-25" y="3" textAnchor="middle" fontSize="8" fill="#5d3a1a" fontFamily="serif">W</text>
-          <text x="0" y="30" textAnchor="middle" fontSize="8" fill="#5d3a1a" fontFamily="serif">S</text>
-        </svg>
+          <defs>
+            <pattern id="wm-grid" width="40" height="40" patternUnits="userSpaceOnUse">
+              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="var(--paper-3)" strokeWidth="0.5" opacity="0.4" />
+            </pattern>
+            <linearGradient id="wm-land" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#e8dba8" />
+              <stop offset="100%" stopColor="#d4c490" />
+            </linearGradient>
+            <linearGradient id="wm-water" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#a8c4d8" />
+              <stop offset="100%" stopColor="#7ba2bc" />
+            </linearGradient>
+          </defs>
 
-        {/* Region polygons + connecting lines */}
-        <svg
-          width="100%"
-          height="100%"
-          viewBox="0 0 100 100"
-          preserveAspectRatio="none"
-          style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}
-        >
+          <rect width="1600" height="1000" fill="url(#wm-water)" opacity="0.85" />
+
+          <path
+            d="M 200 200 L 240 200 L 240 180 L 280 180 L 280 200 L 320 200
+               L 320 160 L 400 160 L 400 140 L 480 140 L 480 160 L 600 160
+               L 600 120 L 720 120 L 720 100 L 840 100 L 840 120 L 960 120
+               L 960 140 L 1080 140 L 1080 160 L 1200 160 L 1200 180 L 1280 180
+               L 1280 220 L 1320 220 L 1320 280 L 1360 280 L 1360 360 L 1380 360
+               L 1380 480 L 1360 480 L 1360 560 L 1320 560 L 1320 640 L 1280 640
+               L 1280 720 L 1240 720 L 1240 780 L 1200 780 L 1200 840 L 1080 840
+               L 1080 880 L 920 880 L 920 900 L 720 900 L 720 880 L 600 880
+               L 600 860 L 480 860 L 480 820 L 400 820 L 400 780 L 320 780
+               L 320 720 L 280 720 L 280 640 L 240 640 L 240 540 L 200 540
+               L 200 460 L 180 460 L 180 360 L 200 360 Z"
+            fill="url(#wm-land)"
+            stroke="var(--wood-3)"
+            strokeWidth="3"
+          />
+
+          <rect width="1600" height="1000" fill="url(#wm-grid)" />
+
+          <DecorMountain x={1200} y={180} />
+          <DecorMountain x={1280} y={250} />
+          <DecorMountain x={1240} y={140} />
+
+          <DecorTree x={400} y={400} />
+          <DecorTree x={460} y={420} />
+          <DecorTree x={380} y={460} />
+          <DecorTree x={1100} y={500} />
+          <DecorTree x={1150} y={530} />
+          <DecorTree x={760} y={620} />
+          <DecorTree x={820} y={650} />
+
+          <path d="M 448 600 Q 700 480, 928 350 Q 1100 270, 1280 200" fill="none" stroke="var(--wood-3)" strokeWidth="2" strokeDasharray="6 4" opacity="0.5" />
+          <path d="M 928 350 Q 850 500, 800 780" fill="none" stroke="var(--wood-3)" strokeWidth="2" strokeDasharray="6 4" opacity="0.5" />
+
           {LOCATIONS.map((loc) => (
-            <polygon
-              key={`region-${loc.id}`}
-              points={loc.region}
-              fill="#d4a374"
-              opacity={hoveredId === loc.id ? 0.22 : 0}
-              style={{ transition: 'opacity 0.15s' }}
+            <LocationMarker
+              key={loc.id}
+              loc={loc}
+              isHovered={hovered === loc.id}
+              isCurrent={loc.sceneKey === currentScene}
+              onClick={() => handleClick(loc)}
+              onHover={() => setHovered(loc.id)}
+              onLeave={() => setHovered(null)}
             />
           ))}
-          {/* Connecting paths */}
-          <line x1="28" y1="60" x2="53" y2="36" stroke="#a05a35" strokeWidth="0.4" strokeDasharray="1.2 0.8" />
-          <line x1="53" y1="36" x2="80" y2="20" stroke="#a05a35" strokeWidth="0.4" strokeDasharray="1.2 0.8" />
-          <line x1="53" y1="36" x2="50" y2="78" stroke="#a05a35" strokeWidth="0.4" strokeDasharray="1.2 0.8" />
+
+          <text x="800" y="60" textAnchor="middle" fontFamily="var(--f-pixel)" fontSize="36" fill="var(--wood-3)" opacity="0.4" style={{ letterSpacing: '0.3em' }}>
+            CUA 基地 · 全境
+          </text>
         </svg>
 
-        {/* POI markers */}
-        {LOCATIONS.map((loc) => {
-          const isCurrent = ID_TO_SCENE[loc.id] === currentScene;
-          const isHovered = hoveredId === loc.id;
-          return (
-            <div
-              key={loc.id}
-              onMouseEnter={() => setHoveredId(loc.id)}
-              onMouseLeave={() => setHoveredId(null)}
-              onClick={() => handleTravel(loc)}
-              style={{
-                position: 'absolute',
-                left: `${loc.xPct}%`,
-                top: `${loc.yPct}%`,
-                transform: `translate(-50%, -50%) ${isHovered ? 'scale(1.15)' : 'scale(1)'}`,
-                cursor: loc.available ? 'pointer' : 'not-allowed',
-                opacity: loc.available ? 1 : 0.5,
-                userSelect: 'none',
-                zIndex: isHovered ? 20 : 10,
-                transition: 'transform 0.15s',
-              }}
-            >
-              {/* Pulse ring (current location only) */}
-              {isCurrent && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: -6,
-                    left: -6,
-                    right: -6,
-                    bottom: 'auto',
-                    width: 'calc(100% + 12px)',
-                    height: 'calc(100% + 12px)',
-                    border: '2px solid #daa520',
-                    pointerEvents: 'none',
-                    animation: 'wmPulse 1.6s ease-out infinite',
-                  }}
-                />
-              )}
-
-              {/* Sprite icon (32x32 first frame from spritesheet) */}
-              <div
-                style={{
-                  width: 40,
-                  height: 40,
-                  background: isCurrent ? '#daa520' : '#fdf0cf',
-                  border: '2px solid #5d3a1a',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  imageRendering: 'pixelated',
-                }}
-              >
-                <div
-                  style={{
-                    width: 32,
-                    height: 32,
-                    backgroundImage: `url(/assets/sprites/${loc.sprite})`,
-                    backgroundPosition: '0 0',
-                    backgroundRepeat: 'no-repeat',
-                    backgroundSize: 'auto',
-                    imageRendering: 'pixelated',
-                  }}
-                />
-              </div>
-
-              {/* Label */}
-              <div
-                style={{
-                  position: 'absolute',
-                  top: 'calc(100% + 4px)',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  color: isCurrent ? '#a05a35' : '#3a2a1a',
-                  fontSize: 12,
-                  fontFamily: 'serif',
-                  fontWeight: 500,
-                  whiteSpace: 'nowrap',
-                  pointerEvents: 'none',
-                  textShadow: '0 1px 0 #fdf0cf, 0 -1px 0 #fdf0cf, 1px 0 #fdf0cf, -1px 0 #fdf0cf',
-                }}
-              >
-                {loc.name}
-                {isCurrent && (
-                  <span style={{ marginLeft: 4, fontSize: 10 }}>(当前)</span>
-                )}
-              </div>
-
-              {/* Tooltip (on hover) */}
-              {isHovered && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    bottom: 'calc(100% + 14px)',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    background: '#fdf0cf',
-                    border: '2px solid #5d3a1a',
-                    padding: '8px 12px',
-                    width: 200,
-                    fontSize: 11,
-                    color: '#3a2a1a',
-                    lineHeight: 1.5,
-                    pointerEvents: 'none',
-                    zIndex: 30,
-                    boxShadow: '2px 2px 0 #5d3a1a',
-                    fontFamily: 'serif',
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: 13,
-                      color: '#a05a35',
-                      fontWeight: 500,
-                      marginBottom: 4,
-                    }}
-                  >
-                    {loc.name}
-                  </div>
-                  <div style={{ color: '#5d3a1a', marginBottom: 6 }}>
-                    {loc.description}
-                  </div>
-                  <div
-                    style={{
-                      paddingTop: 4,
-                      borderTop: '1px solid #c89a4a',
-                      fontSize: 10,
-                      color: '#8b5a2b',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                    }}
-                  >
-                    <span>类型：{loc.type}</span>
-                    <span>{isCurrent ? '★ 当前位置' : '点击传送'}</span>
-                  </div>
-                  {/* Tooltip tail */}
-                  <div
-                    style={{
-                      position: 'absolute',
-                      top: '100%',
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      width: 0,
-                      height: 0,
-                      borderLeft: '6px solid transparent',
-                      borderRight: '6px solid transparent',
-                      borderTop: '6px solid #5d3a1a',
-                    }}
-                  />
-                </div>
-              )}
-            </div>
-          );
-        })}
-
-        {/* Legend (bottom-right) */}
+        {/* 提示 */}
         <div
           style={{
             position: 'absolute',
-            bottom: 24,
-            right: 24,
-            background: '#fdf0cfdd',
-            border: '1px solid #8b5a2b',
-            padding: '6px 10px',
-            fontSize: 10,
-            color: '#5d3a1a',
-            fontFamily: 'serif',
-            lineHeight: 1.6,
-            pointerEvents: 'none',
-          }}
-        >
-          {LOCATIONS.map((loc) => (
-            <div
-              key={`legend-${loc.id}`}
-              style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}
-            >
-              <div
-                style={{
-                  width: 16,
-                  height: 16,
-                  background: '#fdf0cf',
-                  border: '1px solid #5d3a1a',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  imageRendering: 'pixelated',
-                }}
-              >
-                <div
-                  style={{
-                    width: 14,
-                    height: 14,
-                    backgroundImage: `url(/assets/sprites/${loc.sprite})`,
-                    backgroundPosition: '0 0',
-                    backgroundRepeat: 'no-repeat',
-                    backgroundSize: '32px 32px',
-                    transform: 'scale(0.4375)',
-                    transformOrigin: '0 0',
-                    imageRendering: 'pixelated',
-                  }}
-                />
-              </div>
-              <span>{loc.type}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* Bottom hint */}
-        <div
-          style={{
-            position: 'absolute',
-            bottom: 28,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            color: '#8b5a2b',
+            bottom: 12,
+            right: 12,
             fontSize: 11,
-            fontFamily: 'serif',
-            letterSpacing: '0.05em',
-            pointerEvents: 'none',
+            color: 'var(--wood-4)',
+            background: 'rgba(253, 240, 207, 0.9)',
+            border: '1px solid var(--wood-3)',
+            padding: '4px 10px',
+            fontFamily: 'var(--f-pixel)',
           }}
         >
-          点击 POI 传送 · 鼠标悬停看详情 · M / Esc 关闭
+          点击传送 · M / ESC 关闭
         </div>
       </div>
-
-      <style>{`
-        @keyframes wmFadeIn {
-          from { opacity: 0; transform: scale(0.97); }
-          to { opacity: 1; transform: scale(1); }
-        }
-        @keyframes wmPulse {
-          0% { transform: scale(1); opacity: 0.9; }
-          100% { transform: scale(1.6); opacity: 0; }
-        }
-      `}</style>
     </div>
   );
 }
 
-function cornerStudStyle(corner: 'tl' | 'tr' | 'bl' | 'br'): React.CSSProperties {
-  const base: React.CSSProperties = {
-    position: 'absolute',
-    width: 18,
-    height: 18,
-    background: '#fdf0cf',
-    border: '2px solid #5d3a1a',
-    borderRadius: '50%',
-    pointerEvents: 'none',
-  };
-  switch (corner) {
-    case 'tl': return { ...base, top: -4, left: -4 };
-    case 'tr': return { ...base, top: -4, right: -4 };
-    case 'bl': return { ...base, bottom: -4, left: -4 };
-    case 'br': return { ...base, bottom: -4, right: -4 };
-  }
+function DecorMountain({ x, y }: { x: number; y: number }) {
+  return (
+    <g transform={`translate(${x}, ${y})`}>
+      <polygon points="-30,40 0,-20 30,40" fill="var(--wood-2)" opacity="0.5" />
+      <polygon points="-15,30 0,-10 15,30" fill="var(--wood-3)" opacity="0.7" />
+    </g>
+  );
+}
+
+function DecorTree({ x, y }: { x: number; y: number }) {
+  return (
+    <g transform={`translate(${x}, ${y})`}>
+      <rect x="-3" y="0" width="6" height="14" fill="var(--wood-3)" />
+      <circle cx="0" cy="-4" r="14" fill="#7fc090" opacity="0.7" />
+      <circle cx="-6" cy="-2" r="8" fill="#6dab7e" opacity="0.6" />
+      <circle cx="6" cy="-2" r="8" fill="#6dab7e" opacity="0.6" />
+    </g>
+  );
+}
+
+function LocationMarker({
+  loc,
+  isHovered,
+  isCurrent,
+  onClick,
+  onHover,
+  onLeave,
+}: {
+  loc: MapLocation;
+  isHovered: boolean;
+  isCurrent: boolean;
+  onClick: () => void;
+  onHover: () => void;
+  onLeave: () => void;
+}) {
+  const cx = (loc.xPct / 100) * 1600;
+  const cy = (loc.yPct / 100) * 1000;
+  const fill = '#daa520';
+
+  return (
+    <g
+      transform={`translate(${cx}, ${cy})`}
+      style={{ cursor: 'pointer' }}
+      onClick={onClick}
+      onMouseEnter={onHover}
+      onMouseLeave={onLeave}
+    >
+      <circle r="50" fill="transparent" />
+
+      {(isHovered || isCurrent) && (
+        <circle r="40" fill="none" stroke={isCurrent ? '#daa520' : 'var(--wood-3)'} strokeWidth="3" strokeDasharray="4 2" opacity="0.7" />
+      )}
+
+      <circle r="28" fill="var(--paper-1)" stroke={fill} strokeWidth="3" />
+      <circle r="14" fill={fill} />
+
+      {isCurrent && (
+        <g transform="translate(28, -28)">
+          <rect x="-14" y="-8" width="28" height="14" fill="#daa520" stroke="var(--wood-3)" strokeWidth="1" />
+          <text textAnchor="middle" y="3" fontSize="9" fontFamily="var(--f-pixel)" fill="white">当前</text>
+        </g>
+      )}
+
+      <g transform="translate(0, 56)">
+        <rect x="-50" y="-12" width="100" height="22" fill="var(--paper-1)" stroke="var(--wood-3)" strokeWidth="1.5" />
+        <text textAnchor="middle" y="3" fontFamily="var(--f-sans)" fontSize="13" fontWeight="600" fill="var(--wood-3)">
+          {loc.name}
+        </text>
+      </g>
+    </g>
+  );
 }

@@ -317,6 +317,8 @@ export class MainScene extends Phaser.Scene {
     // G1.0 · Multiplayer setup (via helper)
     this.mp = setupMultiplayer(this, 'Main', () => this.player, () => this.currentFacing);
 
+    EventBus.on('worldmap-travel', this.onWorldMapTravel, this);
+
     this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
     this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
     this.cameras.main.setZoom(2);
@@ -1374,4 +1376,9 @@ export class MainScene extends Phaser.Scene {
       this.scene.start('SproutCity');
     });
   }
+
+  private onWorldMapTravel = (data: { sceneKey: string }) => {
+    if (data.sceneKey === 'Main') return;
+    this.scene.start(data.sceneKey);
+  };
 }

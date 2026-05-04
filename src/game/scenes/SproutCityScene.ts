@@ -217,6 +217,8 @@ export class SproutCityScene extends Phaser.Scene {
     // G1.1 · Multiplayer (via helper)
     this.mp = setupMultiplayer(this, 'SproutCity', () => this.player, () => this.currentFacing);
 
+    EventBus.on('worldmap-travel', this.onWorldMapTravel, this);
+
     this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
     this.cameras.main.setZoom(2);
     this.cameras.main.fadeIn(300, 0, 0, 0);
@@ -628,4 +630,9 @@ export class SproutCityScene extends Phaser.Scene {
       this.portHint.setVisible(false);
     }
   }
+
+  private onWorldMapTravel = (data: { sceneKey: string }) => {
+    if (data.sceneKey === 'SproutCity') return;
+    this.scene.start(data.sceneKey);
+  };
 }

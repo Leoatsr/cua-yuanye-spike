@@ -117,6 +117,8 @@ export class GrandPlazaScene extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, MAP_WIDTH, MAP_HEIGHT);
     // G1.1 · Multiplayer (via helper)
     this.mp = setupMultiplayer(this, 'GrandPlaza', () => this.player, () => this.currentFacing);
+
+    EventBus.on('worldmap-travel', this.onWorldMapTravel, this);
     attachMinimap(this, 'GrandPlaza');
 
     this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
@@ -703,4 +705,9 @@ export class GrandPlazaScene extends Phaser.Scene {
       hideAll();
     }
   }
+
+  private onWorldMapTravel = (data: { sceneKey: string }) => {
+    if (data.sceneKey === 'GrandPlaza') return;
+    this.scene.start(data.sceneKey);
+  };
 }
