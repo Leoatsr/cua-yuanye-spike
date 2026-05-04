@@ -86,6 +86,7 @@ export class GrandPlazaScene extends Phaser.Scene {
 
   create() {
     this.inputLockUntil = this.time.now + 250;
+    this.cameras.main.setBackgroundColor('#8a7355');
     this.physics.world.setBounds(0, 0, MAP_WIDTH, MAP_HEIGHT);
 
     // ---- Visuals (Wave 8 · 米色羊皮纸 + 16 发散纹) ----

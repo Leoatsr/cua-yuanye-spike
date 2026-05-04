@@ -45,8 +45,10 @@ export function PhaserGame() {
         arcade: { gravity: { x: 0, y: 0 }, debug: false },
       },
       scale: {
-        mode: Phaser.Scale.RESIZE,
+        mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH,
+        width: 1280,
+        height: 720,
       },
       scene: [
         BootScene,
@@ -86,6 +88,7 @@ export function PhaserGame() {
         position: 'fixed',
         inset: 0,
         overflow: 'hidden',
+        background: '#1a1a1a',
       }}
     />
   );

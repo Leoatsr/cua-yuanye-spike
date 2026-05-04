@@ -546,6 +546,7 @@ export class MainScene extends Phaser.Scene {
     if (this.spawnOverride) {
       this.cameras.main.fadeIn(300, 0, 0, 0);
       this.inputLockUntil = this.time.now + 250;
+    this.cameras.main.setBackgroundColor('#4a7340');
     }
 
     // ---- BGM ----

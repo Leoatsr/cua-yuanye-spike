@@ -83,6 +83,7 @@ export class BlacksmithScene extends Phaser.Scene {
 
   create() {
     this.inputLockUntil = this.time.now + 250;
+    this.cameras.main.setBackgroundColor('#8b4513');
     bgmManager.stop(this); // 内景静默
     this.physics.world.setBounds(0, 0, ROOM_WIDTH, ROOM_HEIGHT);
 

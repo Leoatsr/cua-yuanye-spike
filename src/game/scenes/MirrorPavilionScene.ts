@@ -57,6 +57,7 @@ export class MirrorPavilionScene extends Phaser.Scene {
 
   create() {
     this.inputLockUntil = this.time.now + 250;
+    this.cameras.main.setBackgroundColor('#8b4513');
     this.physics.world.setBounds(0, 0, ROOM_WIDTH, ROOM_HEIGHT);
 
     // === Wave 8 · 米色羊皮纸地板 (替代灰蓝) ===

@@ -58,6 +58,7 @@ export class DuliangGeScene extends Phaser.Scene {
 
   create() {
     this.inputLockUntil = this.time.now + 250;
+    this.cameras.main.setBackgroundColor('#8b4513');
     this.physics.world.setBounds(0, 0, ROOM_WIDTH, ROOM_HEIGHT);
 
     // ---- Floor (Wave 7.K · 落地页米色) ----

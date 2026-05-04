@@ -104,6 +104,7 @@ export class InteriorScene extends Phaser.Scene {
 
   create() {
     this.inputLockUntil = this.time.now + 250;
+    this.cameras.main.setBackgroundColor('#8b4513');
 
     // ---- Tilemap ----
     const map = this.make.tilemap({ key: this.config.mapKey });

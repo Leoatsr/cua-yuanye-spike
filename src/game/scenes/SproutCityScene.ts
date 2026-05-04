@@ -172,6 +172,7 @@ export class SproutCityScene extends Phaser.Scene {
   create() {
     attachMinimap(this, 'SproutCity');
     this.inputLockUntil = this.time.now + 250;
+    this.cameras.main.setBackgroundColor('#4a7340');
 
     // ---- Tilemap ----
     const map = this.make.tilemap({ key: 'sproutcity' });

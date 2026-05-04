@@ -126,6 +126,7 @@ export class GovHillScene extends Phaser.Scene {
 
   create() {
     this.inputLockUntil = this.time.now + 250;
+    this.cameras.main.setBackgroundColor('#6b6258');
 
     // ---- World bounds ----
     this.physics.world.setBounds(0, 0, MAP_WIDTH, MAP_HEIGHT);
