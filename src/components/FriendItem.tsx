@@ -14,6 +14,8 @@ interface FriendItemProps {
   subtitle?: ReactNode;
   /** 在线状态 · undefined 表示不显示状态 (例如请求页) */
   isOnline?: boolean;
+  /** 点击头像或名字时跳转个人主页的回调 · 不传则不可点 */
+  onProfileClick?: () => void;
 }
 
 /**
@@ -22,6 +24,8 @@ interface FriendItemProps {
  * 在线状态显示:
  *   - 头像右下角小圆点 (绿 = 在线 · 灰 = 离线)
  *   - 名字旁文字标签 ([在线] / [离线])
+ *
+ * 头像 + 名字可点跳转个人主页 (微信风) · 通过 onProfileClick 回调
  */
 export function FriendItem({
   displayName,
@@ -33,8 +37,10 @@ export function FriendItem({
   actions,
   subtitle,
   isOnline,
+  onProfileClick,
 }: FriendItemProps) {
   const showOnlineStatus = isOnline !== undefined;
+  const clickable = !!onProfileClick;
 
   return (
     <div
@@ -48,6 +54,7 @@ export function FriendItem({
     >
       {/* 头像 + 状态点 */}
       <div
+        onClick={onProfileClick}
         style={{
           width: 36,
           height: 36,
@@ -56,7 +63,16 @@ export function FriendItem({
           padding: 1,
           flexShrink: 0,
           position: 'relative',
+          cursor: clickable ? 'pointer' : 'default',
+          transition: 'transform 0.1s',
         }}
+        onMouseEnter={(e) => {
+          if (clickable) (e.currentTarget as HTMLDivElement).style.transform = 'scale(1.05)';
+        }}
+        onMouseLeave={(e) => {
+          if (clickable) (e.currentTarget as HTMLDivElement).style.transform = 'scale(1)';
+        }}
+        title={clickable ? `查看 ${displayName} 的主页` : undefined}
       >
         {avatarUrl ? (
           <img
@@ -86,6 +102,7 @@ export function FriendItem({
               background: isOnline ? '#3bd16f' : '#9a9489',
               border: '2px solid var(--paper-0)',
               boxShadow: isOnline ? '0 0 4px rgba(59,209,111,0.6)' : 'none',
+              pointerEvents: 'none',
             }}
             title={isOnline ? '在线' : '离线'}
           />
@@ -103,11 +120,22 @@ export function FriendItem({
           }}
         >
           <span
+            onClick={onProfileClick}
             className="t-title"
             style={{
               fontSize: 13,
               color: 'var(--wood-3)',
+              cursor: clickable ? 'pointer' : 'default',
+              transition: 'color 0.1s',
+              ...(clickable ? { textDecoration: 'none' } : {}),
             }}
+            onMouseEnter={(e) => {
+              if (clickable) (e.currentTarget as HTMLSpanElement).style.color = 'var(--gold, #b8893a)';
+            }}
+            onMouseLeave={(e) => {
+              if (clickable) (e.currentTarget as HTMLSpanElement).style.color = 'var(--wood-3)';
+            }}
+            title={clickable ? `查看 ${displayName} 的主页` : undefined}
           >
             {displayName}
           </span>

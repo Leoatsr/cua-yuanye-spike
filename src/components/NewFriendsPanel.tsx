@@ -25,6 +25,9 @@ import { FriendItem } from './FriendItem';
  *   - 通过 useGlobalPresence 订阅 realtimePresence 全局集合
  *   - 好友 / 关注 / 粉丝 3 tab 显示 (请求 tab 不显示)
  *
+ * Wave 11 新增:
+ *   - 头像 + 名字可点跳转 /u/{username} 个人主页
+ *
  * 尺寸 480×560
  */
 
@@ -58,6 +61,12 @@ export function NewFriendsPanel() {
   if (!open) return null;
 
   const incomingCount = friendsApi.requests.incoming.length;
+
+  // 跳转个人主页 · 新标签页打开 · 保留社交面板
+  const goToProfile = (username: string) => {
+    if (!username) return;
+    window.open(`/u/${username}`, '_blank', 'noopener,noreferrer');
+  };
 
   return (
     <div
@@ -168,16 +177,22 @@ export function NewFriendsPanel() {
             api={friendsApi}
             loading={friendsApi.loading}
             onlineSet={onlineSet}
+            goToProfile={goToProfile}
           />
         )}
         {tab === 'requests' && (
-          <RequestsTab api={friendsApi} loading={friendsApi.loading} />
+          <RequestsTab
+            api={friendsApi}
+            loading={friendsApi.loading}
+            goToProfile={goToProfile}
+          />
         )}
         {tab === 'following' && (
           <FollowingTab
             api={followsApi}
             loading={followsApi.loading}
             onlineSet={onlineSet}
+            goToProfile={goToProfile}
           />
         )}
         {tab === 'followers' && (
@@ -185,6 +200,7 @@ export function NewFriendsPanel() {
             api={followsApi}
             loading={followsApi.loading}
             onlineSet={onlineSet}
+            goToProfile={goToProfile}
           />
         )}
       </div>
@@ -250,10 +266,12 @@ function FriendsTab({
   api,
   loading,
   onlineSet,
+  goToProfile,
 }: {
   api: ReturnType<typeof useFriends>;
   loading: boolean;
   onlineSet: Set<string>;
+  goToProfile: (username: string) => void;
 }) {
   if (loading) return <LoadingState />;
   if (api.friends.length === 0)
@@ -281,6 +299,7 @@ function FriendsTab({
           levelName={f.level_name}
           totalCV={f.total_cv}
           isOnline={onlineSet.has(f.friend_id)}
+          onProfileClick={() => goToProfile(f.username)}
           actions={
             <PixelButton
               size="pb-sm"
@@ -306,9 +325,11 @@ function FriendsTab({
 function RequestsTab({
   api,
   loading,
+  goToProfile,
 }: {
   api: ReturnType<typeof useFriends>;
   loading: boolean;
+  goToProfile: (username: string) => void;
 }) {
   if (loading) return <LoadingState />;
   const total = api.requests.incoming.length + api.requests.outgoing.length;
@@ -326,6 +347,7 @@ function RequestsTab({
               username={req.username}
               avatarUrl={req.avatar_url}
               subtitle="想加你为好友"
+              onProfileClick={() => goToProfile(req.username)}
               actions={
                 <>
                   <PixelButton
@@ -357,6 +379,7 @@ function RequestsTab({
               username={req.username}
               avatarUrl={req.avatar_url}
               subtitle="等待对方回复"
+              onProfileClick={() => goToProfile(req.username)}
               actions={
                 <PixelButton
                   size="pb-sm"
@@ -381,10 +404,12 @@ function FollowingTab({
   api,
   loading,
   onlineSet,
+  goToProfile,
 }: {
   api: ReturnType<typeof useFollows>;
   loading: boolean;
   onlineSet: Set<string>;
+  goToProfile: (username: string) => void;
 }) {
   if (loading) return <LoadingState />;
   if (api.following.length === 0)
@@ -409,6 +434,7 @@ function FollowingTab({
           levelName={f.level_name}
           totalCV={f.total_cv}
           isOnline={f.followee_id ? onlineSet.has(f.followee_id) : false}
+          onProfileClick={() => goToProfile(f.username)}
           actions={
             <PixelButton
               size="pb-sm"
@@ -433,10 +459,12 @@ function FollowersTab({
   api,
   loading,
   onlineSet,
+  goToProfile,
 }: {
   api: ReturnType<typeof useFollows>;
   loading: boolean;
   onlineSet: Set<string>;
+  goToProfile: (username: string) => void;
 }) {
   if (loading) return <LoadingState />;
   if (api.followers.length === 0)
@@ -463,6 +491,7 @@ function FollowersTab({
           levelName={f.level_name}
           totalCV={f.total_cv}
           isOnline={f.follower_id ? onlineSet.has(f.follower_id) : false}
+          onProfileClick={() => goToProfile(f.username)}
         />
       ))}
     </div>
