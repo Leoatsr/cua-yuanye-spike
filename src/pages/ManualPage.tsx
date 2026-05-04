@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Chip } from '../ui';
+import { Chip, type ChipTone } from '../ui';
 
 /**
  * 玩家手册 · 像素古籍风
@@ -426,7 +426,7 @@ function WorkshopsTab() {
   );
 }
 
-function categoryTone(category: '降噪' | '链接' | '共创'): string {
+function categoryTone(category: '降噪' | '链接' | '共创'): ChipTone {
   if (category === '降噪') return 'spring';
   if (category === '链接') return '';
   return 'gold';
