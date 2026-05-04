@@ -257,7 +257,7 @@ export function PublicProfilePage() {
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           gap: 12,
         }}>
-          <Link to="/" style={{
+          <Link to="/play" style={{
             fontSize: 12,
             color: 'var(--wood-3, #8b4513)',
             textDecoration: 'none',
@@ -317,7 +317,7 @@ export function PublicProfilePage() {
               <button
                 onClick={() => {
                   EventBus.emit('open-private-chat', { otherUserId: profile.user_id });
-                  navigate('/');
+                  navigate('/play');
                 }}
                 style={{
                   padding: '6px 12px', fontSize: 11,
