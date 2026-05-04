@@ -14,6 +14,7 @@ import {
   useLevel,
   useOnlineCount,
 } from '../hooks';
+import { useHotbarBadges } from '../hooks/useHotbarBadges';
 import { EventBus } from '../game/EventBus';
 import type { MinimapPayload } from '../game/minimap-bridge';
 import { getRealSolarTerm } from '../lib/realSolarTerm';
@@ -21,10 +22,13 @@ import { getRealSolarTerm } from '../lib/realSolarTerm';
 /**
  * NewGameApp · /play 路由替换 MainGameApp 视觉部分
  *
- * Wave 7.E.1 改动：
- *   - 删右下角 ? 帮助按钮（跟左下 hotbar 公告重复）
- *   - 时钟用真实世界时间 + 真实昼夜 phase（替代 timeStore.formatTime）
- *   - 节气保持 gameTime.solarTerm（游戏机制 · 不是真实节气）
+ * Wave 7.E.1 改动:
+ *   - 删右上角 ? 帮助按钮 (跟左下 hotbar 公告重复)
+ *   - 时钟用真实世界时间 + 真实昼夜 phase (替代 timeStore.formatTime)
+ *   - 节气保持 gameTime.solarTerm (游戏机制 · 不是真实节气)
+ *
+ * Wave 11 (本次) 改动:
+ *   - 接通 useHotbarBadges · 5 hotbar 微信风红点
  */
 
 /** 真实世界时间 + phase */
@@ -55,6 +59,7 @@ export function NewGameAppHUD({ visible = true }: NewGameAppHUDProps) {
   const levelInfo = useLevel();
   const online = useOnlineCount();
   const realClock = useRealClock();
+  const badges = useHotbarBadges();
 
   // Wave 7.K real solar term
   const [realTerm, setRealTerm] = useState(() => getRealSolarTerm(new Date()));
@@ -133,7 +138,6 @@ export function NewGameAppHUD({ visible = true }: NewGameAppHUDProps) {
             ▼
           </span>
         </div>
-
         <CVBar
           current={cv}
           threshold={levelInfo.nextThreshold || 100}
@@ -181,7 +185,7 @@ export function NewGameAppHUD({ visible = true }: NewGameAppHUDProps) {
         />
       </div>
 
-      {/* 左下 — 5 图标按钮 */}
+      {/* 左下 — 5 图标按钮 (微信风红点) */}
       <div
         style={{
           position: 'fixed',
@@ -193,11 +197,11 @@ export function NewGameAppHUD({ visible = true }: NewGameAppHUDProps) {
       >
         <IconBar
           items={[
-            { icon: '📜', label: '公告', onClick: () => triggerPanel('announcement') },
-            { icon: '📋', label: '任务', onClick: () => triggerPanel('questlog') },
-            { icon: '✉', label: '邮件', onClick: () => triggerPanel('mail') },
-            { icon: '💬', label: '聊天', onClick: () => triggerPanel('chat') },
-            { icon: '👥', label: '好友', onClick: () => triggerPanel('friends') },
+            { icon: '📜', label: '公告', badge: badges.announcement, onClick: () => triggerPanel('announcement') },
+            { icon: '📋', label: '任务', badge: badges.quest, onClick: () => triggerPanel('questlog') },
+            { icon: '✉', label: '邮件', badge: badges.mail, onClick: () => triggerPanel('mail') },
+            { icon: '💬', label: '聊天', badge: badges.chat, onClick: () => triggerPanel('chat') },
+            { icon: '👥', label: '好友', badge: badges.friends, onClick: () => triggerPanel('friends') },
           ]}
         />
       </div>

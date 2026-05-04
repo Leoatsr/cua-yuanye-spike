@@ -313,7 +313,7 @@ function QuickstartTab() {
 
       <Section title="🎯 第一次玩，按这个流程">
         <Step n={1} text="按 WASD 键走路（这是基本控制）" />
-        <Step n={2} text="走到老村长 阿降 身边按 E 对话" />
+        <Step n={2} text="走到老村长 高粱 身边按 E 对话" />
         <Step n={3} text="按 J 看看初始任务" />
         <Step n={4} text="按 M 打开世界地图，选一个工坊" />
         <Step n={5} text="进入工坊找 NPC 接任务" />

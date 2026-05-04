@@ -36,7 +36,7 @@ interface SceneInitData {
  *
  * 重写说明:
  *   - 旧版走 home.json tilemap 路线 (Wave 7.G)
- *   - v2 改 graphics customScene · 跟阿降+典籍阁+铁匠铺一脉
+ *   - v2 改 graphics customScene · 跟高粱+典籍阁+铁匠铺一脉
  */
 export class HomeScene extends Phaser.Scene {
   private player!: Phaser.Physics.Arcade.Sprite;

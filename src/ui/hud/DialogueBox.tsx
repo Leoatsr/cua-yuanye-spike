@@ -1,5 +1,5 @@
 interface DialogueBoxProps {
-  npcName: string;       // e.g. "村长 · 阿降"
+  npcName: string;       // e.g. "村长 · 高粱"
   text: string;
   onAdvance?: () => void;
 }
@@ -9,7 +9,7 @@ interface DialogueBoxProps {
  *
  * 用法：
  *   <DialogueBox
- *     npcName="村长 · 阿降"
+ *     npcName="村长 · 高粱"
  *     text="初来乍到？先把这五件小事做了..."
  *     onAdvance={() => setIndex(i => i + 1)}
  *   />

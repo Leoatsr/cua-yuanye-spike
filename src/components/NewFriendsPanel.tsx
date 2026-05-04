@@ -3,6 +3,7 @@ import { useFriends } from '../hooks/useFriends';
 import { useFollows } from '../hooks/useFollows';
 import { useOpenViaEventBus } from '../hooks/useOpenViaEventBus';
 import { useProfile } from '../hooks/useProfile';
+import { useGlobalPresence } from '../hooks/useGlobalPresence';
 import type { UserProfile } from '../lib/profileStore';
 import { fetchProfileByUsername } from '../lib/profileStore';
 import { EventBus } from '../game/EventBus';
@@ -10,7 +11,7 @@ import { PixelButton } from '../ui';
 import { FriendItem } from './FriendItem';
 
 /**
- * NewFriendsPanel · 像素古籍风社交面板
+ * NewFriendsPanel · 像素古籍风社交界面
  *
  * 4 tab:
  *   - 好友
@@ -20,7 +21,14 @@ import { FriendItem } from './FriendItem';
  *
  * 加号按钮 → 用户名搜索 + 发好友请求
  *
- * 尺寸 480×560 (跟 NewChatPanel / NewMailBox 一致)
+ * 在线状态:
+ *   - 通过 useGlobalPresence 订阅 realtimePresence 全局集合
+ *   - 好友 / 关注 / 粉丝 3 tab 显示 (请求 tab 不显示)
+ *
+ * Wave 11 新增:
+ *   - 头像 + 名字可点跳转 /u/{username} 个人主页
+ *
+ * 尺寸 480×560
  */
 
 const PANEL_WIDTH = 480;
@@ -36,6 +44,7 @@ export function NewFriendsPanel() {
   const myProfile = useProfile();
   const friendsApi = useFriends();
   const followsApi = useFollows();
+  const onlineSet = useGlobalPresence();
 
   // ESC 关闭
   useEffect(() => {
@@ -52,6 +61,12 @@ export function NewFriendsPanel() {
   if (!open) return null;
 
   const incomingCount = friendsApi.requests.incoming.length;
+
+  // 跳转个人主页 · 新标签页打开 · 保留社交面板
+  const goToProfile = (username: string) => {
+    if (!username) return;
+    window.open(`/u/${username}`, '_blank', 'noopener,noreferrer');
+  };
 
   return (
     <div
@@ -158,16 +173,35 @@ export function NewFriendsPanel() {
       {/* 内容区 */}
       <div style={{ flex: 1, overflowY: 'auto' }}>
         {tab === 'friends' && (
-          <FriendsTab api={friendsApi} loading={friendsApi.loading} />
+          <FriendsTab
+            api={friendsApi}
+            loading={friendsApi.loading}
+            onlineSet={onlineSet}
+            goToProfile={goToProfile}
+          />
         )}
         {tab === 'requests' && (
-          <RequestsTab api={friendsApi} loading={friendsApi.loading} />
+          <RequestsTab
+            api={friendsApi}
+            loading={friendsApi.loading}
+            goToProfile={goToProfile}
+          />
         )}
         {tab === 'following' && (
-          <FollowingTab api={followsApi} loading={followsApi.loading} />
+          <FollowingTab
+            api={followsApi}
+            loading={followsApi.loading}
+            onlineSet={onlineSet}
+            goToProfile={goToProfile}
+          />
         )}
         {tab === 'followers' && (
-          <FollowersTab api={followsApi} loading={followsApi.loading} />
+          <FollowersTab
+            api={followsApi}
+            loading={followsApi.loading}
+            onlineSet={onlineSet}
+            goToProfile={goToProfile}
+          />
         )}
       </div>
     </div>
@@ -231,16 +265,31 @@ function TabButton({ label, active, badge, onClick }: TabButtonProps) {
 function FriendsTab({
   api,
   loading,
+  onlineSet,
+  goToProfile,
 }: {
   api: ReturnType<typeof useFriends>;
   loading: boolean;
+  onlineSet: Set<string>;
+  goToProfile: (username: string) => void;
 }) {
   if (loading) return <LoadingState />;
-  if (api.friends.length === 0) return <EmptyState icon="👥" text="还没有好友" hint='点 "+ 加好友" 找个伙伴' />;
+  if (api.friends.length === 0)
+    return (
+      <EmptyState icon="👥" text="还没有好友" hint='点 "+ 加好友" 找个伙伴' />
+    );
+
+  // 排序: 在线优先 · 同状态保持原顺序
+  const sorted = [...api.friends].sort((a, b) => {
+    const aOnline = onlineSet.has(a.friend_id);
+    const bOnline = onlineSet.has(b.friend_id);
+    if (aOnline === bOnline) return 0;
+    return aOnline ? -1 : 1;
+  });
 
   return (
     <div>
-      {api.friends.map((f) => (
+      {sorted.map((f) => (
         <FriendItem
           key={f.friend_id}
           displayName={f.display_name}
@@ -249,6 +298,8 @@ function FriendsTab({
           level={f.level}
           levelName={f.level_name}
           totalCV={f.total_cv}
+          isOnline={onlineSet.has(f.friend_id)}
+          onProfileClick={() => goToProfile(f.username)}
           actions={
             <PixelButton
               size="pb-sm"
@@ -268,19 +319,21 @@ function FriendsTab({
 }
 
 // ============================================================
-// Requests 列表
+// Requests 列表 · 不显示在线状态
 // ============================================================
 
 function RequestsTab({
   api,
   loading,
+  goToProfile,
 }: {
   api: ReturnType<typeof useFriends>;
   loading: boolean;
+  goToProfile: (username: string) => void;
 }) {
   if (loading) return <LoadingState />;
   const total = api.requests.incoming.length + api.requests.outgoing.length;
-  if (total === 0) return <EmptyState icon="📩" text="没有未处理请求" />;
+  if (total === 0) return <EmptyState icon="📫" text="没有未处理请求" />;
 
   return (
     <div>
@@ -294,6 +347,7 @@ function RequestsTab({
               username={req.username}
               avatarUrl={req.avatar_url}
               subtitle="想加你为好友"
+              onProfileClick={() => goToProfile(req.username)}
               actions={
                 <>
                   <PixelButton
@@ -325,6 +379,7 @@ function RequestsTab({
               username={req.username}
               avatarUrl={req.avatar_url}
               subtitle="等待对方回复"
+              onProfileClick={() => goToProfile(req.username)}
               actions={
                 <PixelButton
                   size="pb-sm"
@@ -348,16 +403,28 @@ function RequestsTab({
 function FollowingTab({
   api,
   loading,
+  onlineSet,
+  goToProfile,
 }: {
   api: ReturnType<typeof useFollows>;
   loading: boolean;
+  onlineSet: Set<string>;
+  goToProfile: (username: string) => void;
 }) {
   if (loading) return <LoadingState />;
-  if (api.following.length === 0) return <EmptyState icon="⭐" text="还没关注任何人" />;
+  if (api.following.length === 0)
+    return <EmptyState icon="⭐" text="还没关注任何人" />;
+
+  const sorted = [...api.following].sort((a, b) => {
+    const aOnline = a.followee_id ? onlineSet.has(a.followee_id) : false;
+    const bOnline = b.followee_id ? onlineSet.has(b.followee_id) : false;
+    if (aOnline === bOnline) return 0;
+    return aOnline ? -1 : 1;
+  });
 
   return (
     <div>
-      {api.following.map((f) => (
+      {sorted.map((f) => (
         <FriendItem
           key={f.followee_id ?? f.username}
           displayName={f.display_name}
@@ -366,6 +433,8 @@ function FollowingTab({
           level={f.level}
           levelName={f.level_name}
           totalCV={f.total_cv}
+          isOnline={f.followee_id ? onlineSet.has(f.followee_id) : false}
+          onProfileClick={() => goToProfile(f.username)}
           actions={
             <PixelButton
               size="pb-sm"
@@ -389,16 +458,30 @@ function FollowingTab({
 function FollowersTab({
   api,
   loading,
+  onlineSet,
+  goToProfile,
 }: {
   api: ReturnType<typeof useFollows>;
   loading: boolean;
+  onlineSet: Set<string>;
+  goToProfile: (username: string) => void;
 }) {
   if (loading) return <LoadingState />;
-  if (api.followers.length === 0) return <EmptyState icon="👁" text="还没有粉丝" hint="多发表内容让人关注你" />;
+  if (api.followers.length === 0)
+    return (
+      <EmptyState icon="👀" text="还没有粉丝" hint="多发表内容让人关注你" />
+    );
+
+  const sorted = [...api.followers].sort((a, b) => {
+    const aOnline = a.follower_id ? onlineSet.has(a.follower_id) : false;
+    const bOnline = b.follower_id ? onlineSet.has(b.follower_id) : false;
+    if (aOnline === bOnline) return 0;
+    return aOnline ? -1 : 1;
+  });
 
   return (
     <div>
-      {api.followers.map((f) => (
+      {sorted.map((f) => (
         <FriendItem
           key={f.follower_id ?? f.username}
           displayName={f.display_name}
@@ -407,6 +490,8 @@ function FollowersTab({
           level={f.level}
           levelName={f.level_name}
           totalCV={f.total_cv}
+          isOnline={f.follower_id ? onlineSet.has(f.follower_id) : false}
+          onProfileClick={() => goToProfile(f.username)}
         />
       ))}
     </div>
@@ -453,7 +538,6 @@ function FriendSearchBar({
 
   const sendRequest = async () => {
     if (!result) return;
-    // 直接调 friendsManager · 避免再多一层依赖
     const { friendsManager } = await import('../lib/friendsStore');
     const res = await friendsManager.sendRequest(result.user_id);
     if (res.ok) {

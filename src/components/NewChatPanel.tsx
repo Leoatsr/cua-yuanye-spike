@@ -5,12 +5,14 @@ import {
   type ChatChannelType,
 } from '../lib/chatStore';
 import { fetchMyProfile } from '../lib/profileStore';
+import { getSupabase } from '../lib/supabase';
 import type { UserProfile } from '../lib/profileStore';
 import { useChatHistory } from '../hooks/useChatHistory';
 import { useToggleViaEventBus } from '../hooks/useToggleViaEventBus';
 import { useCurrentScene } from '../hooks/useCurrentScene';
 import { usePrivateConversations } from '../hooks/usePrivateConversations';
 import { useUnreadCounts } from '../hooks/useUnreadCounts';
+import { EventBus } from '../game/EventBus';
 import { PixelButton } from '../ui';
 import { ChatMessageItem } from './ChatMessageItem';
 import { ConversationItem } from './ConversationItem';
@@ -26,7 +28,11 @@ import { UserSearchBar } from './UserSearchBar';
  *   - 各 tab 独立未读计数
  *   - 历史消息加载
  *
- * 尺寸: 480×560（比 Wave 2.3.A 的 380×520 大，容纳私聊 sidebar）
+ * 尺寸: 480×560 (比 Wave 2.3.A 的 380×520 大 · 容纳私聊 sidebar)
+ *
+ * Wave 11 修复:
+ *   - 监听 'open-private-chat' 事件 (来自 PlayerInteractMenu + PublicProfilePage)
+ *     收到后自动: 打开面板 + 切私聊 tab + 选中 recipient + 拉取 profile + 订阅频道
  */
 
 const PANEL_WIDTH = 480;
@@ -80,10 +86,10 @@ export function NewChatPanel() {
       ? buildPrivateChannelKey(myUserId || '', activeRecipientId)
       : null;
 
-  // 历史消息（按当前 tab）
+  // 历史消息 (按当前 tab)
   const messages = useChatHistory(activeTab, channelKey, activeRecipientId || undefined);
 
-  // 未读计数
+  // 未读数
   const { counts: unreadCounts } = useUnreadCounts({
     activeTab,
     activeRecipientId,
@@ -153,11 +159,73 @@ export function NewChatPanel() {
     });
   }, [activeTab, activeRecipientId, conversations]);
 
+  // Wave 11 修复 · 监听 'open-private-chat' 事件
+  // 来源: PlayerInteractMenu (游戏内 NPC 互动) + PublicProfilePage (个人主页私聊按钮)
+  useEffect(() => {
+    const onOpenPrivateChat = async (data: { otherUserId: string }) => {
+      if (!data?.otherUserId) return;
+
+      // 1. 打开面板
+      setOpen(true);
+      // 2. 切到 private tab
+      setActiveTab('private');
+      // 3. 设置 recipient (先用 user_id 占位 · 同时主动拉 profile 补全)
+      setActiveRecipientId(data.otherUserId);
+      // 先看 conversations 列表里有没有 (有的话直接用现成的 name + avatar)
+      const existing = conversations.find(
+        (c) => c.other_user_id === data.otherUserId,
+      );
+      if (existing) {
+        setActiveRecipientProfile({
+          name: existing.other_user_name,
+          avatar_url: existing.other_user_avatar,
+        });
+      } else {
+        // 没有 · 主动从 supabase 拉 profile
+        setActiveRecipientProfile({
+          name: '加载中...',
+          avatar_url: null,
+        });
+        try {
+          const supabase = getSupabase();
+          if (supabase) {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('display_name, username, avatar_url')
+              .eq('user_id', data.otherUserId)
+              .maybeSingle();
+            if (profile) {
+              setActiveRecipientProfile({
+                name: (profile.display_name as string) || (profile.username as string) || '未知用户',
+                avatar_url: (profile.avatar_url as string | null) ?? null,
+              });
+            }
+          }
+        } catch (err) {
+          console.error('Failed to fetch profile for private chat:', err);
+        }
+      }
+      // 4. 订阅这个 conversation 频道
+      try {
+        await chatManager.subscribePrivate(data.otherUserId);
+        // 刷新 conversation 列表
+        void reloadConversations();
+      } catch (err) {
+        console.error('Failed to subscribe private chat:', err);
+      }
+    };
+
+    EventBus.on('open-private-chat', onOpenPrivateChat);
+    return () => {
+      EventBus.off('open-private-chat', onOpenPrivateChat);
+    };
+  }, [conversations, setOpen, reloadConversations]);
+
   const send = async () => {
     const trimmed = input.trim();
     if (!trimmed || sending || cooldownLeft > 0) return;
     if (trimmed.length > CHAT_LIMITS.CONTENT_MAX) {
-      setErrorMsg(`消息过长（${trimmed.length}/${CHAT_LIMITS.CONTENT_MAX}）`);
+      setErrorMsg(`消息过长 (${trimmed.length}/${CHAT_LIMITS.CONTENT_MAX})`);
       return;
     }
 
@@ -605,7 +673,7 @@ function EmptyState({
 }) {
   let icon = '💬';
   let title = '世界频道还没有消息';
-  let hint = '发出第一条消息，让大家看到你';
+  let hint = '发出第一条消息 · 让大家看到你';
 
   if (activeTab === 'scene') {
     icon = '📍';
@@ -620,7 +688,7 @@ function EmptyState({
     icon = '✉';
     if (!hasRecipient) {
       title = '请选择一个对话';
-      hint = '左侧列表选一个，或点 "+ 新对话"';
+      hint = '左侧列表选一个 · 或点 "+ 新对话"';
     } else {
       title = '还没有消息';
       hint = '发出第一条消息开始对话';
@@ -651,7 +719,7 @@ function EmptyState({
   );
 }
 
-// 本地版 buildPrivateChannelKey（避免依赖 chatStore export，更稳）
+// 本地版 buildPrivateChannelKey (避免依赖 chatStore export · 更稳)
 function buildPrivateChannelKey(userA: string, userB: string): string {
   const ids = [userA, userB].sort();
   return `${ids[0]}::${ids[1]}`;

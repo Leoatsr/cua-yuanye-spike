@@ -35,7 +35,11 @@ export function PhaserGame() {
       width: window.innerWidth,
       height: window.innerHeight,
       pixelArt: true,
-      backgroundColor: '#fdf0cf',
+      // Wave 11 修复 · 背景色从米黄 #fdf0cf 改为暖木色 #8b4513
+      // 当浏览器窗口宽 > ROOM_WIDTH × zoom(2) 时 · camera 拍不满 canvas
+      // 边缘空白部分显示这个 backgroundColor · 暖木色让空白看起来像房间墙外延伸
+      // 而不是突兀的米黄空地板
+      backgroundColor: '#8b4513',
       physics: {
         default: 'arcade',
         arcade: { gravity: { x: 0, y: 0 }, debug: false },

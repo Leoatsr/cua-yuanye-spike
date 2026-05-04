@@ -504,24 +504,24 @@ function Step({ label, icon, isLast }: { label: string; icon: string; isLast: bo
 function FeaturesSection() {
   const features = [
     {
-      t: '多人在场',
+      t: '多人在线',
       d: 'Supabase Realtime · 14 场景实时同步 · 世界/工坊/私聊',
       chip: 'Phase 3',
     },
     {
-      t: '时间引擎',
-      d: '48 分钟 = 1 游戏日 · 24 节气循环 · NPC 时段问候',
-      chip: 'S2-A',
+      t: '任务系统',
+      d: '真任务源 · CP 系数 · 3 审 quorum · CV 入账 · 邮件通知',
+      chip: 'Phase 2',
     },
     {
-      t: '等级权限',
-      d: 'L0–L4 · 24 像素捏脸 · 公开主页 /u/{username}',
-      chip: '已上线',
+      t: '社交网络',
+      d: '好友双向 / 关注单向 / 粉丝 / 私聊 / 通知',
+      chip: 'Phase 3',
     },
     {
-      t: '数据看板',
-      d: '7 tab 运营看板 · 留存/Session/错误埋点',
-      chip: '管理员',
+      t: '9 工坊体系',
+      d: '降噪/链接/共创 三组 · 每组 3 工坊 · 任务驱动',
+      chip: 'Phase 2',
     },
   ];
 
@@ -565,10 +565,10 @@ function FeaturesSection() {
 
 function RoadmapSection() {
   const waves: { wave: string; title: string; desc: string; status: string; tone: '' | 'gold' }[] = [
-    { wave: 'Wave 1', title: '落地页 · 设计系统', desc: '全新像素古籍风首页 · React Router · 字体加载', status: '已上线', tone: 'gold' },
-    { wave: 'Wave 2', title: '游戏内 HUD', desc: '顶部头像 · CV 进度条 · 任务面板 · 库存格 · 对话框', status: '排期中', tone: '' },
-    { wave: 'Wave 3', title: '手册 + 图鉴', desc: 'ManualPanel 重构 · NPC/工坊/道具 Codex 图鉴', status: '排期中', tone: '' },
-    { wave: 'Wave 4', title: '地图视图', desc: 'WorldMap → 三大区域 Maps View · 节气/天气彩蛋', status: '排期中', tone: '' },
+    { wave: 'Wave 1', title: 'Git 集成', desc: 'GitHub Issue / PR 同步 · 仓库动态推送到游戏 · 贡献记录与 CV 挂钩', status: '排期中', tone: '' },
+    { wave: 'Wave 2', title: '贡献排行', desc: '周/月/总 CV 排行榜 · 工坊贡献 · 复盘月报', status: '排期中', tone: '' },
+    { wave: 'Wave 3', title: '奖牌系统', desc: '25 徽章 · 4 等级 · 4 类别 · 收藏馆', status: '排期中', tone: '' },
+    { wave: 'Wave 4', title: '跨服联动', desc: '与 WebAgentLab 官网双向跳转 · 用户互通 · 项目展示', status: '排期中', tone: '' },
   ];
 
   return (

@@ -39,11 +39,11 @@ const AXIANG_COTTAGE_CONFIG: InteriorConfig = {
   // Exit point — the door mat tile
   exitTileX: 6,
   exitTileY: 7,
-  displayName: '阿降的小屋',
+  displayName: '高粱的小屋',
   npcs: [
     {
       textureKey: 'axiang',
-      name: '老村长 · 阿降',
+      name: '老村长 · 高粱',
       questId: 'axiang',
       // Place him next to the table, facing down toward the door
       tileX: 7,
@@ -51,7 +51,7 @@ const AXIANG_COTTAGE_CONFIG: InteriorConfig = {
       facing: 'down',
       dialogue: [
         '哦，进来了。这屋子不大，随便看看。',
-        '（阿降坐在桌前，桌上摊着几张地图）',
+        '（高粱坐在桌前，桌上摊着几张地图）',
         '"你看这个——这是萌芽镇的全图。"',
         '"东南角的水池，是镇子的眼。"',
         '"西边的铁匠铺，将来要扩成工坊。"',
@@ -335,7 +335,7 @@ export class MainScene extends Phaser.Scene {
     // The door tile (13, 5) is empty so the player can walk up to it and press E to enter.
     this.npcs.axiang = new NPC(this, {
       ...tile(13, 6),
-      key: 'axiang', name: '老村长 · 阿降', texture: 'axiang',
+      key: 'axiang', name: '老村长 · 高粱', texture: 'axiang',
       questId: 'axiang', facing: 'down',
       dialogue: () => this.getAxiangDialogue(),
     });
@@ -401,7 +401,7 @@ export class MainScene extends Phaser.Scene {
         '【萌芽镇 · 公告板】',
         '欢迎来到 CUA 基地！',
         '这是一个还在搭建中的小镇——每天都有新的角色加入。',
-        '想成为镇民的一员？听说要先和老村长阿降聊聊。',
+        '想成为镇民的一员？听说要先和老村长高粱聊聊。',
         '近期计划：开放典籍阁、铁匠铺、杂货铺、湖边钓鱼任务。',
         '— 萌芽镇议事会',
       ],
@@ -673,8 +673,8 @@ export class MainScene extends Phaser.Scene {
       localStorage.setItem('cua-yuanye-merchant-errand-visited', '1');
       return [
         '哎，又是你？',
-        '（你向阿降转达了商人的话——问"今天市集开不开"）',
-        '阿降笑了笑，"开啊，开了一辈子。回去告诉阿满，让他放心。"',
+        '（你向高粱转达了商人的话——问"今天市集开不开"）',
+        '高粱笑了笑，"开啊，开了一辈子。回去告诉阿满，让他放心。"',
         '（你记下了这句话，准备回去复命）',
       ];
     }
@@ -683,7 +683,7 @@ export class MainScene extends Phaser.Scene {
       return [
         '哦，是你啊。',
         '萌芽镇最近怎么样？又来一位新朋友了？',
-        '（阿降露出温和的笑）',
+        '（高粱露出温和的笑）',
         '记住，这镇子的故事，是你们一起写的。',
       ];
     }
@@ -694,7 +694,7 @@ export class MainScene extends Phaser.Scene {
         '我听说了——告示板、典籍阁、铁匠铺、杂货摊...湖边，你都去过了。',
         '还采了花，走了镇子的四个角。这一圈下来，不容易。',
         '从今天起，你就是萌芽镇的人了。',
-        '（阿降郑重地把手放在你肩上）',
+        '（高粱郑重地把手放在你肩上）',
         '欢迎，新镇民。这只是一个开始。',
       ];
     }
@@ -796,7 +796,7 @@ export class MainScene extends Phaser.Scene {
       this.setErrandStatus('merchant', 'inProgress');
       return [
         '咦，镇民来了！正好有事麻烦你——',
-        '我这两天担心市集开不开，可阿降那老头不爱写信。',
+        '我这两天担心市集开不开，可高粱那老头不爱写信。',
         '能帮我跑一趟，问问他今天市集开不开？',
         '（你接到了任务："替阿满问问村长"）',
       ];
@@ -809,7 +809,7 @@ export class MainScene extends Phaser.Scene {
         this.grantTitle('messenger', '可靠的信使', '阿满');
         localStorage.removeItem('cua-yuanye-merchant-errand-visited');
         return [
-          '哦？阿降说市集照开？',
+          '哦？高粱说市集照开？',
           '（阿满松了一口气）',
           '"那就好那就好。这老头嘴硬心软，知道他不会真停的。"',
           '谢谢你跑这一趟！下次进货，给你打折。',
@@ -817,7 +817,7 @@ export class MainScene extends Phaser.Scene {
         ];
       }
       return [
-        '阿降那边怎么说？',
+        '高粱那边怎么说？',
         '（阿满探头问）你还没跑去问过吗？',
       ];
     }
@@ -1020,6 +1020,7 @@ export class MainScene extends Phaser.Scene {
 
   private playDialogueSfx() {
     if (this.sfxDialogue) {
+      if (!this.scene.isActive()) return;
       this.sound.play('sfx-dialogue', { volume: SFX_VOLUME });
     }
   }
@@ -1248,7 +1249,7 @@ export class MainScene extends Phaser.Scene {
     }> = [
       {
         x: 13 * 32 + 16, y: 5 * 32 + 16,
-        label: '[E] 进入阿降的小屋',
+        label: '[E] 进入高粱的小屋',
         enter: () => {
           // Wave 10.villagehead - bypass InteriorScene
           const returnX = this.player.x;

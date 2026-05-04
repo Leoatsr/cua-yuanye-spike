@@ -394,6 +394,7 @@ export class SproutCityScene extends Phaser.Scene {
   }
 
   private playDialogueSfx() {
+    if (!this.scene.isActive()) return;
     this.sound.play('sfx-dialogue', { volume: SFX_VOLUME });
   }
 

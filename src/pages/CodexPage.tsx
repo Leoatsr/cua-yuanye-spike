@@ -23,7 +23,7 @@ import {
  *
  * 6 tab:
  *   1. 工坊（9 个 · 来自 gameMeta WORKSHOPS）
- *   2. NPC（6 个 · 来自 gameMeta NPCS · 含村长阿降 + 百晓居首席高粱）
+ *   2. NPC（6 个 · 来自 gameMeta NPCS · 含村长高粱 + 百晓居首席高粱）
  *   3. 等级（5 个 · 来自 gameMeta LEVELS）
  *   4. 任务（5 真任务 · 来自 questDefinitions QUESTS）
  *   5. 审核员（3 主审 + 3 申诉 · 来自 reviewerProfiles）

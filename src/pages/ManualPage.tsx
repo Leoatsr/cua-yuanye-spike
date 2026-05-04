@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Chip } from '../ui';
+import { Chip, type ChipTone } from '../ui';
 
 /**
  * 玩家手册 · 像素古籍风
@@ -15,7 +15,12 @@ import { Chip } from '../ui';
  *   5. 社交
  *   6. FAQ
  *
- * 文案 100% reuse 自旧 ManualPanel（cua-yuanye 时代）
+ * 文案 100% reuse 自旧 ManualPanel (cua-yuanye 时代)
+ *
+ * Wave 11 改动 (本次):
+ *   - 工坊 tab 改 Image 2 风格 · 3×3 卡片网格 + 降噪/链接/共创 3 组分类
+ *   - 9 工坊用新名字 (百科/数据/播客/内参/招聘/会议/开源/测评/生态)
+ *   - 全部状态 "开放"
  */
 
 type Tab = 'quickstart' | 'keys' | 'workshops' | 'levels' | 'social' | 'faq';
@@ -259,18 +264,18 @@ function QuickstartTab() {
           一个把"开源贡献"游戏化的实验。
         </P>
         <P>
-          每一份贡献都会被看见——做任务、参与议政、关注他人，所有行动都会沉淀为你的 CV（贡献价值）。
+          每一份贡献都会被看见——做任务、参与议政、关注他人,所有行动都会沉淀为你的 CV(贡献价值)。
         </P>
       </Section>
 
       <Section title="🎯 第一次玩 · 按这个流程">
-        <Step n={1} text="按 WASD 键走路（基本控制）" />
-        <Step n={2} text="走到老村长 阿降 身边按 E 对话" />
+        <Step n={1} text="按 WASD 走路(基本控制)" />
+        <Step n={2} text="走到老村长 高粱 身边按 E 对话" />
         <Step n={3} text="按 J 看看初始任务" />
         <Step n={4} text="走出萌芽镇 · 进入共创之都" />
         <Step n={5} text="进入工坊找 NPC 接任务" />
-        <Step n={6} text="完成任务，提交 · 等审核通过 → 获得 CV" />
-        <Step n={7} text="累计 CV 升级 → 解锁更多功能" />
+        <Step n={6} text="完成任务,提交 · 等审核通过 → 获得 CV" />
+        <Step n={7} text="累积 CV 升级 → 解锁更多功能" />
       </Section>
 
       <Section title="💡 小技巧">
@@ -292,27 +297,27 @@ function KeysTab() {
     <div>
       <Section title="🎮 基本操作">
         <KeyRow k="WASD" v="移动玩家" />
-        <KeyRow k="E" v="对话 / 互动（靠近 NPC 时）" />
+        <KeyRow k="E" v="对话 / 互动(靠近 NPC 时)" />
         <KeyRow k="ESC" v="关闭当前面板 / 弹窗" />
       </Section>
 
       <Section title="📋 信息面板">
-        <KeyRow k="J" v="任务日志（你接到的任务）" />
-        <KeyRow k="K" v="邮箱（任务结果 / 审核通知）" />
-        <KeyRow k="P" v="个人资料（捏脸 / 简介 / 用户名）" />
-        <KeyRow k="M" v="世界地图（9 工坊 + 议政高地）" />
-        <KeyRow k="N" v="通知（红点提醒）" />
+        <KeyRow k="J" v="任务日志(你接到的任务)" />
+        <KeyRow k="K" v="邮箱(任务结果 / 审核通知)" />
+        <KeyRow k="P" v="个人资料(履历 / 简介 / 用户名)" />
+        <KeyRow k="M" v="世界地图(9 工坊 + 议政高地)" />
+        <KeyRow k="N" v="通知(红点提醒)" />
       </Section>
 
       <Section title="🤝 社交">
-        <KeyRow k="T" v="聊天（世界 / 工坊 / 私聊）" />
-        <KeyRow k="F" v="社交面板（好友 / 关注 / 粉丝）" />
+        <KeyRow k="T" v="聊天(世界 / 工坊 / 私聊)" />
+        <KeyRow k="F" v="社交面板(好友 / 关注 / 粉丝)" />
         <KeyRow k="😀" v="点击右下按钮 — 表情菜单" />
       </Section>
 
       <Section title="📌 提示">
         <Tip>
-          <Strong>聊天 / 输入框聚焦时</Strong>按字母键不会触发上面的快捷键（让你输入字符）·
+          <Strong>聊天 / 输入框聚焦时</Strong>按字母键不会触发上面的快捷键(让你输入字符)·
           先按 ESC 关闭聊天再按 J / K / F。
         </Tip>
       </Section>
@@ -324,76 +329,172 @@ function KeysTab() {
 // Tab 3 · 工坊
 // ============================================================
 
+const WORKSHOPS_GROUPED: Array<{
+  category: '降噪' | '链接' | '共创';
+  items: Array<{ icon: string; name: string; desc: string }>;
+}> = [
+  {
+    category: '降噪',
+    items: [
+      { icon: '🎙', name: '播客工坊', desc: '对谈、采访、圆桌输出行业洞察' },
+      { icon: '📖', name: '百科工坊', desc: '构建 CUA 行业百科知识沉淀' },
+      { icon: '📊', name: '数据工坊', desc: '人才/论文/项目数据收集清洗' },
+    ],
+  },
+  {
+    category: '链接',
+    items: [
+      { icon: '📰', name: '内参工坊', desc: '深度行业调研与趋势分析' },
+      { icon: '🤝', name: '招聘工坊', desc: '对接行业人才与社区贡献者' },
+      { icon: '🎤', name: '会议工坊', desc: '策划线上线下技术交流' },
+    ],
+  },
+  {
+    category: '共创',
+    items: [
+      { icon: '⚙', name: '开源工坊', desc: '热爱代码、架构与学术研究' },
+      { icon: '🔬', name: '测评工坊', desc: 'CUA 技术与产品测试评估' },
+      { icon: '🌐', name: '生态工坊', desc: '系统软件生态开放度追踪' },
+    ],
+  },
+];
+
 function WorkshopsTab() {
   return (
     <div>
       <Section title="🏛 9 工坊总览">
         <P>
-          9 个工坊位于<Strong>共创之都</Strong>，每个对应一种贡献类型——
+          9 个工坊位于 <Strong>共创之都</Strong>,按 <Strong>降噪 · 链接 · 共创</Strong> 三种贡献方式分组——
         </P>
       </Section>
 
-      <Workshop name="百晓居" desc="📚 论文录入 / 项目卡片 / 数据抽查" badge="L0+" status="开放" />
-      <Workshop name="开元楼" desc="🌱 新人引导 · 完成第一个任务" badge="L0+" status="筹建" />
-      <Workshop name="声闻台" desc="📝 内容创作 · 文章 / 教程 / 翻译" badge="L0+" status="筹建" />
-      <Workshop name="度量阁" desc="📊 度量与评估 · 数据分析 / 调研" badge="L1+" status="筹建" />
-      <Workshop name="引才坊" desc="👥 引才与推荐 · 邀请新人 / 介绍专家" badge="L0+" status="筹建" />
-      <Workshop name="司算所" desc="⚙ 算法与技术 · 代码 / 工具开发" badge="L1+" status="筹建" />
-      <Workshop name="议事亭" desc="💬 议事与协调 · 跨工坊协作" badge="L1+" status="筹建" />
-      <Workshop name="望器楼" desc="🔧 工具与基建 · 平台维护 / 自动化" badge="L2+" status="筹建" />
-      <Workshop name="功德堂" desc="🎖 长期贡献认可 · 总结 / 复盘" badge="L2+" status="开放" />
+      {WORKSHOPS_GROUPED.map((group) => (
+        <div key={group.category} style={{ marginBottom: 24 }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              marginBottom: 12,
+              paddingBottom: 6,
+              borderBottom: '2px dashed var(--wood-2)',
+            }}
+          >
+            <h3
+              className="t-title"
+              style={{
+                fontSize: 15,
+                margin: 0,
+                color: 'var(--wood-3)',
+              }}
+            >
+              {group.category}
+            </h3>
+            <Chip tone={categoryTone(group.category)}>{group.category}</Chip>
+          </div>
+
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: 10,
+            }}
+          >
+            {group.items.map((w) => (
+              <WorkshopCard
+                key={w.name}
+                icon={w.icon}
+                name={w.name}
+                desc={w.desc}
+                category={group.category}
+              />
+            ))}
+          </div>
+        </div>
+      ))}
 
       <Section title="💼 任务流程">
-        <Step n={1} text="进入工坊找 NPC（绿点标识）" />
-        <Step n={2} text="按 E 对话，接受任务" />
-        <Step n={3} text="完成任务（按任务说明 · 可能需要外部完成）" />
+        <Step n={1} text="进入工坊找 NPC(绿点标识)" />
+        <Step n={2} text="按 E 对话,接受任务" />
+        <Step n={3} text="完成任务(按任务说明 · 可能需要外部完成)" />
         <Step n={4} text="按 J 在任务日志里提交链接 + 自评" />
-        <Step n={5} text="3 位审核员独立评议（30-90 秒）" />
+        <Step n={5} text="3 位审核员独立评议(30-90 秒)" />
         <Step n={6} text="多数票决定最终系数 → CV 入账" />
-        <Step n={7} text="不满意可去明镜阁发起申诉（只上调）" />
+        <Step n={7} text="不满意可去明镜阁发起申诉(只上调)" />
       </Section>
     </div>
   );
 }
 
-function Workshop({
+function categoryTone(category: '降噪' | '链接' | '共创'): ChipTone {
+  if (category === '降噪') return 'spring';
+  if (category === '链接') return '';
+  return 'gold';
+}
+
+function WorkshopCard({
+  icon,
   name,
   desc,
-  badge,
-  status,
+  category,
 }: {
+  icon: string;
   name: string;
   desc: string;
-  badge: string;
-  status: '开放' | '筹建';
+  category: '降噪' | '链接' | '共创';
 }) {
   return (
     <div
       style={{
-        display: 'grid',
-        gridTemplateColumns: '110px 1fr 60px 60px',
-        gap: 12,
-        padding: '8px 0',
-        borderBottom: '1px solid var(--paper-3)',
-        fontSize: 12,
-        alignItems: 'center',
+        background: 'var(--paper-0)',
+        border: '2px solid var(--wood-3)',
+        boxShadow: '2px 2px 0 var(--wood-4)',
+        padding: '12px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 8,
       }}
     >
-      <div style={{ color: 'var(--wood-3)', fontWeight: 600 }}>{name}</div>
-      <div className="t-soft" style={{ color: 'var(--ink-faint)' }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          justifyContent: 'space-between',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 22 }}>{icon}</span>
+          <span
+            className="t-title"
+            style={{ fontSize: 14, color: 'var(--wood-3)', fontWeight: 600 }}
+          >
+            {name}
+          </span>
+        </div>
+        <Chip tone={categoryTone(category)}>{category}</Chip>
+      </div>
+      <div
+        className="t-soft"
+        style={{
+          fontSize: 11,
+          color: 'var(--ink-faint)',
+          lineHeight: 1.5,
+        }}
+      >
         {desc}
       </div>
       <div
         style={{
-          color: 'var(--wood-3)',
-          fontFamily: 'var(--f-num)',
           fontSize: 10,
-          textAlign: 'right',
+          color: 'var(--gold)',
+          fontFamily: 'var(--f-num)',
+          fontWeight: 600,
+          marginTop: 'auto',
         }}
       >
-        {badge}
+        ✓ 开放
       </div>
-      <Chip tone={status === '开放' ? 'spring' : ''}>{status}</Chip>
     </div>
   );
 }
@@ -405,9 +506,9 @@ function Workshop({
 function LevelsTab() {
   return (
     <div>
-      <Section title="🎖 等级体系（基于 CV）">
+      <Section title="🎖 等级体系(基于 CV)">
         <P>
-          CV（Contribution Value · 贡献价值）是 CUA 基地的<Strong>核心货币</Strong>。
+          CV(Contribution Value · 贡献价值)是 CUA 基地的 <Strong>核心货币</Strong>。
           完成任务、被审核通过即可获得 CV。
         </P>
       </Section>
@@ -417,7 +518,7 @@ function LevelsTab() {
         <LevelRow level="L1" name="活跃贡献者" range="50 - 199 CV" />
         <LevelRow level="L2" name="mentor" range="200 - 799 CV" />
         <LevelRow level="L3" name="核心贡献者" range="800 - 2999 CV" />
-        <LevelRow level="L4" name="共建人" range="授予制（议政表决）" />
+        <LevelRow level="L4" name="共建人" range="授予制(议政表决)" />
       </Section>
 
       <Section title="🔓 等级解锁">
@@ -428,7 +529,7 @@ function LevelsTab() {
           <Strong>L2</Strong> · 可去议政高地参与提案 + 投票
         </Tip>
         <Tip>
-          <Strong>L3</Strong> · 可发起复议（推翻已决议提案）
+          <Strong>L3</Strong> · 可发起复议(推翻已决议提案)
         </Tip>
         <Tip>
           <Strong>L4</Strong> · 共建人 · 共同决定社区方向
@@ -436,10 +537,10 @@ function LevelsTab() {
       </Section>
 
       <Section title="💰 CV 怎么算">
-        <Tip>每个任务有自己的 CP 值（NPC 接任务时显示）</Tip>
-        <Tip>3 位审核员独立给出系数（x0.5 / x1.0 / x2.0）· 取多数</Tip>
+        <Tip>每个任务有自己的 CP 值(NPC 接任务时显示)</Tip>
+        <Tip>3 位审核员独立给出系数(x0.5 / x1.0 / x2.0) · 取多数</Tip>
         <Tip>最终 CV = CP × 系数 · 全额入账</Tip>
-        <Tip>邀请新人也可获得 CV（引才坊任务）</Tip>
+        <Tip>邀请新人也可获得 CV(招聘工坊任务)</Tip>
       </Section>
     </div>
   );
@@ -495,7 +596,7 @@ function LevelRow({
 function SocialTab() {
   return (
     <div>
-      <Section title="💬 聊天（按 T）">
+      <Section title="💬 聊天(按 T)">
         <Tip>
           <Strong>世界</Strong> 频道 · 全服可见
         </Tip>
@@ -507,18 +608,18 @@ function SocialTab() {
         </Tip>
       </Section>
 
-      <Section title="🤝 好友 vs ⭐ 关注（按 F）">
+      <Section title="🤝 好友 vs ⭐ 关注(按 F)">
         <P>
-          按 <Strong>F</Strong> 打开社交面板：
+          按 <Strong>F</Strong> 打开社交面板:
         </P>
         <KeyRow k="👥 好友" v="双向 · 必须互相同意" />
         <KeyRow k="📥 收到" v="别人发来的好友请求" />
         <KeyRow k="📤 发出" v="你发出的待处理请求" />
-        <KeyRow k="⭐ 关注" v="单向 · 无需对方同意（像微博）" />
-        <KeyRow k="💗 粉丝" v="关注你的人" />
+        <KeyRow k="⭐ 关注" v="单向 · 无需对方同意(像微博)" />
+        <KeyRow k="💝 粉丝" v="关注你的人" />
       </Section>
 
-      <Section title="🔔 通知（按 N）">
+      <Section title="🔔 通知(按 N)">
         <Tip>好友请求 / 关注 / 任务结果都在这里</Tip>
         <Tip>顶部 🔔 图标有红点 = 有未读</Tip>
       </Section>
@@ -533,49 +634,49 @@ function SocialTab() {
 function FaqTab() {
   return (
     <div>
-      <Faq q="找不到任务怎么办？">
-        进入任意工坊（按 M 看世界地图）→ 找 NPC → 按 E 对话。**百晓居** 是最容易上手的（5 个真任务）。
+      <Faq q="找不到任务怎么办?">
+        进入任意工坊(按 M 看世界地图)→ 找 NPC → 按 E 对话。<Strong>百科工坊</Strong> 是最容易上手的(5 个真任务)。
       </Faq>
 
-      <Faq q="我的 CV 没增加？">
-        提交任务后需要等 3 位审核员投票（30-90 秒）· 审核完成后 CV 自动入账。结果会在邮箱（按 K）通知。
+      <Faq q="我的 CV 没增加?">
+        提交任务后需要等 3 位审核员投票(30-90 秒) · 审核完成后 CV 自动入账。结果会在邮箱(按 K)通知。
       </Faq>
 
-      <Faq q="为什么按 J 没反应？">
+      <Faq q="为什么按 J 没反应?">
         如果当前光标在聊天输入框里 · 字母键会作为字符输入。先按 ESC 关闭聊天再按 J。
       </Faq>
 
-      <Faq q="可以撤回已提交的任务吗？">
-        提交后 3 分钟内可以撤回（任务日志 J · 审核中 tab · 撤回按钮 + 倒计时）。3 分钟过后或已收到 quorum 不能撤回。
+      <Faq q="可以撤回已提交的任务吗?">
+        提交后 3 分钟内可以撤回(任务日志 J · 审核中 tab · 撤回按钮 + 倒计时)。3 分钟过后或已收到 quorum 不能撤回。
       </Faq>
 
-      <Faq q="对审核结果不满意怎么办？">
-        已完成任务可以在任务日志（按 J · 已完成 tab）点 "发起申诉"· 进入明镜阁流程 · 3 位复审员独立给出意见 · <Strong>只上调系数 · 不下调</Strong>。
+      <Faq q="对审核结果不满意怎么办?">
+        已完成任务可以在任务日志(按 J · 已完成 tab)点 "发起申诉" · 进入明镜阁流程 · 3 位复审员独立给出意见 · <Strong>只上调系数 · 不下调</Strong>。
       </Faq>
 
-      <Faq q="加好友 vs 关注 有什么区别？">
-        好友需要双方同意（像 LinkedIn）· 关注是单向的（像微博）· 你可以关注任何人不需对方同意。
+      <Faq q="加好友 vs 关注 有什么区别?">
+        好友需要双方同意(像 LinkedIn) · 关注是单向的(像微博) · 你可以关注任何人不需对方同意。
       </Faq>
 
-      <Faq q="议政高地怎么去？">
-        L2 mentor 可解锁议政高地传送点 · 在共创之都地图右侧。三大设施：
+      <Faq q="议政高地怎么去?">
+        L2 mentor 可解锁议政高地传送点 · 在共创之都地图右侧。三大议政:
         <br />
         · 远见塔 · 5 阶段路线图
         <br />
         · 执政厅 · 提案投票
         <br />
-        · 明镜阁 · 申诉案桌
+        · 明镜阁 · 申诉案审
       </Faq>
 
-      <Faq q="移动端可以玩吗？">
-        v3.x 主要为桌面端设计（依赖键盘）· 移动端适配在路线图里。
+      <Faq q="移动端可以玩吗?">
+        v3.x 主要为桌面端设计(依赖键盘) · 移动端适配在路线图里。
       </Faq>
 
-      <Faq q="我的数据存在哪？">
-        Supabase 后端（云端 + 跨设备同步）+ localStorage（本地缓存）。
+      <Faq q="我的数据存在哪?">
+        Supabase 后端(云端 + 跨设备同步)+ localStorage(本地缓存)。
       </Faq>
 
-      <Faq q="如何提交反馈 / bug？">
+      <Faq q="如何提交反馈 / bug?">
         GitHub Issues:{' '}
         <a
           href="https://github.com/Leoatsr/cua-base/issues"

@@ -433,7 +433,7 @@ export class BlacksmithScene extends Phaser.Scene {
     EventBus.emit('show-dialogue', {
       name: '📰 今日热点 · 5 条',
       lines: [
-        '1. CV 排行榜更新 · 阿陈反超阿降',
+        '1. CV 排行榜更新 · 阿陈反超高粱',
         '2. 9 工坊新增 3 个任务 · 明日截止',
         '3. 议政高地 · 远见塔开放新沙盘',
         '4. 典籍阁新到 12 篇 arXiv',
