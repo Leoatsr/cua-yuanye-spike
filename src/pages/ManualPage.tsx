@@ -514,25 +514,25 @@ function LevelsTab() {
       </Section>
 
       <Section title="📈 等级阈值">
-        <LevelRow level="L0" name="萌芽" range="0 - 49 CV" />
-        <LevelRow level="L1" name="活跃贡献者" range="50 - 199 CV" />
-        <LevelRow level="L2" name="mentor" range="200 - 799 CV" />
-        <LevelRow level="L3" name="核心贡献者" range="800 - 2999 CV" />
-        <LevelRow level="L4" name="共建人" range="授予制(议政表决)" />
+        <LevelRow level="L0" name="新人 · 萌芽镇" range="0–99 CV" />
+        <LevelRow level="L1" name="活跃贡献者 · 解锁贡献者中心" range="100–499 CV" />
+        <LevelRow level="L2" name="核心贡献者 · 解锁议政参与" range="500–1499 CV" />
+        <LevelRow level="L3" name="子项目负责人 · 可发起提案" range="1500–4999 CV" />
+        <LevelRow level="L4" name="主席 · 参与申诉裁定" range="5000+ CV" />
       </Section>
 
       <Section title="🔓 等级解锁">
         <Tip>
-          <Strong>L1</Strong> · 解锁工坊任务审核投票权
+          <Strong>L1</Strong> · 活跃贡献者 · 解锁贡献者中心
         </Tip>
         <Tip>
-          <Strong>L2</Strong> · 可去议政高地参与提案 + 投票
+          <Strong>L2</Strong> · 核心贡献者 · 解锁议政参与(提案 + 投票)
         </Tip>
         <Tip>
-          <Strong>L3</Strong> · 可发起复议(推翻已决议提案)
+          <Strong>L3</Strong> · 子项目负责人 · 可发起提案
         </Tip>
         <Tip>
-          <Strong>L4</Strong> · 共建人 · 共同决定社区方向
+          <Strong>L4</Strong> · 主席 · 参与申诉裁定 · 共同决定社区方向
         </Tip>
       </Section>
 
