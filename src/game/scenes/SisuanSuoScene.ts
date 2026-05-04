@@ -5,8 +5,8 @@ import { setupMultiplayer, facingFromVelocity, type MultiplayerHandle } from './
 const PLAYER_SPEED = 130;
 const INTERACT_DISTANCE = 56;
 
-const ROOM_WIDTH = 720;
-const ROOM_HEIGHT = 520;
+const ROOM_WIDTH = 1000;
+const ROOM_HEIGHT = 700;
 
 interface SceneInitData {
   returnX?: number;
@@ -58,6 +58,7 @@ export class SisuanSuoScene extends Phaser.Scene {
 
   create() {
     this.inputLockUntil = this.time.now + 250;
+    this.cameras.main.setBackgroundColor('#8b4513');
     this.physics.world.setBounds(0, 0, ROOM_WIDTH, ROOM_HEIGHT);
 
     // ---- Floor (Wave 7.K · 落地页米色) ----

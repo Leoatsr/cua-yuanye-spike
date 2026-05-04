@@ -6,8 +6,8 @@ import { setupMultiplayer, facingFromVelocity, type MultiplayerHandle } from './
 const PLAYER_SPEED = 130;
 const INTERACT_DISTANCE = 56;
 
-const ROOM_WIDTH = 720;
-const ROOM_HEIGHT = 520;
+const ROOM_WIDTH = 1000;
+const ROOM_HEIGHT = 700;
 
 interface SceneInitData {
   returnX?: number;
@@ -44,14 +44,14 @@ export class BlacksmithScene extends Phaser.Scene {
   private lastDirection: 'down' | 'left' | 'right' | 'up' = 'down';
 
   // 互动点
-  private furnaceX = 155;
-  private furnaceY = 145;
-  private boardX = 500;
-  private boardY = 145;
-  private anvilX = 360;
-  private anvilY = 290;
-  private smithX = 440;
-  private smithY = 270;
+  private furnaceX = 215;
+  private furnaceY = 195;
+  private boardX = 695;
+  private boardY = 195;
+  private anvilX = 500;
+  private anvilY = 390;
+  private smithX = 611;
+  private smithY = 363;
 
   private exitX = 0;
   private exitY = 0;
@@ -83,6 +83,7 @@ export class BlacksmithScene extends Phaser.Scene {
 
   create() {
     this.inputLockUntil = this.time.now + 250;
+    this.cameras.main.setBackgroundColor('#8b4513');
     bgmManager.stop(this); // 内景静默
     this.physics.world.setBounds(0, 0, ROOM_WIDTH, ROOM_HEIGHT);
 
@@ -136,10 +137,10 @@ export class BlacksmithScene extends Phaser.Scene {
     // 中央铁砧碰撞 (椭圆近似)
     walls.add(this.add.rectangle(this.anvilX, this.anvilY, 80, 40, 0, 0));
     // 工具墙
-    walls.add(this.add.rectangle(95, 280, 30, 140, 0, 0));
+    walls.add(this.add.rectangle(132, 377, 30, 140, 0, 0));
     // 双工作桌
-    walls.add(this.add.rectangle(220, 380, 80, 30, 0, 0));
-    walls.add(this.add.rectangle(500, 380, 80, 30, 0, 0));
+    walls.add(this.add.rectangle(305, 511, 80, 30, 0, 0));
+    walls.add(this.add.rectangle(695, 511, 80, 30, 0, 0));
     this.physics.add.collider(this.player, walls);
 
     // ---- Camera ----
@@ -337,8 +338,8 @@ export class BlacksmithScene extends Phaser.Scene {
       g.fillCircle(cx - 16, cy - 4, 4);
       g.fillRect(cx + 4, cy - 8, 18, 4);
     };
-    drawBench(220, 380);
-    drawBench(500, 380);
+    drawBench(305, 511);
+    drawBench(695, 511);
   }
 
   /** 铁匠 NPC (graphics 手画 · 红围裙 + 锤在手) */

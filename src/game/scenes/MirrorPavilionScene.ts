@@ -5,8 +5,8 @@ import { setupMultiplayer, facingFromVelocity, type MultiplayerHandle } from './
 const PLAYER_SPEED = 130;
 const INTERACT_DISTANCE = 56;
 
-const ROOM_WIDTH = 700;
-const ROOM_HEIGHT = 500;
+const ROOM_WIDTH = 1000;
+const ROOM_HEIGHT = 700;
 // Wave 8.MirrorPavilion · 天平中心 · 公正大堂
 
 interface SceneInitData {
@@ -57,6 +57,7 @@ export class MirrorPavilionScene extends Phaser.Scene {
 
   create() {
     this.inputLockUntil = this.time.now + 250;
+    this.cameras.main.setBackgroundColor('#8b4513');
     this.physics.world.setBounds(0, 0, ROOM_WIDTH, ROOM_HEIGHT);
 
     // === Wave 8 · 米色羊皮纸地板 (替代灰蓝) ===

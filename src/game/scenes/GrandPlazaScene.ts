@@ -1,6 +1,7 @@
 import * as Phaser from 'phaser';
 import { bgmManager } from '../bgmManager';
 import { EventBus } from '../EventBus';
+import { attachMinimap } from '../minimap-bridge';
 import { setupMultiplayer, facingFromVelocity, type MultiplayerHandle } from './multiplayerHelper';
 
 const PLAYER_SPEED = 140;
@@ -86,6 +87,7 @@ export class GrandPlazaScene extends Phaser.Scene {
 
   create() {
     this.inputLockUntil = this.time.now + 250;
+    this.cameras.main.setBackgroundColor('#8a7355');
     this.physics.world.setBounds(0, 0, MAP_WIDTH, MAP_HEIGHT);
 
     // ---- Visuals (Wave 8 · 米色羊皮纸 + 16 发散纹) ----
@@ -115,6 +117,9 @@ export class GrandPlazaScene extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, MAP_WIDTH, MAP_HEIGHT);
     // G1.1 · Multiplayer (via helper)
     this.mp = setupMultiplayer(this, 'GrandPlaza', () => this.player, () => this.currentFacing);
+
+    EventBus.on('worldmap-travel', this.onWorldMapTravel, this);
+    attachMinimap(this, 'GrandPlaza');
 
     this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
     this.cameras.main.setZoom(1.5);
@@ -700,4 +705,9 @@ export class GrandPlazaScene extends Phaser.Scene {
       hideAll();
     }
   }
+
+  private onWorldMapTravel = (data: { sceneKey: string }) => {
+    if (data.sceneKey === 'GrandPlaza') return;
+    this.scene.start(data.sceneKey);
+  };
 }

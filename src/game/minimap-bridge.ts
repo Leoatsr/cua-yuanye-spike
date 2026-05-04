@@ -94,10 +94,28 @@ const HOME_LANDMARKS: Landmark[] = [
 
 // ============ Scene name → landmarks 映射 ============
 
+/**
+ * GovHillScene (议政高地)
+ */
+const GOVHILL_LANDMARKS: Landmark[] = [
+  { x: 800, y: 400, w: 120, h: 80, color: '#8b4513', label: '议' },
+  { x: 400, y: 300, w: 80, h: 96, color: '#5d3a1a', label: '远' },
+  { x: 1200, y: 300, w: 80, h: 96, color: '#a0522d', label: '镜' },
+];
+
+/**
+ * GrandPlazaScene (大集会广场)
+ */
+const GRANDPLAZA_LANDMARKS: Landmark[] = [
+  { x: 800, y: 400, w: 200, h: 120, color: '#cd853f', label: '台' },
+];
+
 const LANDMARKS_BY_SCENE: Record<string, Landmark[]> = {
   MainScene: MAINSCENE_LANDMARKS,
   SproutCity: SPROUTCITY_LANDMARKS,
   HomeScene: HOME_LANDMARKS,
+  GovHill: GOVHILL_LANDMARKS,
+  GrandPlaza: GRANDPLAZA_LANDMARKS,
 };
 
 const ROADS_BY_SCENE: Record<string, { y: number; color?: string }> = {

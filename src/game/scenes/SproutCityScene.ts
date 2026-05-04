@@ -172,6 +172,7 @@ export class SproutCityScene extends Phaser.Scene {
   create() {
     attachMinimap(this, 'SproutCity');
     this.inputLockUntil = this.time.now + 250;
+    this.cameras.main.setBackgroundColor('#4a7340');
 
     // ---- Tilemap ----
     const map = this.make.tilemap({ key: 'sproutcity' });
@@ -215,6 +216,8 @@ export class SproutCityScene extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
     // G1.1 · Multiplayer (via helper)
     this.mp = setupMultiplayer(this, 'SproutCity', () => this.player, () => this.currentFacing);
+
+    EventBus.on('worldmap-travel', this.onWorldMapTravel, this);
 
     this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
     this.cameras.main.setZoom(2);
@@ -627,4 +630,9 @@ export class SproutCityScene extends Phaser.Scene {
       this.portHint.setVisible(false);
     }
   }
+
+  private onWorldMapTravel = (data: { sceneKey: string }) => {
+    if (data.sceneKey === 'SproutCity') return;
+    this.scene.start(data.sceneKey);
+  };
 }

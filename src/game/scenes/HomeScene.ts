@@ -6,8 +6,8 @@ import { setupMultiplayer, facingFromVelocity, type MultiplayerHandle } from './
 const PLAYER_SPEED = 130;
 const INTERACT_DISTANCE = 56;
 
-const ROOM_WIDTH = 720;
-const ROOM_HEIGHT = 520;
+const ROOM_WIDTH = 1000;
+const ROOM_HEIGHT = 700;
 
 interface SceneInitData {
   returnX?: number;
@@ -51,14 +51,14 @@ export class HomeScene extends Phaser.Scene {
   private lastDirection: 'down' | 'left' | 'right' | 'up' = 'down';
 
   // 互动点
-  private memorialX = 360;
-  private memorialY = 145;
-  private bedX = 110;
-  private bedY = 290;
-  private deskX = 360;
-  private deskY = 305;
-  private fireplaceX = 600;
-  private fireplaceY = 380;
+  private memorialX = 500;
+  private memorialY = 195;
+  private bedX = 153;
+  private bedY = 390;
+  private deskX = 500;
+  private deskY = 410;
+  private fireplaceX = 833;
+  private fireplaceY = 511;
 
   private exitX = 0;
   private exitY = 0;
@@ -93,6 +93,7 @@ export class HomeScene extends Phaser.Scene {
 
   create() {
     this.inputLockUntil = this.time.now + 250;
+    this.cameras.main.setBackgroundColor('#8b4513');
     bgmManager.stop(this); // 内景静默
     this.physics.world.setBounds(0, 0, ROOM_WIDTH, ROOM_HEIGHT);
 

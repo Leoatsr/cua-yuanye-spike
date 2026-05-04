@@ -86,6 +86,7 @@ export function PhaserGame() {
         position: 'fixed',
         inset: 0,
         overflow: 'hidden',
+        background: '#8b4513',
       }}
     />
   );
