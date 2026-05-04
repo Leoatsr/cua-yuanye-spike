@@ -5,8 +5,8 @@ import { setupMultiplayer, facingFromVelocity, type MultiplayerHandle } from './
 const PLAYER_SPEED = 130;
 const INTERACT_DISTANCE = 56;
 
-const ROOM_WIDTH = 720;
-const ROOM_HEIGHT = 520;
+const ROOM_WIDTH = 1000;
+const ROOM_HEIGHT = 700;
 
 interface SceneInitData {
   returnX?: number;

@@ -1,6 +1,7 @@
 import * as Phaser from 'phaser';
 import { bgmManager } from '../bgmManager';
 import { EventBus } from '../EventBus';
+import { attachMinimap } from '../minimap-bridge';
 import { setupMultiplayer, facingFromVelocity, type MultiplayerHandle } from './multiplayerHelper';
 
 const PLAYER_SPEED = 140;
@@ -116,6 +117,7 @@ export class GrandPlazaScene extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, MAP_WIDTH, MAP_HEIGHT);
     // G1.1 · Multiplayer (via helper)
     this.mp = setupMultiplayer(this, 'GrandPlaza', () => this.player, () => this.currentFacing);
+    attachMinimap(this, 'GrandPlaza');
 
     this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
     this.cameras.main.setZoom(1.5);

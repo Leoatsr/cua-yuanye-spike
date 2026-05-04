@@ -6,8 +6,8 @@ import { setupMultiplayer, facingFromVelocity, type MultiplayerHandle } from './
 const PLAYER_SPEED = 130;
 const INTERACT_DISTANCE = 56;
 
-const ROOM_WIDTH = 720;
-const ROOM_HEIGHT = 520;
+const ROOM_WIDTH = 1000;
+const ROOM_HEIGHT = 700;
 
 interface SceneInitData {
   returnX?: number;
@@ -46,14 +46,14 @@ export class VillageHeadScene extends Phaser.Scene {
   private lastDirection: 'down' | 'left' | 'right' | 'up' = 'down';
 
   // 互动点坐标
-  private mapX = 220;     // 北墙地图
-  private mapY = 145;
-  private rosterX = 500;  // 北墙名册
-  private rosterY = 145;
-  private deskX = 360;    // 中央案台
-  private deskY = 290;
-  private axiangX = 360;  // 高粱 NPC (案台北侧)
-  private axiangY = 235;
+  private mapX = 305;     // 北墙地图
+  private mapY = 195;
+  private rosterX = 695;  // 北墙名册
+  private rosterY = 195;
+  private deskX = 500;    // 中央案台
+  private deskY = 390;
+  private axiangX = 500;  // 高粱 NPC (案台北侧)
+  private axiangY = 316;
 
   // 出口
   private exitX = 0;
@@ -132,8 +132,8 @@ export class VillageHeadScene extends Phaser.Scene {
     // 案台碰撞
     walls.add(this.add.rectangle(this.deskX, this.deskY, 200, 60, 0, 0));
     // 双侧书架碰撞
-    walls.add(this.add.rectangle(95, 270, 30, 130, 0, 0));
-    walls.add(this.add.rectangle(625, 270, 30, 130, 0, 0));
+    walls.add(this.add.rectangle(132, 363, 30, 130, 0, 0));
+    walls.add(this.add.rectangle(868, 363, 30, 130, 0, 0));
     this.physics.add.collider(this.player, walls);
 
     // ---- Camera ----
@@ -262,8 +262,8 @@ export class VillageHeadScene extends Phaser.Scene {
       }
     };
 
-    drawShelf(95, 270);   // 西书架
-    drawShelf(625, 270);  // 东书架
+    drawShelf(132, 363);   // 西书架
+    drawShelf(868, 363);  // 东书架
   }
 
   /** 中央案台 (米色面 + 砚 + 卷宗 + 印章) */
@@ -350,8 +350,8 @@ export class VillageHeadScene extends Phaser.Scene {
       g.fillStyle(0xa05a35, 1);
       g.fillRect(cx - 15, cy - 15, 30, 8);
     };
-    drawChair(190, 410);
-    drawChair(530, 410);
+    drawChair(264, 552);
+    drawChair(736, 552);
   }
 
   // ============ ANIMATION ============

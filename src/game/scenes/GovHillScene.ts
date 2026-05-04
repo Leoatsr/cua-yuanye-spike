@@ -2,6 +2,7 @@ import * as Phaser from 'phaser';
 import { bgmManager } from '../bgmManager';
 import { EventBus } from '../EventBus';
 import { fetchUserLevel } from '../../lib/levelStore';
+import { attachMinimap } from '../minimap-bridge';
 import { setupMultiplayer, facingFromVelocity, type MultiplayerHandle } from './multiplayerHelper';
 
 const PLAYER_SPEED = 140;
@@ -173,6 +174,7 @@ export class GovHillScene extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, MAP_WIDTH, MAP_HEIGHT);
     // G1.1 路 Multiplayer (via helper)
     this.mp = setupMultiplayer(this, 'GovHill', () => this.player, () => this.currentFacing);
+    attachMinimap(this, 'GovHill');
 
     this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
     this.cameras.main.setZoom(1.5);

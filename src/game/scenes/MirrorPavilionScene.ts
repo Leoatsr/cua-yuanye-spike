@@ -5,8 +5,8 @@ import { setupMultiplayer, facingFromVelocity, type MultiplayerHandle } from './
 const PLAYER_SPEED = 130;
 const INTERACT_DISTANCE = 56;
 
-const ROOM_WIDTH = 700;
-const ROOM_HEIGHT = 500;
+const ROOM_WIDTH = 1000;
+const ROOM_HEIGHT = 700;
 // Wave 8.MirrorPavilion · 天平中心 · 公正大堂
 
 interface SceneInitData {

@@ -5,8 +5,8 @@ import { setupMultiplayer, facingFromVelocity, type MultiplayerHandle } from './
 const PLAYER_SPEED = 130;
 const INTERACT_DISTANCE = 56;
 
-const ROOM_WIDTH = 800;
-const ROOM_HEIGHT = 600;
+const ROOM_WIDTH = 1000;
+const ROOM_HEIGHT = 700;
 // Wave 8.VisionTower · 中央大沙盘布局
 
 interface SceneInitData {

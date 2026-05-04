@@ -6,8 +6,8 @@ import { setupMultiplayer, facingFromVelocity, type MultiplayerHandle } from './
 const PLAYER_SPEED = 130;
 const INTERACT_DISTANCE = 56;
 
-const ROOM_WIDTH = 720;
-const ROOM_HEIGHT = 520;
+const ROOM_WIDTH = 1000;
+const ROOM_HEIGHT = 700;
 
 interface SceneInitData {
   returnX?: number;
@@ -47,14 +47,14 @@ export class LibraryScene extends Phaser.Scene {
   private lastDirection: 'down' | 'left' | 'right' | 'up' = 'down';
 
   // 互动点坐标
-  private cabinetX = 360;
-  private cabinetY = 145;
-  private deskX = 360;
-  private deskY = 290;
-  private lampX = 360;
-  private lampY = 270;
-  private baixiaoX = 145;
-  private baixiaoY = 290;
+  private cabinetX = 500;
+  private cabinetY = 195;
+  private deskX = 500;
+  private deskY = 390;
+  private lampX = 500;
+  private lampY = 363;
+  private baixiaoX = 201;
+  private baixiaoY = 390;
 
   // 出口
   private exitX = 0;
@@ -147,8 +147,8 @@ export class LibraryScene extends Phaser.Scene {
     // 长桌
     walls.add(this.add.rectangle(this.deskX, this.deskY, 240, 60, 0, 0));
     // 双侧书架
-    walls.add(this.add.rectangle(95, 290, 30, 220, 0, 0));
-    walls.add(this.add.rectangle(625, 290, 30, 220, 0, 0));
+    walls.add(this.add.rectangle(132, 390, 30, 220, 0, 0));
+    walls.add(this.add.rectangle(868, 390, 30, 220, 0, 0));
     this.physics.add.collider(this.player, walls);
 
     // ---- Camera ----
