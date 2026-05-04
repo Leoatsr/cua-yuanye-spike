@@ -207,6 +207,7 @@ export class InteriorScene extends Phaser.Scene {
   }
 
   private playDialogueSfx() {
+    if (!this.scene.isActive()) return;
     this.sound.play('sfx-dialogue', { volume: 0.5 });
   }
 
