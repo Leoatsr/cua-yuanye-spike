@@ -90,6 +90,7 @@ class BotManager {
         face: BOT_FACES[i],
         x, y, vx: 0, vy: 0, facing: 'down',
         last_seen: Date.now(),
+        meta_ready: true,
       };
       const bot: Bot = {
         info,
