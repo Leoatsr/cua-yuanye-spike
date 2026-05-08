@@ -707,6 +707,8 @@ export class GrandPlazaScene extends Phaser.Scene {
   }
 
   private onWorldMapTravel = (data: { sceneKey: string }) => {
+    // 只有当前 active 的 scene 处理传送 (防止 4 个 listener 同时触发)
+    if (!this.scene || !this.scene.isActive()) return;
     if (data.sceneKey === 'GrandPlaza') return;
     this.scene.start(data.sceneKey);
   };

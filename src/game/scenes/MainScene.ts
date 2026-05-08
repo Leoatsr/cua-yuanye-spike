@@ -1023,7 +1023,10 @@ export class MainScene extends Phaser.Scene {
 
   private playDialogueSfx() {
     if (this.sfxDialogue) {
-      if (!this.scene || !this.scene.isActive()) return;
+      if (!this.scene || typeof this.scene.isActive !== 'function') return;
+    try {
+      if (!this.scene.isActive()) return;
+    } catch { return; }
       this.sound.play('sfx-dialogue', { volume: SFX_VOLUME });
     }
   }
@@ -1378,6 +1381,11 @@ export class MainScene extends Phaser.Scene {
   }
 
   private onWorldMapTravel = (data: { sceneKey: string }) => {
+    // 只有当前 active 的 scene 处理传送 (防止 4 个 listener 同时触发)
+    if (!this.scene || typeof this.scene.isActive !== 'function') return;
+    try {
+      if (!this.scene.isActive()) return;
+    } catch { return; }
     if (data.sceneKey === 'Main') return;
     this.scene.start(data.sceneKey);
   };
